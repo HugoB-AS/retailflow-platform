@@ -29,6 +29,20 @@ services:
     networks:
       - retailflow_network
 
+  fastapi:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: retailflow_fastapi
+    environment:
+      DATABASE_URL: postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    networks:
+      - retailflow_network
+
 volumes:
   postgres_data:
   pgadmin_data:

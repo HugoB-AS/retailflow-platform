@@ -1,7 +1,12 @@
+import os
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "postgresql+psycopg2://retailflow:retailflow@localhost:5432/retailflow_db"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db",
+)
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
