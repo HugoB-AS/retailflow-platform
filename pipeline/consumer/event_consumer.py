@@ -2,9 +2,12 @@ import json
 import os
 import signal
 from datetime import datetime
+from uuid import uuid4
 
 from confluent_kafka import Consumer
 from sqlalchemy import create_engine, text
+
+from pipeline.consumer.validators import validate_event
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "redpanda:9092")
 EVENT_TOPIC = os.getenv("EVENT_TOPIC", "retailflow_events")
@@ -72,6 +75,62 @@ INSERT_EVENT_SQL = text("""
     ON CONFLICT (event_id) DO NOTHING
 """)
 
+INSERT_DEAD_LETTER_SQL = text("""
+    INSERT INTO governance.dead_letter_events (
+        dead_letter_id,
+        event_id,
+        source_topic,
+        event_type,
+        error_reason,
+        raw_payload,
+        created_at,
+        severity,
+        reprocessed,
+        reprocessed_at
+    )
+    VALUES (
+        :dead_letter_id,
+        :event_id,
+        :source_topic,
+        :event_type,
+        :error_reason,
+        CAST(:raw_payload AS JSONB),
+        :created_at,
+        :severity,
+        FALSE,
+        NULL
+    )
+""")
+
+INSERT_QUALITY_LOG_SQL = text("""
+    INSERT INTO governance.data_quality_logs (
+        check_id,
+        rule_id,
+        rule_name,
+        table_name,
+        record_id,
+        status,
+        severity,
+        action,
+        error_message,
+        checked_at,
+        source
+    )
+    VALUES (
+        :check_id,
+        :rule_id,
+        :rule_name,
+        :table_name,
+        :record_id,
+        :status,
+        :severity,
+        :action,
+        :error_message,
+        :checked_at,
+        :source
+    )
+""")
+
 
 def parse_datetime(value: str | None):
     if not value:
@@ -79,30 +138,82 @@ def parse_datetime(value: str | None):
     return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
 
 
-def insert_event(event: dict) -> None:
+def insert_event(conn, event: dict) -> None:
     event_timestamp = parse_datetime(event.get("event_timestamp"))
     created_at = parse_datetime(event.get("created_at"))
 
-    with engine.begin() as conn:
+    conn.execute(
+        INSERT_EVENT_SQL,
+        {
+            "event_id": event.get("event_id"),
+            "customer_id": event.get("customer_id"),
+            "session_id": event.get("session_id"),
+            "event_type": event.get("event_type"),
+            "product_id": event.get("product_id"),
+            "event_timestamp": event_timestamp,
+            "device_type": event.get("device_type"),
+            "browser": event.get("browser"),
+            "country": event.get("country"),
+            "page_url": event.get("page_url"),
+            "referrer": event.get("referrer"),
+            "sales_channel": event.get("sales_channel"),
+            "raw_payload": json.dumps(event.get("raw_payload", {})),
+            "created_at": created_at,
+        },
+    )
+
+
+def insert_dead_letter(conn, event: dict, errors: list[dict]) -> None:
+    error_reason = " | ".join(error["message"] for error in errors)
+    severity = "high" if any(error["severity"] == "high" for error in errors) else "medium"
+
+    conn.execute(
+        INSERT_DEAD_LETTER_SQL,
+        {
+            "dead_letter_id": f"dlq_{uuid4().hex[:12]}",
+            "event_id": event.get("event_id"),
+            "source_topic": EVENT_TOPIC,
+            "event_type": event.get("event_type"),
+            "error_reason": error_reason,
+            "raw_payload": json.dumps(event),
+            "created_at": datetime.utcnow(),
+            "severity": severity,
+        },
+    )
+
+
+def insert_quality_logs(conn, event: dict, errors: list[dict]) -> None:
+    for error in errors:
         conn.execute(
-            INSERT_EVENT_SQL,
+            INSERT_QUALITY_LOG_SQL,
             {
-                "event_id": event.get("event_id"),
-                "customer_id": event.get("customer_id"),
-                "session_id": event.get("session_id"),
-                "event_type": event.get("event_type"),
-                "product_id": event.get("product_id"),
-                "event_timestamp": event_timestamp,
-                "device_type": event.get("device_type"),
-                "browser": event.get("browser"),
-                "country": event.get("country"),
-                "page_url": event.get("page_url"),
-                "referrer": event.get("referrer"),
-                "sales_channel": event.get("sales_channel"),
-                "raw_payload": json.dumps(event.get("raw_payload", {})),
-                "created_at": created_at,
+                "check_id": f"chk_{uuid4().hex[:12]}",
+                "rule_id": error["rule_id"],
+                "rule_name": error["rule_name"],
+                "table_name": "raw.events",
+                "record_id": event.get("event_id"),
+                "status": "failed",
+                "severity": error["severity"],
+                "action": error["action"],
+                "error_message": error["message"],
+                "checked_at": datetime.utcnow(),
+                "source": "event_consumer",
             },
         )
+
+
+def process_event(event: dict) -> None:
+    with engine.begin() as conn:
+        errors = validate_event(event, conn)
+
+        if errors:
+            insert_dead_letter(conn, event, errors)
+            insert_quality_logs(conn, event, errors)
+            print(f"Rejected event {event.get('event_id')} errors={len(errors)}")
+            return
+
+        insert_event(conn, event)
+        print(f"Inserted event {event.get('event_id')} type={event.get('event_type')}")
 
 
 def main():
@@ -121,8 +232,7 @@ def main():
 
         try:
             event = json.loads(msg.value().decode("utf-8"))
-            insert_event(event)
-            print(f"Inserted event {event.get('event_id')} type={event.get('event_type')}")
+            process_event(event)
         except Exception as exc:
             print(f"Failed to process message: {exc}")
 

@@ -8,4 +8,6 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY pipeline /app/pipeline
 
-CMD ["python", "pipeline/consumer/event_consumer.py"]
+ENV PYTHONPATH=/app
+
+CMD ["python", "-m", "pipeline.consumer.event_consumer"]
