@@ -63,6 +63,7 @@ page = st.sidebar.radio(
         "Analytics Dashboard",
         "Churn Candidates",
         "Data Quality Monitor",
+        "AI Customer Intelligence",
     ],
 )
 
@@ -270,3 +271,61 @@ elif page == "Data Quality Monitor":
 
     except Exception as exc:
         st.error(f"Error loading quality metrics: {exc}")
+
+elif page == "AI Customer Intelligence":
+    st.title("AI Customer Intelligence")
+
+    st.markdown(
+        """
+        Cette page expose les résultats des modèles ML :
+        - churn prediction ;
+        - customer segmentation ;
+        - customer lifetime value.
+        """
+    )
+
+    try:
+        churn = api_get("/ai/churn-top", params={"limit": 20})
+        clv = api_get("/ai/clv-top", params={"limit": 20})
+        segments = api_get("/ai/segments")
+
+        df_churn = pd.DataFrame(churn)
+        df_clv = pd.DataFrame(clv)
+        df_segments = pd.DataFrame(segments)
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric("Churn candidates", len(df_churn))
+
+        with col2:
+            st.metric("High CLV customers shown", len(df_clv))
+
+        with col3:
+            st.metric("Segments", len(df_segments))
+
+        st.subheader("Top churn risk customers")
+        st.dataframe(df_churn, use_container_width=True)
+
+        if not df_churn.empty:
+            st.bar_chart(df_churn.set_index("customer_id")["churn_probability"])
+
+        st.subheader("Top predicted CLV customers")
+        st.dataframe(df_clv, use_container_width=True)
+
+        if not df_clv.empty:
+            st.bar_chart(df_clv.set_index("customer_id")["predicted_clv"])
+
+        st.subheader("Customer segments")
+        st.dataframe(df_segments, use_container_width=True)
+
+        if not df_segments.empty:
+            st.bar_chart(df_segments.set_index("segment_label")["customers_count"])
+
+        st.info(
+            "Les modèles actuels sont une première version pragmatique basée sur des labels "
+            "et cibles métier heuristiques. Ils servent à démontrer la chaîne ML de bout en bout."
+        )
+
+    except Exception as exc:
+        st.error(f"Error loading AI metrics: {exc}")
