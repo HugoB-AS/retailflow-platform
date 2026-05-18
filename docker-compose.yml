@@ -29,6 +29,34 @@ services:
     networks:
       - retailflow_network
 
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: retailflow_redpanda
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - "1G"
+      - --reserve-memory
+      - "0M"
+      - --node-id
+      - "0"
+      - --check=false
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:9092
+    ports:
+      - "9092:9092"
+      - "9644:9644"
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    networks:
+      - retailflow_network
+
   fastapi:
     build:
       context: .
@@ -36,10 +64,28 @@ services:
     container_name: retailflow_fastapi
     environment:
       DATABASE_URL: postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      EVENT_TOPIC: retailflow_events
     ports:
       - "8000:8000"
     depends_on:
       - postgres
+      - redpanda
+    networks:
+      - retailflow_network
+
+  event_consumer:
+    build:
+      context: .
+      dockerfile: pipeline/consumer/Dockerfile
+    container_name: retailflow_event_consumer
+    environment:
+      DATABASE_URL: postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      EVENT_TOPIC: retailflow_events
+    depends_on:
+      - postgres
+      - redpanda
     networks:
       - retailflow_network
 
@@ -60,6 +106,7 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  redpanda_data:
 
 networks:
   retailflow_network:
