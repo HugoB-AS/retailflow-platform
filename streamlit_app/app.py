@@ -62,6 +62,7 @@ page = st.sidebar.radio(
         "Checkout",
         "Analytics Dashboard",
         "Churn Candidates",
+        "Data Quality Monitor",
     ],
 )
 
@@ -218,3 +219,54 @@ elif page == "Churn Candidates":
 
     if not df.empty:
         st.bar_chart(df.set_index("customer_id")["days_since_last_order"])
+
+elif page == "Data Quality Monitor":
+    st.title("Data Quality Monitor")
+
+    st.markdown(
+        """
+        Cette page montre les événements rejetés par le consumer streaming
+        et les règles qualité déclenchées.
+        """
+    )
+
+    try:
+        dead_letters = api_get("/quality/dead-letters", params={"limit": 20})
+        quality_summary = api_get("/quality/summary")
+        dead_letter_summary = api_get("/quality/dead-letter-summary")
+
+        df_dead = pd.DataFrame(dead_letters)
+        df_quality = pd.DataFrame(quality_summary)
+        df_summary = pd.DataFrame(dead_letter_summary)
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric("Dead-letter events", len(df_dead))
+
+        with col2:
+            failed_rules = df_quality["rule_id"].nunique() if not df_quality.empty else 0
+            st.metric("Failed rules", failed_rules)
+
+        with col3:
+            high_severity = (
+                len(df_dead[df_dead["severity"] == "high"])
+                if not df_dead.empty and "severity" in df_dead.columns
+                else 0
+            )
+            st.metric("High severity", high_severity)
+
+        st.subheader("Dead-letter events")
+        st.dataframe(df_dead, use_container_width=True)
+
+        st.subheader("Quality rules summary")
+        st.dataframe(df_quality, use_container_width=True)
+
+        st.subheader("Dead-letter summary")
+        st.dataframe(df_summary, use_container_width=True)
+
+        if not df_quality.empty:
+            st.bar_chart(df_quality.set_index("rule_name")["checks_count"])
+
+    except Exception as exc:
+        st.error(f"Error loading quality metrics: {exc}")

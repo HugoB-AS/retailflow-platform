@@ -5,6 +5,7 @@ from api.app.routes.customers import router as customers_router
 from api.app.routes.analytics import router as analytics_router
 from api.app.routes.products import router as products_router
 from api.app.routes.events import router as events_router
+from api.app.routes.quality import router as quality_router
 
 app = FastAPI(
     title="RetailFlow API",
@@ -17,3 +18,4 @@ app.include_router(customers_router)
 app.include_router(analytics_router)
 app.include_router(products_router)
 app.include_router(events_router)
+app.include_router(quality_router)
