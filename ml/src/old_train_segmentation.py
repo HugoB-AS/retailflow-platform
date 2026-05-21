@@ -1,14 +1,12 @@
 from pathlib import Path
-from urllib.parse import urlparse
 
 import joblib
 import pandas as pd
-import psycopg2
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
-from ml.src.db import DATABASE_URL
+from ml.src.db import get_connection
 
 MODEL_DIR = Path("ml/models")
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -34,31 +32,14 @@ SEGMENT_LABELS = {
 }
 
 
-def get_psycopg2_connection():
-    database_url = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql://")
-    parsed = urlparse(database_url)
-
-    return psycopg2.connect(
-        host=parsed.hostname,
-        port=parsed.port or 5432,
-        dbname=parsed.path.lstrip("/"),
-        user=parsed.username,
-        password=parsed.password,
-    )
-
-
-def load_customer_features() -> pd.DataFrame:
-    query = "SELECT * FROM analytics.customer_features"
-
-    conn = get_psycopg2_connection()
-    try:
-        return pd.read_sql_query(query, conn)
-    finally:
-        conn.close()
-
+#def main():
+#    df = pd.read_sql("SELECT * FROM analytics.customer_features", engine)
+#    X = df[FEATURES].fillna(0)
 
 def main():
-    df = load_customer_features()
+    with get_connection() as conn:
+        df = pd.read_sql("SELECT * FROM analytics.customer_features", conn)
+
     X = df[FEATURES].fillna(0)
 
     scaler = StandardScaler()

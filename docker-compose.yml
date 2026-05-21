@@ -10,6 +10,9 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
     AIRFLOW_CONN_RETAILFLOW_POSTGRES: postgresql://retailflow:retailflow@postgres:5432/retailflow_db
+    DATABASE_URL: postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db
+    PYTHONPATH: /opt/airflow
+    _PIP_ADDITIONAL_REQUIREMENTS: pandas==2.2.3 numpy==2.2.1 scikit-learn==1.6.0 joblib==1.4.2 psycopg2-binary==2.9.10
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
