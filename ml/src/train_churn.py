@@ -1,13 +1,14 @@
 from pathlib import Path
+from urllib.parse import urlparse
 
 import joblib
-import numpy as np
 import pandas as pd
+import psycopg2
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.model_selection import train_test_split
 
-from ml.src.db import engine
+from ml.src.db import DATABASE_URL
 
 MODEL_DIR = Path("ml/models")
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -27,6 +28,29 @@ FEATURES = [
 ]
 
 
+def get_psycopg2_connection():
+    database_url = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql://")
+    parsed = urlparse(database_url)
+
+    return psycopg2.connect(
+        host=parsed.hostname,
+        port=parsed.port or 5432,
+        dbname=parsed.path.lstrip("/"),
+        user=parsed.username,
+        password=parsed.password,
+    )
+
+
+def load_customer_features() -> pd.DataFrame:
+    query = "SELECT * FROM analytics.customer_features"
+
+    conn = get_psycopg2_connection()
+    try:
+        return pd.read_sql_query(query, conn)
+    finally:
+        conn.close()
+
+
 def build_churn_label(df: pd.DataFrame) -> pd.Series:
     return (
         (
@@ -42,7 +66,7 @@ def build_churn_label(df: pd.DataFrame) -> pd.Series:
 
 
 def main():
-    df = pd.read_sql("SELECT * FROM analytics.customer_features", engine)
+    df = load_customer_features()
 
     df[FEATURES] = df[FEATURES].fillna(0)
     y = build_churn_label(df)
