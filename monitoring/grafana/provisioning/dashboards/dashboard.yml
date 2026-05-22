@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: RetailFlow Dashboards
+    orgId: 1
+    folder: RetailFlow
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

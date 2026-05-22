@@ -184,12 +184,42 @@ services:
     depends_on:
       airflow-init:
         condition: service_completed_successfully
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: retailflow_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - fastapi
+    networks:
+      - retailflow_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: retailflow_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - retailflow_network
 
 volumes:
   postgres_data:
   pgadmin_data:
   redpanda_data:
   airflow_postgres_data:
+  grafana_data:
 
 networks:
   retailflow_network:

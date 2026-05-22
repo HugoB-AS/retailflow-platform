@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from api.app.routes.health import router as health_router
 from api.app.routes.customers import router as customers_router
@@ -21,3 +22,5 @@ app.include_router(products_router)
 app.include_router(events_router)
 app.include_router(quality_router)
 app.include_router(ai_router)
+
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
