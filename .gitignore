@@ -45,3 +45,6 @@ ml/reports/evidently/*
 # Docker
 postgres_data/
 pgadmin_data/
+
+# Airflow runtime logs
+airflow/logs/
