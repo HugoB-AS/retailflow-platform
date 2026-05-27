@@ -1,0 +1,21 @@
+Segmentation Model Report
+=========================
+
+Rows: 5000
+Selected k: 5
+
+K evaluation:
+- k=3: silhouette=0.2293, davies_bouldin=1.6634, calinski_harabasz=923.45
+- k=4: silhouette=0.2517, davies_bouldin=1.4500, calinski_harabasz=944.47
+- k=5: silhouette=0.2560, davies_bouldin=1.3564, calinski_harabasz=949.86
+- k=6: silhouette=0.2159, davies_bouldin=1.3608, calinski_harabasz=966.27
+- k=7: silhouette=0.2130, davies_bouldin=1.2729, calinski_harabasz=973.34
+
+Segments:
+- cluster 0 / Dormant Low Value Customers: 274 customers
+- cluster 1 / Standard Active Customers: 2778 customers
+- cluster 2 / High Value Loyal Customers: 995 customers
+- cluster 3 / Return-Prone Customers: 425 customers
+- cluster 4 / Promo-Sensitive Browsers: 528 customers
+
+Generated at: 2026-05-27T13:51:40.852640+00:00

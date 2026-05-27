@@ -14,12 +14,12 @@ default_args = {
 
 with DAG(
     dag_id="ml_retraining",
-    description="Retrain RetailFlow ML models and refresh customer intelligence predictions.",
+    description="Retrain RetailFlow ML models, refresh predictions, and generate lightweight ML monitoring reports.",
     schedule="@weekly",
     start_date=pendulum.datetime(2026, 5, 1, tz="UTC"),
     catchup=False,
     default_args=default_args,
-    tags=["retailflow", "ml", "ai"],
+    tags=["retailflow", "ml", "ai", "monitoring"],
 ) as dag:
 
     train_churn = BashOperator(
@@ -42,4 +42,9 @@ with DAG(
         bash_command="cd /opt/airflow && python -m ml.src.predict",
     )
 
-    [train_churn, train_segmentation, train_clv] >> refresh_predictions
+    evaluate_drift = BashOperator(
+        task_id="evaluate_lightweight_drift",
+        bash_command="cd /opt/airflow && python -m ml.src.evaluate_drift",
+    )
+
+    [train_churn, train_segmentation, train_clv] >> refresh_predictions >> evaluate_drift

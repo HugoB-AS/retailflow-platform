@@ -1,0 +1,129 @@
+{
+  "generated_at": "2026-05-27T13:51:42.319003+00:00",
+  "model_name": "clv_model",
+  "model_version": "v2_realism",
+  "task_type": "regression",
+  "dataset_rows": 5000,
+  "features": [
+    "total_orders",
+    "total_spent",
+    "avg_order_value",
+    "days_since_last_order",
+    "return_rate",
+    "cart_abandon_rate",
+    "session_count_30d",
+    "pages_viewed_30d",
+    "support_tickets_count",
+    "avg_rating_given",
+    "discount_usage_rate"
+  ],
+  "target_strategy": "synthetic CLV formula with controlled business noise",
+  "target_summary": {
+    "mean": 4981.168778,
+    "median": 3149.4449999999997,
+    "min": 0.0,
+    "max": 50165.79,
+    "std": 5683.9048273074195
+  },
+  "candidate_models": [
+    "linear_regression",
+    "random_forest",
+    "gradient_boosting"
+  ],
+  "cross_validation": {
+    "folds": 5,
+    "strategy": "KFold",
+    "selection_metric": "lowest_mae_mean",
+    "results": {
+      "linear_regression": {
+        "mae_mean": 1536.6261005591434,
+        "mae_std": 50.88834885540817,
+        "rmse_mean": 2277.4441835124053,
+        "r2_mean": 0.8391280261197892,
+        "r2_std": 0.004666419345100979
+      },
+      "random_forest": {
+        "mae_mean": 1354.6603276471938,
+        "mae_std": 44.05349419163946,
+        "rmse_mean": 2032.11326103716,
+        "r2_mean": 0.8717585303955555,
+        "r2_std": 0.005398570022944557
+      },
+      "gradient_boosting": {
+        "mae_mean": 1323.8091282522548,
+        "mae_std": 35.07275830011745,
+        "rmse_mean": 1974.3119171480846,
+        "r2_mean": 0.8788343004846008,
+        "r2_std": 0.006498119376542291
+      }
+    }
+  },
+  "selected_model": "gradient_boosting",
+  "holdout_metrics": {
+    "mae": 1376.2997044142421,
+    "rmse": 2066.4438456282605,
+    "r2": 0.8822843952696444
+  },
+  "feature_importance": [
+    {
+      "feature": "total_spent",
+      "importance": 0.8701525857276984,
+      "normalized_importance": 0.8701525857276984
+    },
+    {
+      "feature": "days_since_last_order",
+      "importance": 0.05745268232548234,
+      "normalized_importance": 0.05745268232548234
+    },
+    {
+      "feature": "avg_order_value",
+      "importance": 0.029977426245669066,
+      "normalized_importance": 0.029977426245669066
+    },
+    {
+      "feature": "cart_abandon_rate",
+      "importance": 0.016280093537087724,
+      "normalized_importance": 0.016280093537087724
+    },
+    {
+      "feature": "return_rate",
+      "importance": 0.015149771764079807,
+      "normalized_importance": 0.015149771764079807
+    },
+    {
+      "feature": "pages_viewed_30d",
+      "importance": 0.003720460436922172,
+      "normalized_importance": 0.003720460436922172
+    },
+    {
+      "feature": "avg_rating_given",
+      "importance": 0.003708671498619669,
+      "normalized_importance": 0.003708671498619669
+    },
+    {
+      "feature": "total_orders",
+      "importance": 0.0017060208794530904,
+      "normalized_importance": 0.0017060208794530904
+    },
+    {
+      "feature": "discount_usage_rate",
+      "importance": 0.0009436241307096279,
+      "normalized_importance": 0.0009436241307096279
+    },
+    {
+      "feature": "support_tickets_count",
+      "importance": 0.0008433263068363439,
+      "normalized_importance": 0.0008433263068363439
+    },
+    {
+      "feature": "session_count_30d",
+      "importance": 6.533714744190939e-05,
+      "normalized_importance": 6.533714744190939e-05
+    }
+  ],
+  "clv_band_thresholds": {
+    "high_value": 10000,
+    "medium_value": 3000,
+    "low_value": 0
+  }
+}

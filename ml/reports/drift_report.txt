@@ -1,0 +1,23 @@
+Lightweight ML Drift Report
+===========================
+
+Reference rows: 5000
+Current rows: 5000
+Threshold: 20%
+Drift detected: True
+Drifted features: 2
+
+Feature drift:
+- days_since_last_order: 29.99% [DRIFT]
+- avg_order_value: 24.93% [DRIFT]
+- discount_usage_rate: 18.50% [OK]
+- return_rate: 13.06% [OK]
+- cart_abandon_rate: 0.88% [OK]
+- total_orders: 0.00% [OK]
+- total_spent: 0.00% [OK]
+- session_count_30d: 0.00% [OK]
+- pages_viewed_30d: 0.00% [OK]
+- support_tickets_count: 0.00% [OK]
+- avg_rating_given: 0.00% [OK]
+
+Generated at: 2026-05-27T13:51:52.455699+00:00

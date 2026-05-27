@@ -1,0 +1,221 @@
+{
+  "generated_at": "2026-05-27T13:51:39.137099+00:00",
+  "model_name": "churn_model",
+  "model_version": "v2_realism",
+  "task_type": "binary_classification",
+  "dataset_rows": 5000,
+  "features": [
+    "total_orders",
+    "total_spent",
+    "avg_order_value",
+    "days_since_last_order",
+    "return_rate",
+    "cart_abandon_rate",
+    "session_count_30d",
+    "pages_viewed_30d",
+    "support_tickets_count",
+    "avg_rating_given",
+    "discount_usage_rate"
+  ],
+  "target_strategy": "probabilistic synthetic churn label with controlled business noise",
+  "class_distribution": {
+    "counts": {
+      "0": 3216,
+      "1": 1784
+    },
+    "positive_rate": 0.3568
+  },
+  "candidate_models": [
+    "logistic_regression",
+    "random_forest",
+    "gradient_boosting"
+  ],
+  "cross_validation": {
+    "folds": 5,
+    "strategy": "StratifiedKFold",
+    "results": {
+      "logistic_regression": {
+        "roc_auc_mean": 0.682938831583175,
+        "roc_auc_std": 0.01501992571789824,
+        "f1_mean": 0.5364105377868539,
+        "precision_mean": 0.5034641341738424,
+        "recall_mean": 0.5739920687376074,
+        "accuracy_mean": 0.6460000000000001
+      },
+      "random_forest": {
+        "roc_auc_mean": 0.6814810384590191,
+        "roc_auc_std": 0.015079402583109806,
+        "f1_mean": 0.5329452182100862,
+        "precision_mean": 0.4939728978303786,
+        "recall_mean": 0.5790388065338495,
+        "accuracy_mean": 0.6378
+      },
+      "gradient_boosting": {
+        "roc_auc_mean": 0.6717710838362974,
+        "roc_auc_std": 0.014968838328787561,
+        "f1_mean": 0.36823793055919596,
+        "precision_mean": 0.6245781000919204,
+        "recall_mean": 0.26121707109810216,
+        "accuracy_mean": 0.6804
+      }
+    }
+  },
+  "selected_model": "logistic_regression",
+  "holdout_uncalibrated_metrics": {
+    "accuracy": 0.652,
+    "precision": 0.5111111111111111,
+    "recall": 0.5672645739910314,
+    "f1": 0.5377258235919234,
+    "roc_auc": 0.6782399660888383,
+    "brier_score": 0.21965159706682524,
+    "confusion_matrix": [
+      [
+        562,
+        242
+      ],
+      [
+        193,
+        253
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 0.7443708609271523,
+        "recall": 0.6990049751243781,
+        "f1-score": 0.7209749839640796,
+        "support": 804.0
+      },
+      "1": {
+        "precision": 0.5111111111111111,
+        "recall": 0.5672645739910314,
+        "f1-score": 0.5377258235919234,
+        "support": 446.0
+      },
+      "accuracy": 0.652,
+      "macro avg": {
+        "precision": 0.6277409860191316,
+        "recall": 0.6331347745577047,
+        "f1-score": 0.6293504037780016,
+        "support": 1250.0
+      },
+      "weighted avg": {
+        "precision": 0.6611437821927888,
+        "recall": 0.652,
+        "f1-score": 0.6555916835432943,
+        "support": 1250.0
+      }
+    }
+  },
+  "holdout_calibrated_metrics": {
+    "accuracy": 0.6768,
+    "precision": 0.63125,
+    "recall": 0.226457399103139,
+    "f1": 0.3333333333333333,
+    "roc_auc": 0.6781228387211923,
+    "brier_score": 0.20432752431476808,
+    "confusion_matrix": [
+      [
+        745,
+        59
+      ],
+      [
+        345,
+        101
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 0.6834862385321101,
+        "recall": 0.9266169154228856,
+        "f1-score": 0.7866948257655755,
+        "support": 804.0
+      },
+      "1": {
+        "precision": 0.63125,
+        "recall": 0.226457399103139,
+        "f1-score": 0.3333333333333333,
+        "support": 446.0
+      },
+      "accuracy": 0.6768,
+      "macro avg": {
+        "precision": 0.657368119266055,
+        "recall": 0.5765371572630122,
+        "f1-score": 0.5600140795494544,
+        "support": 1250.0
+      },
+      "weighted avg": {
+        "precision": 0.6648483486238532,
+        "recall": 0.6768,
+        "f1-score": 0.6249354452657514,
+        "support": 1250.0
+      }
+    }
+  },
+  "probability_calibration": {
+    "enabled": true,
+    "method": "sigmoid",
+    "note": "The deployed churn model uses calibrated probabilities to avoid overconfident 0.99/1.00 outputs."
+  },
+  "feature_importance": [
+    {
+      "feature": "days_since_last_order",
+      "importance": 0.5790521485578796,
+      "normalized_importance": 0.3715284392332631
+    },
+    {
+      "feature": "cart_abandon_rate",
+      "importance": 0.1984766064313316,
+      "normalized_importance": 0.1273455318236792
+    },
+    {
+      "feature": "pages_viewed_30d",
+      "importance": 0.18659775290925082,
+      "normalized_importance": 0.11972388337641834
+    },
+    {
+      "feature": "return_rate",
+      "importance": 0.17085484788675775,
+      "normalized_importance": 0.10962300222681716
+    },
+    {
+      "feature": "total_orders",
+      "importance": 0.1344807786366477,
+      "normalized_importance": 0.08628486038464901
+    },
+    {
+      "feature": "support_tickets_count",
+      "importance": 0.10506993449933265,
+      "normalized_importance": 0.06741442695981349
+    },
+    {
+      "feature": "avg_order_value",
+      "importance": 0.07299767762784308,
+      "normalized_importance": 0.04683639168642953
+    },
+    {
+      "feature": "session_count_30d",
+      "importance": 0.0505191129041369,
+      "normalized_importance": 0.03241381145975817
+    },
+    {
+      "feature": "avg_rating_given",
+      "importance": 0.027574962722115928,
+      "normalized_importance": 0.017692504703726367
+    },
+    {
+      "feature": "total_spent",
+      "importance": 0.017120946821410177,
+      "normalized_importance": 0.010985053188380339
+    },
+    {
+      "feature": "discount_usage_rate",
+      "importance": 0.01582272519806049,
+      "normalized_importance": 0.010152094957065235
+    }
+  ],
+  "risk_thresholds": {
+    "high_risk": 0.7,
+    "medium_risk": 0.4,
+    "low_risk": 0.0
+  }
+}
