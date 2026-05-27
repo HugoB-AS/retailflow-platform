@@ -101,6 +101,8 @@ services:
       - redpanda
     networks:
       - retailflow_network
+    volumes:
+      - ./ml/reports:/app/ml/reports:ro
 
   event_consumer:
     build:

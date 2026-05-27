@@ -3,6 +3,8 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from api.app.database import get_db
+import json
+from pathlib import Path
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -248,3 +250,32 @@ def model_reports():
             },
         }
     }
+
+REPORT_DIR = Path("ml/reports")
+
+ALLOWED_REPORTS = {
+    "model_summary": REPORT_DIR / "model_summary.json",
+    "churn": REPORT_DIR / "churn_model_report.json",
+    "clv": REPORT_DIR / "clv_model_report.json",
+    "segmentation": REPORT_DIR / "segmentation_model_report.json",
+    "drift": REPORT_DIR / "drift_report.json",
+}
+
+
+@router.get("/model-report/{report_name}")
+def model_report(report_name: str):
+    if report_name not in ALLOWED_REPORTS:
+        raise HTTPException(status_code=404, detail="Unknown model report")
+
+    report_path = ALLOWED_REPORTS[report_name]
+
+    if not report_path.exists():
+        raise HTTPException(status_code=404, detail="Model report file not found")
+
+    try:
+        return json.loads(report_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to read model report: {exc}",
+        )
