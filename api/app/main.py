@@ -8,7 +8,7 @@ from api.app.routes.products import router as products_router
 from api.app.routes.events import router as events_router
 from api.app.routes.quality import router as quality_router
 from api.app.routes.ai import router as ai_router
-
+from api.app.routes.governance import router as governance_router
 app = FastAPI(
     title="RetailFlow API",
     version="1.0.0",
@@ -22,5 +22,6 @@ app.include_router(products_router)
 app.include_router(events_router)
 app.include_router(quality_router)
 app.include_router(ai_router)
+app.include_router(governance_router)
 
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
