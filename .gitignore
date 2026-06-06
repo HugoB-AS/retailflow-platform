@@ -48,3 +48,5 @@ pgadmin_data/
 
 # Airflow runtime logs
 airflow/logs/
+
+retailflow_defense_master_guide_v1.md
