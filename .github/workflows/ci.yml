@@ -29,13 +29,13 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          pip install pytest
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install -r api/requirements.txt
-          pip install -r ml/requirements.txt
-          pip install -r pipeline/requirements.txt
-          pip install -r streamlit_app/requirements.txt
+          python -m pip install pytest
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -r api/requirements.txt
+          python -m pip install -r ml/requirements.txt
+          python -m pip install -r pipeline/requirements.txt
+          python -m pip install -r streamlit_app/requirements.txt
 
       - name: Check Python syntax
         run: |
@@ -43,7 +43,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests -q
+          python -m pytest tests -q
 
   docker-compose-validation:
     name: Docker Compose validation
