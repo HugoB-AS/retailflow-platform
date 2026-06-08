@@ -56,3 +56,26 @@ jobs:
       - name: Validate Docker Compose configuration
         run: |
           docker compose config
+
+  docker-build:
+    name: Docker image build validation
+    runs-on: ubuntu-latest
+    needs:
+      - python-tests
+      - docker-compose-validation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build FastAPI image
+        run: |
+          docker build -t retailflow-api-ci -f api/Dockerfile .
+
+      - name: Build Streamlit image
+        run: |
+          docker build -t retailflow-streamlit-ci -f streamlit_app/Dockerfile .
+
+      - name: Build event consumer image
+        run: |
+          docker build -t retailflow-consumer-ci -f pipeline/consumer/Dockerfile .
