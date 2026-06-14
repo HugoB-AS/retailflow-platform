@@ -1,3 +1,8 @@
+
+
+---
+
+
 # RetailFlow — Executive Context and Integrated Project Presentation
 
 ## End-to-End Retail Intelligence Platform
@@ -1161,6 +1166,11 @@ The next documents describe each core capability in detail:
 2. Data Architecture;
 3. Real-Time Data Pipelines;
 4. Artificial Intelligence Solution.
+
+
+
+---
+
 
 # Data Governance Plan
 
@@ -2999,6 +3009,11 @@ RetailFlow therefore demonstrates a mature approach to data governance for a mod
 
 The governance framework makes customer data more trustworthy, business intelligence more reliable, AI outputs more responsible and platform operations more auditable.
 
+
+
+---
+
+
 # Bloc 2 — Data Architecture Design
 
 # RetailFlow Data Architecture Plan
@@ -3658,117 +3673,1042 @@ This schema makes governance observable and auditable.
 
 ---
 
-## 11. Advanced Data Model Overview
+## 11. Data Modeling Architecture
 
-### 11.1 Core Business Entities
+The RetailFlow data model is designed to support both operational retail workflows and analytical decision-making.
+
+The model follows a layered approach:
+
+```text
+raw event data
+→ trusted business entities
+→ analytical features and aggregates
+→ machine learning predictions
+→ governed business dashboards
+```
+
+This design gives the platform a clear separation between:
+
+- raw ingestion;
+- operational truth;
+- analytical consumption;
+- governance and auditability;
+- AI-ready features.
+
+The data model is customer-centric because the main business questions of RetailFlow are centered on customer behavior, customer value, churn risk, consent, lifecycle and segmentation.
+
+---
+
+### 11.1 Conceptual Data Domains
+
+The data model is organized into seven business domains.
+
+| Domain | Main Tables | Purpose |
+|---|---|---|
+| Customer domain | `core.customers`, `governance.customer_consents` | Identify customers, statuses and consent context |
+| Product domain | `core.products`, `core.suppliers` | Manage catalog and supplier relationships |
+| Commerce domain | `core.orders`, `core.order_items`, `core.payments`, `core.shipments`, `core.returns` | Represent the complete transaction lifecycle |
+| Interaction domain | `raw.events`, `core.sessions`, `core.reviews`, `core.support_tickets` | Capture behavioral and service interactions |
+| Analytics domain | `analytics.customer_features`, `analytics.daily_sales` | Store derived indicators and BI-ready aggregates |
+| AI domain | `analytics.ml_predictions`, `analytics.customer_segments` | Store model outputs, customer intelligence and segmentation |
+| Governance domain | `governance.data_retention_policies`, `governance.retention_actions_log`, `governance.dead_letter_events`, `governance.data_quality_logs` | Support privacy, retention, auditability and data quality |
+
+This domain structure allows RetailFlow to cover operational, analytical, governance and AI use cases in a single coherent PostgreSQL architecture.
+
+---
+
+### 11.2 Complete Implemented Entity Relationship Diagram
+
+The following ERD describes the complete implemented RetailFlow relational model.
+
+The diagram uses logical entity names to make the relationships readable. The physical implementation is organized across PostgreSQL schemas: `raw`, `core`, `analytics` and `governance`.
 
 ```mermaid
 erDiagram
-    CUSTOMERS ||--o{ ORDERS : places
-    ORDERS ||--o{ ORDER_ITEMS : contains
-    PRODUCTS ||--o{ ORDER_ITEMS : sold_as
-    ORDERS ||--o{ PAYMENTS : paid_by
-    ORDERS ||--o{ SHIPMENTS : shipped_by
-    ORDERS ||--o{ RETURNS : may_generate
-    CUSTOMERS ||--o{ SESSIONS : creates
-    CUSTOMERS ||--o{ SUPPORT_TICKETS : opens
-    PRODUCTS ||--o{ REVIEWS : receives
-    CUSTOMERS ||--o{ REVIEWS : writes
+    CORE_CUSTOMERS {
+        string customer_id PK
+        string country
+        string city
+        string loyalty_status
+        string account_status
+        boolean marketing_consent
+        boolean analytics_consent
+        boolean personalization_consent
+        boolean is_anonymized
+        timestamp created_at
+    }
+
+    GOVERNANCE_CUSTOMER_CONSENTS {
+        string consent_id PK
+        string customer_id FK
+        boolean marketing_consent
+        boolean analytics_consent
+        boolean personalization_consent
+        timestamp consent_timestamp
+        string consent_source
+    }
+
+    CORE_SUPPLIERS {
+        string supplier_id PK
+        string supplier_name
+        string country
+        string reliability_tier
+    }
+
+    CORE_PRODUCTS {
+        string product_id PK
+        string supplier_id FK
+        string product_name
+        string category
+        numeric price
+        numeric margin_rate
+        boolean is_active
+    }
+
+    CORE_ORDERS {
+        string order_id PK
+        string customer_id FK
+        timestamp order_timestamp
+        string order_status
+        numeric total_amount
+        string currency
+    }
+
+    CORE_ORDER_ITEMS {
+        string order_item_id PK
+        string order_id FK
+        string product_id FK
+        int quantity
+        numeric unit_price
+        numeric line_amount
+    }
+
+    CORE_PAYMENTS {
+        string payment_id PK
+        string order_id FK
+        string payment_method
+        string payment_status
+        numeric payment_amount
+        timestamp payment_timestamp
+    }
+
+    CORE_SHIPMENTS {
+        string shipment_id PK
+        string order_id FK
+        string shipment_status
+        string carrier
+        timestamp shipped_at
+        timestamp delivered_at
+    }
+
+    CORE_RETURNS {
+        string return_id PK
+        string order_id FK
+        string customer_id FK
+        string product_id FK
+        string return_reason
+        numeric refund_amount
+        timestamp return_timestamp
+    }
+
+    CORE_SESSIONS {
+        string session_id PK
+        string customer_id FK
+        timestamp session_start
+        timestamp session_end
+        string device_type
+        string traffic_source
+    }
+
+    RAW_EVENTS {
+        string event_id PK
+        string session_id FK
+        string customer_id FK
+        string product_id FK
+        string event_type
+        timestamp event_timestamp
+        json payload
+    }
+
+    CORE_REVIEWS {
+        string review_id PK
+        string customer_id FK
+        string product_id FK
+        int rating
+        string review_text
+        timestamp review_timestamp
+    }
+
+    CORE_SUPPORT_TICKETS {
+        string ticket_id PK
+        string customer_id FK
+        string ticket_category
+        string ticket_status
+        string priority
+        timestamp created_at
+        timestamp resolved_at
+    }
+
+    ANALYTICS_CUSTOMER_FEATURES {
+        string customer_id PK
+        int total_orders
+        numeric total_spent
+        numeric avg_order_value
+        int days_since_last_order
+        numeric return_rate
+        numeric cart_abandon_rate
+        int session_count_30d
+        int pages_viewed_30d
+        int support_tickets_count
+        string preferred_category
+    }
+
+    ANALYTICS_ML_PREDICTIONS {
+        string prediction_id PK
+        string customer_id FK
+        string model_name
+        string model_version
+        numeric prediction_value
+        string prediction_label
+        timestamp prediction_timestamp
+    }
+
+    ANALYTICS_CUSTOMER_SEGMENTS {
+        string segment_id PK
+        string customer_id FK
+        string segment_label
+        string segment_description
+        string model_version
+        timestamp assigned_at
+    }
+
+    ANALYTICS_DAILY_SALES {
+        date sales_date PK
+        string category
+        int orders_count
+        int items_sold
+        numeric gross_revenue
+        numeric net_revenue
+        numeric avg_order_value
+        int returns_count
+    }
+
+    GOVERNANCE_DATA_RETENTION_POLICIES {
+        string policy_id PK
+        string data_domain
+        string retention_period
+        string retention_action
+        boolean is_active
+    }
+
+    GOVERNANCE_RETENTION_ACTIONS_LOG {
+        string action_id PK
+        string policy_id FK
+        string customer_id FK
+        string action_type
+        string action_status
+        timestamp action_timestamp
+    }
+
+    GOVERNANCE_DEAD_LETTER_EVENTS {
+        string dead_letter_id PK
+        string event_id
+        string event_type
+        string rejection_reason
+        string raw_payload
+        timestamp created_at
+    }
+
+    GOVERNANCE_DATA_QUALITY_LOGS {
+        string log_id PK
+        string dead_letter_id FK
+        string rule_id
+        string rule_name
+        string severity
+        string action
+        timestamp created_at
+    }
+
+    CORE_CUSTOMERS ||--o{ GOVERNANCE_CUSTOMER_CONSENTS : has_consent_history
+    CORE_CUSTOMERS ||--o{ CORE_ORDERS : places
+    CORE_CUSTOMERS ||--o{ CORE_SESSIONS : creates
+    CORE_CUSTOMERS ||--o{ RAW_EVENTS : generates
+    CORE_CUSTOMERS ||--o{ CORE_REVIEWS : writes
+    CORE_CUSTOMERS ||--o{ CORE_SUPPORT_TICKETS : opens
+    CORE_CUSTOMERS ||--o{ CORE_RETURNS : requests
+    CORE_CUSTOMERS ||--|| ANALYTICS_CUSTOMER_FEATURES : summarized_as
+    CORE_CUSTOMERS ||--o{ ANALYTICS_ML_PREDICTIONS : receives
+    CORE_CUSTOMERS ||--o{ ANALYTICS_CUSTOMER_SEGMENTS : assigned_to
+    CORE_CUSTOMERS ||--o{ GOVERNANCE_RETENTION_ACTIONS_LOG : affected_by
+
+    CORE_SUPPLIERS ||--o{ CORE_PRODUCTS : supplies
+    CORE_PRODUCTS ||--o{ CORE_ORDER_ITEMS : sold_in
+    CORE_PRODUCTS ||--o{ RAW_EVENTS : viewed_or_used_in
+    CORE_PRODUCTS ||--o{ CORE_REVIEWS : receives
+    CORE_PRODUCTS ||--o{ CORE_RETURNS : returned_as
+
+    CORE_ORDERS ||--o{ CORE_ORDER_ITEMS : contains
+    CORE_ORDERS ||--o{ CORE_PAYMENTS : paid_by
+    CORE_ORDERS ||--o{ CORE_SHIPMENTS : shipped_by
+    CORE_ORDERS ||--o{ CORE_RETURNS : may_generate
+
+    CORE_SESSIONS ||--o{ RAW_EVENTS : contains
+
+    GOVERNANCE_DATA_RETENTION_POLICIES ||--o{ GOVERNANCE_RETENTION_ACTIONS_LOG : triggers
+    GOVERNANCE_DEAD_LETTER_EVENTS ||--o{ GOVERNANCE_DATA_QUALITY_LOGS : explains
 ```
 
-This model reflects a realistic multi-category e-commerce business.
+This ERD shows that RetailFlow is not a flat dataset.
 
-It supports transactional, behavioral and customer relationship analysis.
+It is a normalized and governed relational model that supports:
+
+- customer analytics;
+- commerce analytics;
+- event streaming;
+- quality control;
+- AI features;
+- retention and consent auditability;
+- observability of data failures.
 
 ---
 
-### 11.2 Analytical Entities
+### 11.3 Relationship Explanation
+
+| Relationship | Meaning |
+|---|---|
+| `customers → orders` | A customer can place multiple orders |
+| `orders → order_items` | Each order contains one or more products |
+| `products → order_items` | A product can appear in many order lines |
+| `orders → payments` | An order can have one or more payment records |
+| `orders → shipments` | An order can be associated with shipment tracking |
+| `orders → returns` | An order can generate return records |
+| `customers → sessions` | A customer can create multiple browsing sessions |
+| `sessions → events` | A session contains a sequence of customer events |
+| `customers → events` | Events are linked to customers when available |
+| `products → events` | Product-level events support product analytics |
+| `customers → reviews` | A customer can write reviews |
+| `products → reviews` | A product can receive reviews |
+| `customers → support_tickets` | A customer can open support cases |
+| `customers → customer_features` | Customer features summarize behavioral and transactional history |
+| `customers → ml_predictions` | AI predictions are generated at customer level |
+| `customers → customer_segments` | Segments assign customers to business-readable groups |
+| `customers → customer_consents` | Consent history is attached to the customer profile |
+| `retention_policies → retention_actions_log` | Retention actions are executed according to governance policies |
+| `dead_letter_events → data_quality_logs` | Rejected events are linked to the quality rules that failed |
+
+---
+
+### 11.4 Core Entity Descriptions
+
+#### Customers
+
+`core.customers` is the central master entity of the platform.
+
+It stores customer identity, geographic context, loyalty status, account status and consent flags.
+
+Primary use cases:
+
+- customer portfolio analysis;
+- churn prediction;
+- CLV prediction;
+- consent-aware analytics;
+- retention and anonymization workflows.
+
+Primary key:
+
+```text
+customer_id
+```
+
+Main relationships:
+
+```text
+customers → orders
+customers → sessions
+customers → events
+customers → customer_features
+customers → ml_predictions
+customers → customer_segments
+customers → customer_consents
+```
+
+---
+
+#### Products
+
+`core.products` stores the product catalog.
+
+It connects sales, events, reviews, returns and supplier relationships.
+
+Primary use cases:
+
+- sales analysis;
+- category performance;
+- product interaction tracking;
+- return analysis;
+- product-level customer journey analysis.
+
+Primary key:
+
+```text
+product_id
+```
+
+Main relationships:
+
+```text
+products → order_items
+products → reviews
+products → returns
+products → events
+suppliers → products
+```
+
+---
+
+#### Orders and Order Items
+
+`core.orders` represents the order header.
+
+`core.order_items` represents product-level order lines.
+
+This split is important because one order can contain several products.
+
+Primary use cases:
+
+- revenue analytics;
+- average order value;
+- product sales performance;
+- customer purchase history;
+- CLV feature engineering.
+
+Primary keys:
+
+```text
+order_id
+order_item_id
+```
+
+Main relationships:
+
+```text
+customers → orders
+orders → order_items
+products → order_items
+orders → payments
+orders → shipments
+orders → returns
+```
+
+---
+
+#### Payments
+
+`core.payments` stores payment information attached to orders.
+
+Primary use cases:
+
+- payment validation;
+- payment status tracking;
+- transaction completeness checks;
+- revenue reconciliation.
+
+---
+
+#### Shipments
+
+`core.shipments` stores delivery information.
+
+Primary use cases:
+
+- delivery monitoring;
+- fulfillment tracking;
+- operational analysis;
+- customer experience analysis.
+
+---
+
+#### Returns
+
+`core.returns` stores returned products and refund information.
+
+Primary use cases:
+
+- return rate computation;
+- customer dissatisfaction signals;
+- product quality analysis;
+- churn feature engineering.
+
+---
+
+#### Sessions and Events
+
+`core.sessions` describes browsing sessions.
+
+`raw.events` stores event-level customer activity.
+
+This separation supports both session-level analysis and event-level replay.
+
+Primary use cases:
+
+- behavioral analytics;
+- cart abandonment analysis;
+- product view analysis;
+- funnel tracking;
+- real-time pipeline validation.
+
+---
+
+#### Reviews and Support Tickets
+
+`core.reviews` captures customer feedback on products.
+
+`core.support_tickets` captures service interactions.
+
+Primary use cases:
+
+- satisfaction analysis;
+- customer experience monitoring;
+- support load analysis;
+- churn risk feature engineering.
+
+---
+
+#### Customer Features
+
+`analytics.customer_features` is the customer-level feature table used by machine learning and dashboards.
+
+It combines transactional, behavioral and service signals.
+
+Examples:
+
+- total orders;
+- total spent;
+- days since last order;
+- return rate;
+- cart abandonment rate;
+- support ticket count;
+- preferred category.
+
+---
+
+#### ML Predictions and Segments
+
+`analytics.ml_predictions` stores churn and CLV outputs.
+
+`analytics.customer_segments` stores segmentation assignments.
+
+These tables make the ML layer queryable and auditable through SQL and FastAPI.
+
+---
+
+#### Governance Tables
+
+The governance schema contains:
+
+- consent history;
+- retention policies;
+- retention action logs;
+- dead-letter events;
+- data quality logs.
+
+These entities make governance measurable and traceable.
+
+---
+
+## 12. Implemented Star Schema Architecture
+
+The RetailFlow relational model is normalized for consistency and governance.
+
+On top of this normalized model, I implemented analytical structures that behave like star schemas for reporting, dashboards and AI features.
+
+In this document, I use analytical names such as `fact_sales`, `fact_customer_activity` and `fact_ai_predictions` to describe the star schema design.
+
+In the current PostgreSQL implementation, these fact structures are represented by existing physical tables and aggregates:
+
+| Analytical Fact Name | Implemented Physical Representation |
+|---|---|
+| `fact_sales` | `core.orders`, `core.order_items`, `core.payments`, `core.returns`, `analytics.daily_sales` |
+| `fact_customer_activity` | `raw.events`, `core.sessions`, `analytics.customer_features` |
+| `fact_ai_predictions` | `analytics.ml_predictions`, `analytics.customer_segments`, `analytics.customer_features` |
+
+This means that the star schemas are not only theoretical.
+
+They are implemented through the current PostgreSQL tables and used by dashboards, API endpoints and ML workflows.
+
+---
+
+### 12.1 Sales Analytics Star Schema
+
+The sales star schema is centered on order and order line transactions.
+
+It supports revenue analysis, category performance, product performance and customer value analysis.
 
 ```mermaid
 erDiagram
-    CUSTOMERS ||--|| CUSTOMER_FEATURES : summarized_as
-    CUSTOMER_FEATURES ||--o{ ML_PREDICTIONS : produces
-    CUSTOMERS ||--o{ ML_PREDICTIONS : receives
-    CUSTOMERS ||--o{ CUSTOMER_SEGMENTS : assigned_to
-    ORDERS ||--o{ DAILY_SALES : aggregated_into
+    FACT_SALES {
+        string order_id FK
+        string order_item_id FK
+        string customer_id FK
+        string product_id FK
+        string supplier_id FK
+        date sales_date FK
+        int quantity
+        numeric unit_price
+        numeric line_amount
+        numeric order_total_amount
+        numeric refund_amount
+        boolean is_returned
+    }
+
+    DIM_CUSTOMER {
+        string customer_id PK
+        string country
+        string city
+        string loyalty_status
+        string account_status
+        boolean analytics_consent
+    }
+
+    DIM_PRODUCT {
+        string product_id PK
+        string product_name
+        string category
+        numeric price
+        numeric margin_rate
+        boolean is_active
+    }
+
+    DIM_SUPPLIER {
+        string supplier_id PK
+        string supplier_name
+        string country
+        string reliability_tier
+    }
+
+    DIM_DATE {
+        date date_key PK
+        int year
+        int quarter
+        int month
+        int week
+        int day
+        string day_name
+    }
+
+    DIM_CATEGORY {
+        string category PK
+        string category_group
+        string category_description
+    }
+
+    FACT_SALES }o--|| DIM_CUSTOMER : customer_id
+    FACT_SALES }o--|| DIM_PRODUCT : product_id
+    FACT_SALES }o--|| DIM_SUPPLIER : supplier_id
+    FACT_SALES }o--|| DIM_DATE : sales_date
+    FACT_SALES }o--|| DIM_CATEGORY : category
 ```
 
-The analytical layer translates operational data into decision-support assets.
+Implementation mapping:
+
+| Star Schema Object | Implemented Tables |
+|---|---|
+| `fact_sales` | `core.orders`, `core.order_items`, `core.payments`, `core.returns`, `analytics.daily_sales` |
+| `dim_customer` | `core.customers` |
+| `dim_product` | `core.products` |
+| `dim_supplier` | `core.suppliers` |
+| `dim_date` | derived from order timestamps and aggregation dates |
+| `dim_category` | product category attribute in `core.products` |
+
+Main measures:
+
+| Measure | Meaning |
+|---|---|
+| `orders_count` | Number of orders |
+| `items_sold` | Number of product units sold |
+| `gross_revenue` | Revenue before returns |
+| `net_revenue` | Revenue after returns |
+| `avg_order_value` | Average value per order |
+| `returns_count` | Number of returned items or orders |
+| `return_rate` | Ratio of returns compared with purchases |
+
+Business questions supported:
+
+- What are the highest revenue categories?
+- Which customer groups generate the most sales?
+- Which products have high sales but also high returns?
+- How does daily revenue evolve?
+- Which suppliers contribute most to revenue?
 
 ---
 
-### 11.3 Governance Entities
+### 12.2 Customer Activity Star Schema
+
+The customer activity star schema is centered on event-level behavior.
+
+It supports funnel monitoring, product engagement, browsing analysis and behavioral feature engineering.
 
 ```mermaid
 erDiagram
-    CUSTOMERS ||--o{ CUSTOMER_CONSENTS : has
-    DATA_RETENTION_POLICIES ||--o{ RETENTION_ACTIONS_LOG : triggers
-    CUSTOMERS ||--o{ RETENTION_ACTIONS_LOG : affected_by
-    DEAD_LETTER_EVENTS ||--o{ DATA_QUALITY_LOGS : related_to
+    FACT_CUSTOMER_ACTIVITY {
+        string event_id PK
+        string customer_id FK
+        string session_id FK
+        string product_id FK
+        date event_date FK
+        string event_type FK
+        string device_type FK
+        string traffic_source FK
+        int event_count
+        int page_view_flag
+        int product_view_flag
+        int cart_action_flag
+        int purchase_flag
+    }
+
+    DIM_CUSTOMER {
+        string customer_id PK
+        string country
+        string city
+        string loyalty_status
+        boolean analytics_consent
+    }
+
+    DIM_PRODUCT {
+        string product_id PK
+        string product_name
+        string category
+        numeric price
+    }
+
+    DIM_DATE {
+        date date_key PK
+        int year
+        int month
+        int week
+        int day
+    }
+
+    DIM_EVENT_TYPE {
+        string event_type PK
+        string event_family
+        string funnel_stage
+    }
+
+    DIM_SESSION {
+        string session_id PK
+        string device_type
+        string traffic_source
+        timestamp session_start
+        timestamp session_end
+    }
+
+    FACT_CUSTOMER_ACTIVITY }o--|| DIM_CUSTOMER : customer_id
+    FACT_CUSTOMER_ACTIVITY }o--|| DIM_PRODUCT : product_id
+    FACT_CUSTOMER_ACTIVITY }o--|| DIM_DATE : event_date
+    FACT_CUSTOMER_ACTIVITY }o--|| DIM_EVENT_TYPE : event_type
+    FACT_CUSTOMER_ACTIVITY }o--|| DIM_SESSION : session_id
 ```
 
-The governance model connects data usage, retention and quality to auditable records.
+Implementation mapping:
+
+| Star Schema Object | Implemented Tables |
+|---|---|
+| `fact_customer_activity` | `raw.events`, `core.sessions` |
+| `dim_customer` | `core.customers` |
+| `dim_product` | `core.products` |
+| `dim_date` | derived from `event_timestamp` |
+| `dim_event_type` | event type values validated by the consumer |
+| `dim_session` | `core.sessions` |
+
+Main measures:
+
+| Measure | Meaning |
+|---|---|
+| `event_count` | Number of customer events |
+| `session_count` | Number of sessions |
+| `page_views` | Number of page views |
+| `product_views` | Number of product views |
+| `add_to_cart_count` | Number of add-to-cart actions |
+| `checkout_started_count` | Number of checkout starts |
+| `purchase_count` | Number of purchase events |
+| `cart_abandon_rate` | Behavioral signal used for customer intelligence |
+
+Business questions supported:
+
+- Which event types occur most frequently?
+- Where do customers abandon the journey?
+- Which products generate views but not purchases?
+- Which customers have high activity but low conversion?
+- Are incoming events valid and complete?
 
 ---
 
-## 12. Main Tables and Domains
+### 12.3 AI Predictions Star Schema
 
-### 12.1 Customer Domain
+The AI predictions star schema is centered on model outputs.
 
-| Table | Schema | Purpose |
+It supports AI monitoring, customer prioritization, segmentation analysis and model explainability.
+
+```mermaid
+erDiagram
+    FACT_AI_PREDICTIONS {
+        string prediction_id PK
+        string customer_id FK
+        string model_name FK
+        string model_version FK
+        date prediction_date FK
+        string segment_id FK
+        numeric prediction_value
+        string prediction_label
+        timestamp prediction_timestamp
+    }
+
+    DIM_CUSTOMER {
+        string customer_id PK
+        string country
+        string city
+        string loyalty_status
+        boolean analytics_consent
+        boolean personalization_consent
+    }
+
+    DIM_SEGMENT {
+        string segment_id PK
+        string segment_label
+        string segment_description
+        string model_version
+    }
+
+    DIM_MODEL {
+        string model_name PK
+        string model_type
+        string target
+        string model_version
+    }
+
+    DIM_DATE {
+        date date_key PK
+        int year
+        int month
+        int week
+        int day
+    }
+
+    FACT_AI_PREDICTIONS }o--|| DIM_CUSTOMER : customer_id
+    FACT_AI_PREDICTIONS }o--|| DIM_SEGMENT : segment_id
+    FACT_AI_PREDICTIONS }o--|| DIM_MODEL : model_name
+    FACT_AI_PREDICTIONS }o--|| DIM_DATE : prediction_date
+```
+
+Implementation mapping:
+
+| Star Schema Object | Implemented Tables |
+|---|---|
+| `fact_ai_predictions` | `analytics.ml_predictions` |
+| `dim_customer` | `core.customers` |
+| `dim_segment` | `analytics.customer_segments` |
+| `dim_model` | model metadata from `ml/reports/*.json` and prediction fields |
+| `dim_date` | derived from `prediction_timestamp` |
+
+Main measures:
+
+| Measure | Meaning |
+|---|---|
+| `prediction_value` | Churn probability or predicted CLV value |
+| `predictions_count` | Number of generated predictions |
+| `avg_prediction_value` | Average model output by label or segment |
+| `high_risk_customers_count` | Number of customers with high churn risk |
+| `high_value_customers_count` | Number of customers with high CLV band |
+| `segment_customers_count` | Number of customers assigned to each segment |
+
+Business questions supported:
+
+- Which customers have the highest churn risk?
+- Which customers have the highest predicted CLV?
+- Which segments contain the highest-value customers?
+- Are predictions distributed consistently?
+- Which model version generated each prediction?
+
+---
+
+### 12.4 Dimension Strategy
+
+The dimension layer is designed to make analytics readable and reusable.
+
+| Dimension | Source | Purpose |
 |---|---|---|
-| `customers` | `core` | Customer master records |
-| `customer_consents` | `governance` | Consent history and consent indicators |
-| `customer_features` | `analytics` | Customer-level analytical features |
-| `customer_segments` | `analytics` | Customer segment assignments |
-| `ml_predictions` | `analytics` | Churn and CLV predictions |
+| `dim_customer` | `core.customers` | Customer segmentation, geography, loyalty and consent filtering |
+| `dim_product` | `core.products` | Product and category analysis |
+| `dim_date` | timestamps in operational and analytical tables | Time-based reporting |
+| `dim_category` | `core.products.category` | Category-level performance |
+| `dim_country` | `core.customers.country`, `core.suppliers.country` | Geographic analysis |
+| `dim_supplier` | `core.suppliers` | Supplier performance |
+| `dim_segment` | `analytics.customer_segments` | Segment-level customer intelligence |
+| `dim_event_type` | event validation rules and `raw.events.event_type` | Funnel and behavioral analysis |
+| `dim_model` | ML reports and prediction metadata | Model monitoring and version traceability |
+
+This strategy avoids duplicating business definitions across dashboards and APIs.
 
 ---
 
-### 12.2 Product Domain
+### 12.5 Granularity and Analytical Grain
 
-| Table | Schema | Purpose |
+Each fact structure has a clear grain.
+
+| Fact | Grain | Why It Matters |
 |---|---|---|
-| `products` | `core` | Product catalog |
-| `suppliers` | `core` | Supplier data |
-| `reviews` | `core` | Product and customer feedback |
+| `fact_sales` | one order item / sales line | Allows product, customer, category and supplier analysis |
+| `fact_customer_activity` | one customer event | Allows funnel analysis and behavioral monitoring |
+| `fact_ai_predictions` | one model prediction per customer, model and timestamp | Allows model versioning, monitoring and traceability |
+
+Defining grain is important because it prevents ambiguous metrics.
+
+For example:
+
+- revenue belongs to sales facts;
+- event counts belong to activity facts;
+- churn probability belongs to AI prediction facts.
+
+This separation makes dashboards easier to validate and maintain.
 
 ---
 
-### 12.3 Sales Domain
+### 12.6 Star Schema Usage in RetailFlow
 
-| Table | Schema | Purpose |
-|---|---|---|
-| `orders` | `core` | Customer orders |
-| `order_items` | `core` | Items inside orders |
-| `payments` | `core` | Payment records |
-| `shipments` | `core` | Delivery data |
-| `returns` | `core` | Return and refund data |
-| `daily_sales` | `analytics` | Daily aggregated sales metrics |
+The star schema design is used by several platform components.
 
----
-
-### 12.4 Event Domain
-
-| Table | Schema | Purpose |
-|---|---|---|
-| `events` | `raw` | Valid customer events |
-| `dead_letter_events` | `governance` | Rejected events |
-| `data_quality_logs` | `governance` | Quality rule failures |
+| Component | Star Schema Usage |
+|---|---|
+| Streamlit Platform Overview | sales, customers, events and monitoring indicators |
+| Streamlit Customer Intelligence | customer features, predictions and segments |
+| Streamlit Data Quality | activity validation and rejected event analysis |
+| Streamlit AI Monitoring | AI prediction and model report analysis |
+| FastAPI `/analytics` | aggregated analytical data |
+| FastAPI `/ai` | predictions, segments and model reports |
+| Airflow `daily_sales_aggregation` | sales fact aggregation |
+| Airflow `ml_retraining` | feature generation and prediction refresh |
 
 ---
 
-### 12.5 Governance Domain
+## 13. Data Modeling Design Decisions
 
-| Table | Schema | Purpose |
-|---|---|---|
-| `data_retention_policies` | `governance` | Retention rules |
-| `retention_actions_log` | `governance` | Retention and anonymization audit trail |
-| `customer_consents` | `governance` | Consent records |
+### 13.1 Normalized Core Model
+
+The `core` schema is normalized to preserve data consistency.
+
+This is important because orders, products, payments, shipments, returns and customers have different lifecycles.
+
+For example:
+
+```text
+one order
+→ many order items
+→ one product per order line
+```
+
+A flat table would duplicate product and customer attributes across order lines.
+
+The normalized model avoids this duplication.
 
 ---
 
-## 13. Data Flow Architecture
+### 13.2 Analytical Layer for Decision-Making
+
+The `analytics` schema stores derived data that is optimized for analysis and ML consumption.
+
+Examples:
+
+- `analytics.customer_features`;
+- `analytics.daily_sales`;
+- `analytics.ml_predictions`;
+- `analytics.customer_segments`.
+
+This avoids forcing dashboards and ML scripts to recompute expensive metrics from raw transactional tables every time.
+
+---
+
+### 13.3 Governance Layer for Accountability
+
+The `governance` schema stores consent, retention, quality and audit records.
+
+This design supports privacy and compliance use cases directly in the data architecture.
+
+Examples:
+
+```text
+governance.customer_consents
+governance.data_retention_policies
+governance.retention_actions_log
+governance.dead_letter_events
+governance.data_quality_logs
+```
+
+---
+
+### 13.4 Event Layer for Traceability
+
+The `raw` schema stores customer events.
+
+This layer supports:
+
+- replay;
+- debugging;
+- behavioral analysis;
+- feature engineering;
+- data quality investigation.
+
+Valid events are stored in `raw.events`.
+
+Invalid events are isolated in `governance.dead_letter_events`.
+
+---
+
+### 13.5 AI-Ready Modeling
+
+The data model is designed to support machine learning without requiring a separate data platform.
+
+Customer intelligence is built from:
+
+```text
+core.customers
+core.orders
+core.order_items
+core.returns
+core.reviews
+core.support_tickets
+core.sessions
+raw.events
+analytics.customer_features
+```
+
+Model outputs are stored back into PostgreSQL:
+
+```text
+analytics.ml_predictions
+analytics.customer_segments
+```
+
+This makes AI outputs accessible through SQL, FastAPI and Streamlit.
+
+---
+
+### 13.6 Architecture Objectives Achieved by the Data Model
+
+| Objective | Data Modeling Response |
+|---|---|
+| Support operational retail data | Normalized `core` schema |
+| Support event-driven ingestion | `raw.events` and streaming consumer |
+| Support analytics | `analytics.daily_sales` and customer features |
+| Support AI | ML features, predictions and segments |
+| Support governance | consent, retention, quality and dead-letter tables |
+| Support auditability | retention logs and quality logs |
+| Support dashboarding | star-schema-oriented facts and dimensions |
+| Support scalability | separated domains and reusable analytical tables |
+
+---
+
+## 14. Data Flow Architecture
 
 ### 13.1 Historical Data Flow
 
@@ -3856,7 +4796,7 @@ This flow monitors the operational state of the platform.
 
 ---
 
-## 14. API Architecture
+## 15. API Architecture
 
 FastAPI is the central access layer for Streamlit and external clients.
 
@@ -3894,7 +4834,7 @@ Main endpoint groups:
 
 ---
 
-## 15. Streamlit Architecture
+## 16. Streamlit Architecture
 
 Streamlit is structured as a multi-page platform.
 
@@ -3924,7 +4864,7 @@ This UI architecture supports both business storytelling and technical proof.
 
 ---
 
-## 16. Orchestration Architecture
+## 17. Orchestration Architecture
 
 Airflow is used to orchestrate recurring platform workflows.
 
@@ -3948,7 +4888,7 @@ flowchart TB
 
 ---
 
-## 17. Airflow DAG Design
+## 18. Airflow DAG Design
 
 ### 17.1 daily_sales_aggregation
 
@@ -4021,7 +4961,7 @@ This DAG is a central proof that governance policies are operationalized.
 
 ---
 
-## 18. Machine Learning Architecture
+## 19. Machine Learning Architecture
 
 The ML architecture is integrated with the data platform.
 
@@ -4061,7 +5001,7 @@ It is integrated into:
 
 ---
 
-## 19. Observability Architecture
+## 20. Observability Architecture
 
 RetailFlow includes service and database observability.
 
@@ -4088,7 +5028,7 @@ Main monitoring assets:
 
 ---
 
-## 20. Monitoring and Alerting
+## 21. Monitoring and Alerting
 
 The architecture includes documented alerting rules.
 
@@ -4106,40 +5046,54 @@ These alerts show a production-oriented approach to platform operations.
 
 ---
 
-## 21. CI/CD Architecture
+## 22. CI/CD Architecture
 
 I implemented GitHub Actions as the CI/CD automation layer.
 
-The CI/CD pipeline is designed to validate the platform before changes are integrated.
+The CI/CD pipeline validates the platform before changes are integrated into the main development branch.
 
 ```mermaid
 flowchart LR
     Dev[Developer Push / Pull Request] --> GitHub[GitHub Actions]
     GitHub --> Install[Install Dependencies]
-    Install --> Lint[Code Quality Checks]
-    Lint --> Tests[Run Tests]
-    Tests --> Compose[Validate Docker Compose]
-    Compose --> Build[Build Docker Images]
-    Build --> Smoke[Smoke Checks]
-    Smoke --> Ready[Deployment Ready]
+    Install --> Syntax[Python Syntax Validation]
+    Syntax --> Tests[Automated Test Suite]
+    Tests --> Compose[Docker Compose Configuration Validation]
+    Compose --> Build[Docker Image Build Validation]
+    Build --> Ready[Release Candidate Ready]
 ```
 
-The pipeline supports:
+The implemented CI/CD pipeline includes:
 
-- Python dependency setup;
-- unit tests;
-- API tests;
-- ML tests;
-- data quality tests;
-- Docker Compose validation;
-- container build validation;
-- smoke checks.
+| Stage | Purpose |
+|---|---|
+| Dependency installation | Install project, API, ML, pipeline and Streamlit dependencies |
+| Python syntax validation | Compile Python modules to detect syntax errors |
+| Automated tests | Run API, data quality and ML artifact tests |
+| Docker Compose validation | Validate the deployment configuration |
+| Docker image build validation | Build FastAPI, Streamlit and event consumer images |
 
-This CI/CD design ensures that the platform is not only functional locally but also validated automatically before release.
+The current CI/CD workflow validates:
 
----
+```text
+.github/workflows/ci.yml
+api/Dockerfile
+streamlit_app/Dockerfile
+pipeline/consumer/Dockerfile
+docker-compose.yml
+tests/test_api.py
+tests/test_data_quality.py
+tests/test_ml.py
+```
 
-## 22. Infrastructure as Code Approach
+This creates a deployment-readiness gate.
+
+At the current stage, the pipeline validates the application, tests and container builds.
+
+The remaining production evolution is automated deployment to a target environment such as Kubernetes or a managed cloud platform.
+
+
+## 23. Infrastructure as Code Approach
 
 RetailFlow uses Docker Compose as the main infrastructure definition.
 
@@ -4163,7 +5117,7 @@ Future infrastructure expansion can include:
 
 ---
 
-## 23. Cloud Target Architecture
+## 24. Cloud Target Architecture
 
 The current platform is local and containerized.
 
@@ -4210,7 +5164,7 @@ Potential migration strategy:
 
 ---
 
-## 24. Kubernetes Roadmap
+## 25. Kubernetes Roadmap
 
 The `/k8s` folder is part of the future deployment roadmap.
 
@@ -4249,7 +5203,7 @@ It is part of the scalability and production-readiness roadmap.
 
 ---
 
-## 25. Security Architecture
+## 26. Security Architecture
 
 RetailFlow includes several security-oriented design decisions.
 
@@ -4279,7 +5233,7 @@ Future security controls:
 
 ---
 
-## 26. Data Governance Integration
+## 27. Data Governance Integration
 
 Data architecture and governance are tightly connected.
 
@@ -4300,7 +5254,7 @@ This design ensures that the architecture supports compliance and accountability
 
 ---
 
-## 27. Data Quality Integration
+## 28. Data Quality Integration
 
 Data quality is integrated into the pipeline architecture.
 
@@ -4326,7 +5280,7 @@ They are:
 
 ---
 
-## 28. Architecture Trade-Offs
+## 29. Architecture Trade-Offs
 
 ### 28.1 Docker Compose vs Kubernetes
 
@@ -4395,7 +5349,7 @@ FastAPI was chosen because it provides:
 
 ---
 
-## 29. Architecture Evaluation Against Requirements
+## 30. Architecture Evaluation Against Requirements
 
 | Requirement | Architecture Response |
 |---|---|
@@ -4411,7 +5365,7 @@ FastAPI was chosen because it provides:
 
 ---
 
-## 30. Architecture Strengths
+## 31. Architecture Strengths
 
 The main strengths of the architecture are:
 
@@ -4428,7 +5382,7 @@ The main strengths of the architecture are:
 
 ---
 
-## 31. Architecture Limitations
+## 32. Architecture Limitations
 
 The current architecture does not yet include:
 
@@ -4445,7 +5399,7 @@ These limitations are expected at the current platform stage and are addressed i
 
 ---
 
-## 32. Architecture Roadmap
+## 33. Architecture Roadmap
 
 ### 32.1 Completed Architecture Capabilities
 
@@ -4487,7 +5441,7 @@ Planned architecture improvements:
 
 ---
 
-## 33. Conclusion
+## 34. Conclusion
 
 I designed the RetailFlow data architecture as a coherent, modular and production-oriented platform.
 
@@ -4520,6 +5474,10 @@ The platform demonstrates the main capabilities expected from a modern data arch
 The current architecture is intentionally designed for local reproducibility while remaining aligned with a future cloud and Kubernetes deployment path.
 
 This makes RetailFlow both demonstrable and extensible.
+
+
+---
+
 
 # Bloc 3 — Real-Time Data Pipelines
 
@@ -6336,6 +7294,11 @@ This document includes the following diagrams:
 
 ---
 
+
+
+---
+
+
 # RetailFlow AI Solution Design
 
 ## Block 4 — End-to-End Artificial Intelligence Solution
@@ -6371,7 +7334,7 @@ The AI layer is integrated with:
 - FastAPI for prediction and report serving;
 - Streamlit for business-facing and monitoring dashboards;
 - Prometheus and Grafana for operational observability;
-- GitHub Actions for CI/CD validation;
+- GitHub Actions for CI/CD validation, automated tests and Docker image build validation;
 - governance controls for consent-aware analytics and responsible AI usage.
 
 The final design follows the lifecycle below:
@@ -7360,74 +8323,267 @@ flowchart TD
 
 ### 18.1 Objective
 
-I implemented GitHub Actions CI/CD to validate the platform whenever changes are pushed or proposed through pull requests.
+I implemented GitHub Actions as the CI/CD automation layer for the RetailFlow AI solution and the wider RetailFlow platform.
 
-The CI/CD workflow is designed to reduce regression risk and support a production-oriented development process.
+The objective is to ensure that every important code change is automatically validated before it is considered stable.
 
-### 18.2 CI/CD Scope
+For the AI solution, CI/CD is important because the model layer depends on several connected components:
 
-The CI/CD pipeline covers:
+- training scripts;
+- feature engineering code;
+- model report files;
+- FastAPI serving routes;
+- Streamlit monitoring dashboards;
+- Dockerized runtime services;
+- orchestration and monitoring configuration.
 
-- repository checkout;
-- Python environment setup;
-- dependency installation;
-- code quality checks;
-- unit tests;
-- API tests;
-- ML tests;
-- data quality tests;
-- Docker Compose validation;
-- Docker image build checks;
-- application smoke tests.
+The CI/CD workflow reduces the risk of introducing regressions in the AI serving layer, the ML reporting layer, or the deployment configuration.
 
-### 18.3 CI/CD Workflow
+---
+
+### 18.2 Current CI/CD Implementation
+
+The workflow is implemented in:
+
+```text
+.github/workflows/ci.yml
+```
+
+It is triggered on:
+
+```text
+push to develop
+push to feature/** branches
+pull requests targeting develop
+```
+
+This trigger strategy ensures that both feature development and integration into the stable branch are validated automatically.
+
+---
+
+### 18.3 CI/CD Jobs
+
+The workflow contains three main jobs.
+
+| Job | Purpose | Result |
+|---|---|---|
+| `python-tests` | Validate Python dependencies, syntax and automated tests | Confirms that the Python codebase and baseline tests are valid |
+| `docker-compose-validation` | Validate the Docker Compose configuration | Confirms that the multi-service deployment file is structurally valid |
+| `docker-build` | Build the main Docker images | Confirms that the FastAPI, Streamlit and event consumer services can be containerized |
+
+The `docker-build` job depends on the two previous jobs.
+
+This means Docker images are only built after the Python validation and Docker Compose validation have succeeded.
+
+---
+
+### 18.4 Python Validation
+
+The Python validation job performs the following checks:
+
+```text
+repository checkout
+→ Python 3.11 setup
+→ pip upgrade
+→ dependency installation
+→ Python syntax validation
+→ automated tests
+```
+
+The dependency installation covers the main project components:
+
+```text
+requirements.txt
+requirements-dev.txt
+api/requirements.txt
+ml/requirements.txt
+pipeline/requirements.txt
+streamlit_app/requirements.txt
+```
+
+The syntax validation is executed with:
+
+```bash
+python -m compileall api ml pipeline data_generator tests streamlit_app
+```
+
+This provides a basic but useful guardrail against syntax errors across the API, ML, pipeline, data generation, Streamlit and test layers.
+
+---
+
+### 18.5 Automated Test Suite
+
+The CI/CD workflow executes baseline automated tests located in:
+
+```text
+tests/
+```
+
+The test command is:
+
+```bash
+python -m pytest tests/test_*.py -q
+```
+
+The baseline test suite covers three important areas.
+
+| Test File | Coverage |
+|---|---|
+| `tests/test_api.py` | Validates that the FastAPI OpenAPI contract is available |
+| `tests/test_data_quality.py` | Validates core event quality rules and rejection behavior |
+| `tests/test_ml.py` | Validates the presence and JSON readability of ML report artifacts |
+
+These tests are intentionally lightweight and CI-friendly.
+
+They do not require a live PostgreSQL database, Redpanda broker, Airflow scheduler, or Streamlit runtime.
+
+This makes the CI pipeline reliable and fast while still validating core architecture contracts.
+
+---
+
+### 18.6 Docker Compose Validation
+
+The CI/CD workflow validates the Docker Compose configuration with:
+
+```bash
+docker compose config
+```
+
+This check ensures that the platform deployment definition can be parsed correctly by Docker Compose.
+
+It validates the structure of the multi-service infrastructure before a release is considered stable.
+
+This is important because RetailFlow relies on Docker Compose to deploy:
+
+- FastAPI;
+- Streamlit;
+- PostgreSQL;
+- Redpanda;
+- event consumer;
+- Airflow;
+- Prometheus;
+- Grafana;
+- PostgreSQL exporter.
+
+---
+
+### 18.7 Docker Image Build Validation
+
+I also added Docker image build validation to strengthen the deployment part of the CI/CD pipeline.
+
+The workflow builds the following images:
+
+| Image Validation | Dockerfile |
+|---|---|
+| FastAPI service image | `api/Dockerfile` |
+| Streamlit service image | `streamlit_app/Dockerfile` |
+| Event consumer image | `pipeline/consumer/Dockerfile` |
+
+The build commands are:
+
+```bash
+docker build -t retailflow-api-ci -f api/Dockerfile .
+docker build -t retailflow-streamlit-ci -f streamlit_app/Dockerfile .
+docker build -t retailflow-consumer-ci -f pipeline/consumer/Dockerfile .
+```
+
+This confirms that the main deployable services can be containerized successfully.
+
+For Block 4, this is especially important because the AI solution is not only code-based.
+
+It is served through an API, visualized through dashboards, and integrated into a containerized platform.
+
+---
+
+### 18.8 CI/CD Workflow Diagram
 
 ```mermaid
 flowchart LR
-    Push[Git Push / Pull Request] --> Checkout[Checkout Repository]
-    Checkout --> Setup[Setup Python]
+    Push[Push or Pull Request] --> Checkout[Checkout Repository]
+    Checkout --> Setup[Set up Python 3.11]
     Setup --> Install[Install Dependencies]
-    Install --> Lint[Lint and Format Checks]
-    Lint --> Tests[Run Automated Tests]
-    Tests --> Compose[Validate Docker Compose]
-    Compose --> Build[Build Containers]
-    Build --> Smoke[Run Smoke Tests]
-    Smoke --> Result[CI Result]
+    Install --> Compile[Compile Python Modules]
+    Compile --> Tests[Run Automated Tests]
+
+    Checkout --> Compose[Validate Docker Compose]
+
+    Tests --> Build[Docker Image Build Validation]
+    Compose --> Build
+
+    Build --> Result[CI/CD Result]
 ```
 
-### 18.4 Test Categories
+---
 
-| Test Category | Purpose |
+### 18.9 CI/CD Implementation Evidence
+
+The stable CI/CD implementation includes:
+
+| Capability | Implementation |
 |---|---|
-| API tests | Validate FastAPI endpoints |
-| Data quality tests | Validate event validation and dead-letter logic |
-| ML tests | Validate model report structure and prediction workflows |
-| Docker checks | Ensure services can be built |
-| Smoke tests | Validate basic service availability |
+| Workflow engine | GitHub Actions |
+| Workflow file | `.github/workflows/ci.yml` |
+| Python version | Python 3.11 |
+| Dependency validation | Multiple requirements files installed in CI |
+| Syntax validation | `python -m compileall` |
+| Test execution | `python -m pytest tests/test_*.py -q` |
+| Docker Compose validation | `docker compose config` |
+| Docker image validation | FastAPI, Streamlit and consumer image builds |
+| Stable tag | `v18-1-github-actions-docker-build-stable` |
 
-### 18.5 CI/CD Value
+---
 
-GitHub Actions improves:
+### 18.10 CI/CD Value for the AI Solution
 
-- development reliability;
-- pull request validation;
-- deployment confidence;
-- reproducibility;
-- collaboration readiness;
-- platform maintainability.
+The CI/CD pipeline improves the AI solution in several ways.
 
-### 18.6 Production Orientation
+| Area | CI/CD Contribution |
+|---|---|
+| API serving | Validates the FastAPI application contract |
+| Data quality | Validates event quality rule behavior |
+| ML monitoring | Validates model report artifacts |
+| Deployment | Validates Docker Compose and Docker image builds |
+| Maintainability | Prevents basic regressions from being merged unnoticed |
+| Reproducibility | Confirms that the platform can be rebuilt in a clean environment |
 
-The CI/CD workflow supports the MLOps objective because ML systems should not be deployed manually without validation.
+This supports the industrialization objective of Block 4.
 
-For RetailFlow, CI/CD is used to verify that the platform remains stable when changes affect:
+The AI solution is not only trained locally.
 
-- APIs;
-- models;
-- reports;
-- pipelines;
-- dashboards;
-- Docker services.
+It is validated automatically through a repeatable CI/CD process.
+
+---
+
+### 18.11 Current Boundary of CD
+
+The current implementation provides a strong CI/CD foundation up to deployment readiness.
+
+It validates:
+
+```text
+code
+→ dependencies
+→ syntax
+→ tests
+→ Docker Compose
+→ Docker image builds
+```
+
+The workflow does not yet automatically deploy to a production Kubernetes cluster or cloud environment.
+
+This is an intentional boundary of the current project stage.
+
+The next production step would be:
+
+```text
+Docker image build
+→ container registry push
+→ Kubernetes deployment
+→ production smoke tests
+→ monitored rollout
+```
+
+Therefore, RetailFlow currently has CI/CD for automated validation and build readiness, with Kubernetes production deployment identified as the next evolution.
 
 ## 19. Responsible AI
 
@@ -7543,7 +8699,7 @@ AI governance ensures that model outputs are controlled, interpretable, monitore
 | Drift monitoring | Intermediate to Advanced | Lightweight drift process is implemented |
 | Model registry | Developing | Model artifacts exist but no full registry yet |
 | Automated retraining | Advanced | Airflow retraining DAG exists |
-| CI/CD | Advanced | GitHub Actions production CI/CD is in place |
+| CI/CD | Advanced | GitHub Actions CI/CD is in place with automated tests, Docker Compose validation and Docker image build validation |
 | Responsible AI | Intermediate to Advanced | Explainability, consent and oversight principles are integrated |
 
 ## 21. Security and Privacy Considerations
@@ -7681,18 +8837,32 @@ tests/test_ml.py
 
 ### 23.4 CI/CD Testing
 
-The GitHub Actions workflow supports automated validation through:
+The GitHub Actions workflow supports automated validation through the following sequence:
 
 ```text
 push / pull request
 → install dependencies
-→ run tests
+→ validate Python syntax
+→ run automated tests
 → validate Docker Compose
-→ build services
-→ smoke checks
+→ build deployable Docker images
 ```
 
-This reduces the risk of deploying broken AI or API changes.
+The CI test suite currently validates:
+
+- FastAPI contract availability through `/openapi.json`;
+- data quality validation behavior;
+- ML report artifact existence and JSON readability.
+
+The CI/CD workflow also validates that the main platform services can be built as Docker images:
+
+- FastAPI;
+- Streamlit;
+- event consumer.
+
+This reduces the risk of releasing broken AI serving code, invalid ML monitoring artifacts, or non-buildable deployment components.
+
+Future test expansion should include API route tests requiring a temporary PostgreSQL service, end-to-end event ingestion tests, Airflow DAG validation and production smoke tests after Kubernetes deployment.
 
 ## 24. Operational Runbook for AI
 
@@ -7792,7 +8962,7 @@ I have already implemented:
 - AI Monitoring dashboard;
 - drift reporting;
 - Airflow retraining workflow;
-- GitHub Actions CI/CD;
+- GitHub Actions CI/CD with automated tests and Docker image build validation;
 - consent-aware customer exploration;
 - interpretation guides;
 - feature importance visualization.
@@ -7926,7 +9096,7 @@ The AI layer includes:
 - Streamlit dashboards;
 - Airflow retraining;
 - drift monitoring;
-- GitHub Actions CI/CD;
+- GitHub Actions CI/CD with automated tests and Docker image build validation;
 - responsible AI principles;
 - governance-aware customer intelligence.
 
