@@ -18,4 +18,4 @@ Segments:
 - cluster 3 / Return-Prone Customers: 425 customers
 - cluster 4 / Promo-Sensitive Browsers: 528 customers
 
-Generated at: 2026-05-27T13:51:40.852640+00:00
+Generated at: 2026-06-14T18:01:27.347026+00:00

@@ -29,4 +29,4 @@ Top feature importance:
 - avg_rating_given: 0.0177
 - total_spent: 0.0110
 
-Generated at: 2026-05-27T13:51:39.137099+00:00
+Generated at: 2026-06-14T18:01:26.193584+00:00

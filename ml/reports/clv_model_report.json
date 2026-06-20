@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-27T13:51:42.319003+00:00",
+  "generated_at": "2026-06-14T18:01:29.087412+00:00",
   "model_name": "clv_model",
   "model_version": "v2_realism",
   "task_type": "regression",
@@ -44,7 +44,7 @@
       },
       "random_forest": {
         "mae_mean": 1354.6603276471938,
-        "mae_std": 44.05349419163946,
+        "mae_std": 44.05349419163953,
         "rmse_mean": 2032.11326103716,
         "r2_mean": 0.8717585303955555,
         "r2_std": 0.005398570022944557

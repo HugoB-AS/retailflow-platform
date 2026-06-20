@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-27T13:51:39.137099+00:00",
+  "generated_at": "2026-06-14T18:01:26.193584+00:00",
   "model_name": "churn_model",
   "model_version": "v2_realism",
   "task_type": "binary_classification",

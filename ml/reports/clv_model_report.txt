@@ -31,4 +31,4 @@ Top feature importance:
 - discount_usage_rate: 0.0009
 - support_tickets_count: 0.0008
 
-Generated at: 2026-05-27T13:51:42.319003+00:00
+Generated at: 2026-06-14T18:01:29.087412+00:00
