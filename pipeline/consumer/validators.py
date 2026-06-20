@@ -3,6 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from sqlalchemy import text
 
+# Central whitelist for event taxonomy.
+# Keeping this list explicit prevents unexpected event types from entering
+# raw.events and makes the validation policy easy to explain during the defense.
 ALLOWED_EVENT_TYPES = {
     "page_view",
     "catalog_view",
@@ -18,6 +21,11 @@ ALLOWED_EVENT_TYPES = {
 
 
 def parse_datetime(value: str | None):
+    """""Safely parse an event timestamp.
+
+    Returns None instead of raising when the value is missing or malformed, so
+    validate_event can convert parsing problems into data quality rule errors.
+    """
     if not value:
         return None
     try:
@@ -27,6 +35,12 @@ def parse_datetime(value: str | None):
 
 
 def validate_event(event: dict, conn) -> list[dict]:
+    """""Validate a raw event before insertion into PostgreSQL.
+
+    The function returns a list of structured rule violations rather than
+    raising exceptions. This makes it possible to store rejected events in a
+    dead-letter queue and to log each failed data quality rule.
+    """
     errors = []
 
     event_id = event.get("event_id")

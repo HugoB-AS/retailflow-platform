@@ -11,6 +11,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REPORTS_DIR = PROJECT_ROOT / "ml" / "reports"
 MODELS_DIR = PROJECT_ROOT / "ml" / "models"
 MODEL_REGISTRY_PATH = PROJECT_ROOT / "ml" / "model_registry.json"
+# Append-only lightweight run history used as evidence for retraining
+# traceability. The file keeps the latest runs to avoid uncontrolled growth.
 RETRAINING_RUNS_PATH = REPORTS_DIR / "retraining_runs.json"
 
 
@@ -22,10 +24,14 @@ MODEL_ARTIFACTS = {
 
 
 def utc_now_iso() -> str:
+    """Return a timezone-aware UTC timestamp serialized as ISO 8601."""
+
     return datetime.now(timezone.utc).isoformat()
 
 
 def read_json(path: Path, default: Any = None) -> Any:
+    """Read JSON if available, otherwise return a safe default."""
+
     if not path.exists():
         return default
 
@@ -33,10 +39,14 @@ def read_json(path: Path, default: Any = None) -> Any:
 
 
 def relative_path(path: Path) -> str:
+    """Return repository-relative paths for portable run history entries."""
+
     return str(path.relative_to(PROJECT_ROOT))
 
 
 def file_metadata(path: Path) -> dict[str, Any]:
+    """Collect existence, size and modification timestamp for audit evidence."""
+
     if not path.exists():
         return {
             "path": relative_path(path),
@@ -56,6 +66,11 @@ def file_metadata(path: Path) -> dict[str, Any]:
 
 
 def build_run_payload() -> dict[str, Any]:
+    """""Build one retraining run record.
+
+    When executed by Airflow, AIRFLOW_CTX_* variables are captured. When executed
+    manually, the script still produces a valid run record for local validation.
+    """
     model_summary = read_json(REPORTS_DIR / "model_summary.json", default={})
     model_registry = read_json(MODEL_REGISTRY_PATH, default={})
     drift_report = read_json(REPORTS_DIR / "drift_report.json", default={})
@@ -144,6 +159,8 @@ def build_run_payload() -> dict[str, Any]:
 
 
 def load_run_history() -> dict[str, Any]:
+    """Load the existing retraining history or initialize a new one."""
+
     if not RETRAINING_RUNS_PATH.exists():
         return {
             "project": "RetailFlow",
@@ -161,6 +178,8 @@ def load_run_history() -> dict[str, Any]:
 
 
 def write_run_history(history: dict[str, Any]) -> None:
+    """Persist the retraining history as formatted JSON."""
+
     RETRAINING_RUNS_PATH.parent.mkdir(parents=True, exist_ok=True)
     RETRAINING_RUNS_PATH.write_text(
         json.dumps(history, indent=2, ensure_ascii=False),
@@ -169,6 +188,8 @@ def write_run_history(history: dict[str, Any]) -> None:
 
 
 def main() -> None:
+    """Append a new retraining run to ml/reports/retraining_runs.json."""
+
     history = load_run_history()
     run_payload = build_run_payload()
 

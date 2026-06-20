@@ -11,6 +11,8 @@ from uuid import uuid4
 from confluent_kafka import Producer
 
 
+# Defaults are adapted for local execution from WSL/host.
+# Docker services can override these values with environment variables.
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:19092")
 EVENT_TOPIC = os.getenv("EVENT_TOPIC", "retailflow_events")
 EVENT_COUNT = int(os.getenv("EVENT_COUNT", "20"))
@@ -20,6 +22,8 @@ PIPELINE_REPORT_DIR = Path(os.getenv("PIPELINE_REPORT_DIR", "pipeline/reports"))
 PIPELINE_METRICS_PATH = PIPELINE_REPORT_DIR / "pipeline_metrics.json"
 
 
+# Event taxonomy aligned with pipeline.consumer.validators.ALLOWED_EVENT_TYPES.
+# This keeps the demo producer compatible with the consumer quality rules.
 EVENT_TYPES = [
     "page_view",
     "catalog_view",
@@ -35,10 +39,17 @@ EVENT_TYPES = [
 
 
 def utc_now_iso() -> str:
+    """Return a timezone-aware UTC timestamp serialized as ISO 8601."""
+
     return datetime.now(timezone.utc).isoformat()
 
 
 def make_event(index: int) -> dict:
+    """""Generate one synthetic retail event for the real-time pipeline demo.
+
+    Customer and product IDs are generated inside the existing synthetic data
+    ranges, so the consumer can validate foreign-key-like references.
+    """
     event_type = random.choice(EVENT_TYPES)
     customer_id = f"cust_{random.randint(1, 5000):06d}"
     product_id = None
@@ -78,6 +89,11 @@ def make_event(index: int) -> dict:
 
 
 def write_pipeline_metrics(metrics: dict) -> None:
+    """""Persist lightweight producer metrics as JSON evidence.
+
+    The output is used as a simple performance proof for the real-time pipeline:
+    event count, delivered count, duration and throughput.
+    """
     PIPELINE_REPORT_DIR.mkdir(parents=True, exist_ok=True)
     PIPELINE_METRICS_PATH.write_text(
         json.dumps(metrics, indent=2, ensure_ascii=False),
@@ -86,6 +102,8 @@ def write_pipeline_metrics(metrics: dict) -> None:
 
 
 def main() -> None:
+    """Produce synthetic events to Redpanda/Kafka and record delivery metrics."""
+
     producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
 
     delivered_events = 0

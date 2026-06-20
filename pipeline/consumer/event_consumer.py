@@ -16,6 +16,8 @@ DATABASE_URL = os.getenv(
     "postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db",
 )
 
+# Runtime flag used to stop the Kafka consumer gracefully when Docker or the OS
+# sends SIGTERM/SIGINT. This avoids interrupting a database transaction midway.
 running = True
 
 
@@ -27,6 +29,9 @@ def handle_shutdown(signum, frame):
 signal.signal(signal.SIGTERM, handle_shutdown)
 signal.signal(signal.SIGINT, handle_shutdown)
 
+# pool_pre_ping=True makes SQLAlchemy verify connections before using them.
+# This is useful in Docker environments where PostgreSQL connections can be
+# restarted while the consumer process is still alive.
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 consumer = Consumer(
@@ -133,12 +138,23 @@ INSERT_QUALITY_LOG_SQL = text("""
 
 
 def parse_datetime(value: str | None):
+    """""Parse event timestamps into naive UTC-compatible datetimes for PostgreSQL.
+
+    Incoming events may use ISO strings with a trailing Z. PostgreSQL columns in
+    this project are stored without timezone, so timezone information is removed
+    after parsing.
+    """
     if not value:
         return datetime.utcnow()
     return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
 
 
 def insert_event(conn, event: dict) -> None:
+    """""Insert a valid event into raw.events.
+
+    ON CONFLICT is handled by the SQL statement, making repeated messages
+    idempotent when the same event_id is consumed more than once.
+    """
     event_timestamp = parse_datetime(event.get("event_timestamp"))
     created_at = parse_datetime(event.get("created_at"))
 
@@ -164,6 +180,11 @@ def insert_event(conn, event: dict) -> None:
 
 
 def insert_dead_letter(conn, event: dict, errors: list[dict]) -> None:
+    """""Store rejected events for auditability and later replay analysis.
+
+    This supports data quality governance: invalid events are not silently lost,
+    and the original payload remains available in the dead-letter table.
+    """
     error_reason = " | ".join(error["message"] for error in errors)
     severity = "high" if any(error["severity"] == "high" for error in errors) else "medium"
 
@@ -183,6 +204,11 @@ def insert_dead_letter(conn, event: dict, errors: list[dict]) -> None:
 
 
 def insert_quality_logs(conn, event: dict, errors: list[dict]) -> None:
+    """""Write one data quality log per validation error.
+
+    The governance.data_quality_logs table provides rule-level traceability for
+    rejected records and can be used later in dashboards or audits.
+    """
     for error in errors:
         conn.execute(
             INSERT_QUALITY_LOG_SQL,
@@ -203,6 +229,11 @@ def insert_quality_logs(conn, event: dict, errors: list[dict]) -> None:
 
 
 def process_event(event: dict) -> None:
+    """""Validate and persist a single Kafka event inside one DB transaction.
+
+    Valid events are inserted into raw.events. Invalid events are redirected to
+    dead-letter storage and data quality logs in the same transaction.
+    """
     with engine.begin() as conn:
         errors = validate_event(event, conn)
 
@@ -217,6 +248,11 @@ def process_event(event: dict) -> None:
 
 
 def main():
+    """""Run the long-lived Kafka consumer loop.
+
+    The loop polls Redpanda/Kafka, decodes JSON messages, applies validation,
+    and persists accepted/rejected records until a shutdown signal is received.
+    """
     print(f"Starting consumer on topic={EVENT_TOPIC}, brokers={KAFKA_BOOTSTRAP_SERVERS}")
     consumer.subscribe([EVENT_TOPIC])
 
