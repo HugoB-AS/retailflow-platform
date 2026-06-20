@@ -1,0 +1,14 @@
+{
+  "pipeline_name": "retailflow_realtime_events",
+  "component": "ecommerce_event_producer",
+  "topic": "retailflow_events",
+  "bootstrap_servers": "localhost:19092",
+  "started_at": "2026-06-20T15:30:00.304913+00:00",
+  "ended_at": "2026-06-20T15:30:06.313444+00:00",
+  "duration_seconds": 6.0085,
+  "target_event_count": 20,
+  "delivered_event_count": 20,
+  "failed_event_count": 0,
+  "events_per_second": 3.3286,
+  "status": "success"
+}
