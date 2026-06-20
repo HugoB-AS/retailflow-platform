@@ -88,4 +88,6 @@ def recent_events(limit: int = 20, db: Session = Depends(get_db)):
     """)
 
     result = db.execute(query, {"limit": limit}).mappings().all()
+
+    return [dict(row) for row in result]
     return [dict(row) for row in result]
