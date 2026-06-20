@@ -1,0 +1,147 @@
+{
+  "project": "RetailFlow",
+  "registry_type": "ml_model_registry",
+  "generated_at": "2026-06-20T16:02:07.782986+00:00",
+  "source_reports": {
+    "summary": "ml/reports/model_summary.json",
+    "churn": "ml/reports/churn_model_report.json",
+    "clv": "ml/reports/clv_model_report.json",
+    "segmentation": "ml/reports/segmentation_model_report.json",
+    "drift": "ml/reports/drift_report.json"
+  },
+  "models": {
+    "churn": {
+      "model_name": "churn_model",
+      "business_use_case": "Predict customer churn risk",
+      "task_type": "binary_classification",
+      "model_version": "v2_realism",
+      "selected_model": "logistic_regression",
+      "artifact_path": "ml/models/churn_model.joblib",
+      "artifact_exists": true,
+      "dataset_rows": 5000,
+      "features_count": 11,
+      "main_metrics": {
+        "roc_auc": 0.6781228387211923,
+        "f1": 0.3333333333333333,
+        "positive_rate": 0.3568
+      },
+      "calibration": {
+        "enabled": true,
+        "method": "sigmoid",
+        "note": "The deployed churn model uses calibrated probabilities to avoid overconfident 0.99/1.00 outputs."
+      },
+      "risk_thresholds": {
+        "high_risk": 0.7,
+        "medium_risk": 0.4,
+        "low_risk": 0.0
+      },
+      "top_features": [
+        {
+          "feature": "days_since_last_order",
+          "normalized_importance": 0.3715284392332631
+        },
+        {
+          "feature": "cart_abandon_rate",
+          "normalized_importance": 0.1273455318236792
+        },
+        {
+          "feature": "pages_viewed_30d",
+          "normalized_importance": 0.11972388337641834
+        },
+        {
+          "feature": "return_rate",
+          "normalized_importance": 0.10962300222681716
+        },
+        {
+          "feature": "total_orders",
+          "normalized_importance": 0.08628486038464901
+        }
+      ],
+      "status": "active"
+    },
+    "clv": {
+      "model_name": "clv_model",
+      "business_use_case": "Estimate customer lifetime value",
+      "task_type": "regression",
+      "model_version": "v2_realism",
+      "selected_model": "gradient_boosting",
+      "artifact_path": "ml/models/clv_model.joblib",
+      "artifact_exists": true,
+      "dataset_rows": 5000,
+      "features_count": 11,
+      "main_metrics": {
+        "mae": 1376.2997044142421,
+        "rmse": 2066.4438456282605,
+        "r2": 0.8822843952696444
+      },
+      "clv_band_thresholds": {
+        "high_value": 10000,
+        "medium_value": 3000,
+        "low_value": 0
+      },
+      "top_features": [
+        {
+          "feature": "total_spent",
+          "normalized_importance": 0.8701525857276984
+        },
+        {
+          "feature": "days_since_last_order",
+          "normalized_importance": 0.05745268232548234
+        },
+        {
+          "feature": "avg_order_value",
+          "normalized_importance": 0.029977426245669066
+        },
+        {
+          "feature": "cart_abandon_rate",
+          "normalized_importance": 0.016280093537087724
+        },
+        {
+          "feature": "return_rate",
+          "normalized_importance": 0.015149771764079807
+        }
+      ],
+      "status": "active"
+    },
+    "segmentation": {
+      "model_name": "segmentation_model",
+      "business_use_case": "Segment customers into actionable retail groups",
+      "task_type": "clustering",
+      "model_version": "v2_realism",
+      "selected_model": "kmeans",
+      "selected_k": 5,
+      "selection_metric": "highest_silhouette",
+      "artifact_path": "ml/models/segmentation_model.joblib",
+      "artifact_exists": true,
+      "dataset_rows": 5000,
+      "features_count": 8,
+      "main_metrics": {
+        "selected_k": 5,
+        "selection_metric": "highest_silhouette"
+      },
+      "segment_labels": {
+        "0": "Dormant Low Value Customers",
+        "1": "Standard Active Customers",
+        "2": "High Value Loyal Customers",
+        "3": "Return-Prone Customers",
+        "4": "Promo-Sensitive Browsers"
+      },
+      "status": "active"
+    }
+  },
+  "monitoring": {
+    "drift": {
+      "available": true,
+      "drift_detected": true,
+      "drifted_features_count": 2,
+      "threshold": 0.2,
+      "report_path": "ml/reports/drift_report.json",
+      "status": "warning"
+    }
+  },
+  "governance": {
+    "versioning_strategy": "Model versions are tracked through report metadata, artifact paths and Git history.",
+    "retraining_strategy": "Models are retrained through the Airflow ML retraining workflow and validated through generated reports.",
+    "explainability_strategy": "Feature importance and business thresholds are recorded for model interpretation."
+  }
+}

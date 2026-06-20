@@ -1,0 +1,162 @@
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+REPORTS_DIR = PROJECT_ROOT / "ml" / "reports"
+MODELS_DIR = PROJECT_ROOT / "ml" / "models"
+MODEL_REGISTRY_PATH = PROJECT_ROOT / "ml" / "model_registry.json"
+
+
+REPORT_PATHS = {
+    "summary": REPORTS_DIR / "model_summary.json",
+    "churn": REPORTS_DIR / "churn_model_report.json",
+    "clv": REPORTS_DIR / "clv_model_report.json",
+    "segmentation": REPORTS_DIR / "segmentation_model_report.json",
+    "drift": REPORTS_DIR / "drift_report.json",
+}
+
+
+MODEL_ARTIFACTS = {
+    "churn": MODELS_DIR / "churn_model.joblib",
+    "clv": MODELS_DIR / "clv_model.joblib",
+    "segmentation": MODELS_DIR / "segmentation_model.joblib",
+}
+
+
+def read_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise FileNotFoundError(f"Required report not found: {path}")
+
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def relative_path(path: Path) -> str:
+    return str(path.relative_to(PROJECT_ROOT))
+
+
+def top_features(report: dict[str, Any], limit: int = 5) -> list[dict[str, Any]]:
+    features = report.get("feature_importance", [])
+    if not isinstance(features, list):
+        return []
+
+    return [
+        {
+            "feature": item.get("feature"),
+            "normalized_importance": item.get("normalized_importance"),
+        }
+        for item in features[:limit]
+    ]
+
+
+def build_registry() -> dict[str, Any]:
+    summary = read_json(REPORT_PATHS["summary"])
+    churn_report = read_json(REPORT_PATHS["churn"])
+    clv_report = read_json(REPORT_PATHS["clv"])
+    segmentation_report = read_json(REPORT_PATHS["segmentation"])
+    drift_report = read_json(REPORT_PATHS["drift"])
+
+    registry = {
+        "project": "RetailFlow",
+        "registry_type": "ml_model_registry",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_reports": {
+            name: relative_path(path)
+            for name, path in REPORT_PATHS.items()
+        },
+        "models": {
+            "churn": {
+                "model_name": churn_report.get("model_name", "churn_model"),
+                "business_use_case": "Predict customer churn risk",
+                "task_type": churn_report.get("task_type"),
+                "model_version": churn_report.get("model_version"),
+                "selected_model": churn_report.get("selected_model"),
+                "artifact_path": relative_path(MODEL_ARTIFACTS["churn"]),
+                "artifact_exists": MODEL_ARTIFACTS["churn"].exists(),
+                "dataset_rows": churn_report.get("dataset_rows"),
+                "features_count": len(churn_report.get("features", [])),
+                "main_metrics": {
+                    "roc_auc": summary.get("churn", {}).get("roc_auc"),
+                    "f1": summary.get("churn", {}).get("f1"),
+                    "positive_rate": summary.get("churn", {}).get("positive_rate"),
+                },
+                "calibration": churn_report.get("probability_calibration", {}),
+                "risk_thresholds": churn_report.get("risk_thresholds", {}),
+                "top_features": top_features(churn_report),
+                "status": "active" if MODEL_ARTIFACTS["churn"].exists() else "missing_artifact",
+            },
+            "clv": {
+                "model_name": clv_report.get("model_name", "clv_model"),
+                "business_use_case": "Estimate customer lifetime value",
+                "task_type": clv_report.get("task_type"),
+                "model_version": clv_report.get("model_version"),
+                "selected_model": clv_report.get("selected_model"),
+                "artifact_path": relative_path(MODEL_ARTIFACTS["clv"]),
+                "artifact_exists": MODEL_ARTIFACTS["clv"].exists(),
+                "dataset_rows": clv_report.get("dataset_rows"),
+                "features_count": len(clv_report.get("features", [])),
+                "main_metrics": {
+                    "mae": summary.get("clv", {}).get("mae"),
+                    "rmse": summary.get("clv", {}).get("rmse"),
+                    "r2": summary.get("clv", {}).get("r2"),
+                },
+                "clv_band_thresholds": clv_report.get("clv_band_thresholds", {}),
+                "top_features": top_features(clv_report),
+                "status": "active" if MODEL_ARTIFACTS["clv"].exists() else "missing_artifact",
+            },
+            "segmentation": {
+                "model_name": segmentation_report.get("model_name", "segmentation_model"),
+                "business_use_case": "Segment customers into actionable retail groups",
+                "task_type": segmentation_report.get("task_type"),
+                "model_version": segmentation_report.get("model_version"),
+                "selected_model": "kmeans",
+                "selected_k": segmentation_report.get("selected_k"),
+                "selection_metric": segmentation_report.get("selection_metric"),
+                "artifact_path": relative_path(MODEL_ARTIFACTS["segmentation"]),
+                "artifact_exists": MODEL_ARTIFACTS["segmentation"].exists(),
+                "dataset_rows": segmentation_report.get("dataset_rows"),
+                "features_count": len(segmentation_report.get("features", [])),
+                "main_metrics": {
+                    "selected_k": summary.get("segmentation", {}).get("selected_k"),
+                    "selection_metric": summary.get("segmentation", {}).get("selection_metric"),
+                },
+                "segment_labels": segmentation_report.get("segment_labels", {}),
+                "status": "active" if MODEL_ARTIFACTS["segmentation"].exists() else "missing_artifact",
+            },
+        },
+        "monitoring": {
+            "drift": {
+                "available": summary.get("drift", {}).get("available"),
+                "drift_detected": summary.get("drift", {}).get("drift_detected"),
+                "drifted_features_count": summary.get("drift", {}).get("drifted_features_count"),
+                "threshold": summary.get("drift", {}).get("threshold"),
+                "report_path": relative_path(REPORT_PATHS["drift"]),
+                "status": "warning" if summary.get("drift", {}).get("drift_detected") else "ok",
+            }
+        },
+        "governance": {
+            "versioning_strategy": "Model versions are tracked through report metadata, artifact paths and Git history.",
+            "retraining_strategy": "Models are retrained through the Airflow ML retraining workflow and validated through generated reports.",
+            "explainability_strategy": "Feature importance and business thresholds are recorded for model interpretation.",
+        },
+    }
+
+    return registry
+
+
+def main() -> None:
+    registry = build_registry()
+    MODEL_REGISTRY_PATH.write_text(
+        json.dumps(registry, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    print(f"Model registry written to {relative_path(MODEL_REGISTRY_PATH)}")
+
+
+if __name__ == "__main__":
+    main()
