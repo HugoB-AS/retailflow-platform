@@ -39,6 +39,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retailflow -d retailflow_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - retailflow_network
 
@@ -87,6 +93,12 @@ services:
       - "9644:9644"
     volumes:
       - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster info --brokers localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - retailflow_network
 
@@ -102,8 +114,16 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
-      - redpanda
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/openapi.json', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - retailflow_network
     volumes:
@@ -119,8 +139,10 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
       EVENT_TOPIC: retailflow_events
     depends_on:
-      - postgres
-      - redpanda
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
     networks:
       - retailflow_network
 
@@ -134,7 +156,14 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - fastapi
+      fastapi:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - retailflow_network
 
