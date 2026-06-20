@@ -14,12 +14,12 @@ default_args = {
 
 with DAG(
     dag_id="ml_retraining",
-    description="Retrain RetailFlow ML models, refresh predictions, and generate lightweight ML monitoring reports.",
+    description="Retrain RetailFlow ML models, refresh predictions, generate monitoring reports, and log MLOps retraining evidence.",
     schedule="@weekly",
     start_date=pendulum.datetime(2026, 5, 1, tz="UTC"),
     catchup=False,
     default_args=default_args,
-    tags=["retailflow", "ml", "ai", "monitoring"],
+    tags=["retailflow", "ml", "ai", "monitoring", "mlops"],
 ) as dag:
 
     train_churn = BashOperator(
@@ -47,4 +47,14 @@ with DAG(
         bash_command="cd /opt/airflow && python -m ml.src.evaluate_drift",
     )
 
-    [train_churn, train_segmentation, train_clv] >> refresh_predictions >> evaluate_drift
+    generate_model_registry = BashOperator(
+        task_id="generate_model_registry",
+        bash_command="cd /opt/airflow && python -m ml.src.generate_model_registry",
+    )
+
+    log_retraining_run = BashOperator(
+        task_id="log_retraining_run",
+        bash_command="cd /opt/airflow && python -m ml.src.log_retraining_run",
+    )
+
+    [train_churn, train_segmentation, train_clv] >> refresh_predictions >> evaluate_drift >> generate_model_registry >> log_retraining_run

@@ -1,0 +1,114 @@
+{
+  "project": "RetailFlow",
+  "registry_type": "ml_retraining_runs",
+  "created_at": "2026-06-20T16:14:02.989395+00:00",
+  "last_updated_at": "2026-06-20T16:14:02.989911+00:00",
+  "runs": [
+    {
+      "run_id": "manual_retraining_20260620T161402.989649+0000",
+      "logged_at": "2026-06-20T16:14:02.989649+00:00",
+      "trigger": "manual",
+      "airflow_context": {
+        "dag_id": null,
+        "dag_run_id": null,
+        "task_id": null
+      },
+      "pipeline": {
+        "name": "ml_retraining",
+        "steps": [
+          "train_churn_model",
+          "train_segmentation_model",
+          "train_clv_model",
+          "refresh_ml_predictions",
+          "evaluate_lightweight_drift",
+          "generate_model_registry",
+          "log_retraining_run"
+        ]
+      },
+      "models": {
+        "churn": {
+          "model_version": "v2_realism",
+          "selected_model": "logistic_regression",
+          "task_type": "binary_classification",
+          "artifact": {
+            "path": "ml/models/churn_model.joblib",
+            "exists": true,
+            "size_bytes": 7455,
+            "modified_at": "2026-06-14T18:01:26.203062+00:00"
+          },
+          "main_metrics": {
+            "roc_auc": 0.6781228387211923,
+            "f1": 0.3333333333333333,
+            "positive_rate": 0.3568
+          },
+          "status": "active"
+        },
+        "clv": {
+          "model_version": "v2_realism",
+          "selected_model": "gradient_boosting",
+          "task_type": "regression",
+          "artifact": {
+            "path": "ml/models/clv_model.joblib",
+            "exists": true,
+            "size_bytes": 301246,
+            "modified_at": "2026-06-14T18:01:29.235449+00:00"
+          },
+          "main_metrics": {
+            "mae": 1376.2997044142421,
+            "rmse": 2066.4438456282605,
+            "r2": 0.8822843952696444
+          },
+          "status": "active"
+        },
+        "segmentation": {
+          "model_version": "v2_realism",
+          "selected_model": "kmeans",
+          "task_type": "clustering",
+          "artifact": {
+            "path": "ml/models/segmentation_model.joblib",
+            "exists": true,
+            "size_bytes": 22915,
+            "modified_at": "2026-06-14T18:01:27.347208+00:00"
+          },
+          "main_metrics": {
+            "selected_k": 5,
+            "selection_metric": "highest_silhouette"
+          },
+          "status": "active"
+        }
+      },
+      "monitoring": {
+        "drift": {
+          "available": true,
+          "drift_detected": true,
+          "drifted_features_count": 2,
+          "threshold": 0.2,
+          "status": "warning",
+          "report_path": "ml/reports/drift_report.json"
+        }
+      },
+      "reports": {
+        "model_summary": {
+          "path": "ml/reports/model_summary.json",
+          "exists": true,
+          "size_bytes": 816,
+          "modified_at": "2026-06-14T18:01:47.625936+00:00"
+        },
+        "model_registry": {
+          "path": "ml/model_registry.json",
+          "exists": true,
+          "size_bytes": 4638,
+          "modified_at": "2026-06-20T16:14:02.957280+00:00"
+        },
+        "drift_report": {
+          "path": "ml/reports/drift_report.json",
+          "exists": true,
+          "size_bytes": 4754,
+          "modified_at": "2026-06-14T18:01:47.621936+00:00"
+        }
+      },
+      "missing_files": [],
+      "status": "success"
+    }
+  ]
+}
