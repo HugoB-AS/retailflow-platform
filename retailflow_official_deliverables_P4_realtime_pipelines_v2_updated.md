@@ -57,6 +57,30 @@ This approach supports three important objectives:
 
 ---
 
+## Final Implementation Update
+
+The final RetailFlow implementation strengthened the pipeline block with additional operational and demonstration evidence.
+
+The following elements are now part of the current project state.
+
+| Area | Final implementation update | Evidence location |
+|---|---|---|
+| Customer event demo | The Customer View page supports a guided customer journey and explicit invalid event generation for quality demonstration. | `streamlit_app/pages/2_Customer_View.py` |
+| Recent events API | The platform exposes recent ingested events through FastAPI for demo validation and operational inspection. | `GET /events/recent` |
+| Dead-letter evidence | Invalid events are visible from the Data Quality page with rejection reason, severity, source topic and raw payload context. | `streamlit_app/pages/6_Data_Quality.py` |
+| Quality remediation workflow | The Data Quality page documents how rejected events should be reviewed, corrected, replayed or archived. | Streamlit > Data Quality |
+| Pipeline metrics evidence | The producer layer includes lightweight performance and event reporting evidence. | `pipeline/reports/pipeline_metrics.json` |
+| Airflow orchestration | Pipeline-related batch controls are covered by daily quality and sales aggregation DAGs. | `airflow/dags/daily_data_quality.py`, `airflow/dags/daily_sales_aggregation.py` |
+| Platform healthchecks | Core services include Docker healthchecks to support operational reliability. | `docker-compose.yml` |
+| Monitoring and alerting | Prometheus alert rules monitor FastAPI, PostgreSQL exporter, latency, error rate and database connection pressure. | `monitoring/prometheus/rules/retailflow_alerts.yml` |
+| Grafana dashboards | Operational dashboards are provisioned for API and platform overview monitoring. | Grafana > RetailFlow API Overview, RetailFlow Platform Overview |
+| CI/CD validation | GitHub Actions validates Python syntax, tests, Docker Compose configuration, Docker image builds and security reports. | `.github/workflows/ci.yml` |
+| Final evidence mapping | The Project Evidence page includes a skills evidence matrix connecting competencies to RetailFlow proofs. | `streamlit_app/pages/10_Project_Evidence.py` |
+
+This update confirms that the pipeline is not only designed conceptually. It is also demonstrable through live events, observable quality controls, operational monitoring, CI validation and documented evidence mapping.
+
+---
+
 ## Scope of the Pipeline Block
 
 This document covers the following areas:
@@ -737,6 +761,26 @@ The dashboard is important because it makes pipeline quality visible.
 
 It also connects the technical pipeline to the governance framework.
 
+### Final Data Quality demo evidence
+
+The final Streamlit Data Quality page provides a direct demonstration path for the pipeline block.
+
+The user can generate an invalid event from Customer View and then inspect the resulting dead-letter evidence from Data Quality.
+
+A typical rejected event includes:
+
+| Field | Purpose |
+|---|---|
+| `event_id` | Links the rejected record to the original attempted event. |
+| `event_type` | Shows the invalid or unsupported event type. |
+| `source_topic` | Confirms that the event came from the streaming topic. |
+| `error_reason` | Explains why the event was rejected. |
+| `severity` | Supports prioritization of the quality issue. |
+| `raw_payload` | Preserves diagnostic evidence for investigation. |
+| `reprocessed` | Tracks whether the event has been corrected or replayed. |
+
+This makes the pipeline error path visible, auditable and easy to explain during the live demonstration.
+
 ---
 
 ## Data Quality Page Flow
@@ -768,6 +812,16 @@ RetailFlow exposes quality data through FastAPI endpoints.
 | `GET /quality/dead-letter-summary` | Returns aggregated dead-letter statistics. |
 
 These endpoints are consumed by the Data Quality page.
+
+### Event inspection endpoint
+
+The event layer also exposes a recent events endpoint.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /events/recent` | Returns recently ingested customer events for demo validation and operational inspection. |
+
+This endpoint is useful to verify that generated events reach the platform and become visible after ingestion.
 
 ---
 
@@ -990,6 +1044,23 @@ RetailFlow monitors the pipeline through several mechanisms:
 | Orchestration | Airflow DAG status. |
 | UI | Streamlit Data Quality page. |
 
+### Final monitoring evidence
+
+The final platform includes both service-level monitoring and pipeline-oriented quality visibility.
+
+| Monitoring asset | What it proves | Where to verify |
+|---|---|---|
+| Prometheus targets | FastAPI and PostgreSQL exporter are scraped. | Prometheus > Status > Targets |
+| Prometheus alert rules | Alert rules are loaded and evaluated. | Prometheus > Alerts |
+| `RetailFlowFastAPIDown` | Detects FastAPI unavailability. | Prometheus alert rules |
+| `RetailFlowPostgresExporterDown` | Detects PostgreSQL exporter unavailability. | Prometheus alert rules |
+| `RetailFlowHighFastAPIRequestLatency` | Detects degraded API response time. | Prometheus alert rules |
+| `RetailFlowFastAPIHighErrorRate` | Detects elevated API error rate. | Prometheus alert rules |
+| `RetailFlowPostgresTooManyConnections` | Detects PostgreSQL connection pressure. | Prometheus alert rules |
+| Grafana API Overview dashboard | Visualizes API operational behavior. | Grafana > RetailFlow API Overview |
+| Grafana Platform Overview dashboard | Visualizes platform-level availability and metrics. | Grafana > RetailFlow Platform Overview |
+| Streamlit Observability page | Centralizes monitoring links, targets and alert rules for the demo. | Streamlit > Observability |
+
 ---
 
 ## Observability Connection
@@ -1161,16 +1232,18 @@ The pipeline is integrated into the GitHub Actions CI/CD workflow.
 
 The CI/CD workflow is designed to validate code quality and platform reliability before changes are merged.
 
-The recommended checks include:
+The implemented checks include:
 
 - Python dependency installation;
-- linting;
-- unit tests;
-- data quality tests;
-- API tests;
-- Docker Compose validation;
-- Docker image build checks;
-- smoke tests for health endpoints.
+- Python syntax validation with `compileall`;
+- automated tests for API, data quality and ML artifacts;
+- Docker Compose configuration validation;
+- Docker image build validation for deployable services;
+- automated security reports for Python dependencies and risky code patterns.
+
+The current CI workflow validates build readiness and regression safety.
+
+Full production deployment automation, such as pushing images to a registry and deploying to Kubernetes, remains a future production hardening step.
 
 ---
 
@@ -1180,18 +1253,22 @@ The recommended checks include:
 flowchart LR
     Commit[Git Commit]
     CI[GitHub Actions]
-    Lint[Lint and Static Checks]
-    Tests[Unit and Integration Tests]
-    Docker[Docker Build Checks]
-    Smoke[API and Service Smoke Tests]
-    Merge[Merge to Develop]
+    Compile[Python Syntax Validation]
+    Tests[Automated Tests]
+    Compose[Docker Compose Validation]
+    Docker[Docker Image Build Validation]
+    Security[Security Report Artifacts]
+    Result[Validated Develop Branch]
 
     Commit --> CI
-    CI --> Lint
-    Lint --> Tests
+    CI --> Compile
+    Compile --> Tests
+    CI --> Compose
     Tests --> Docker
-    Docker --> Smoke
-    Smoke --> Merge
+    Compose --> Docker
+    CI --> Security
+    Docker --> Result
+    Security --> Result
 ```
 
 ---
@@ -1709,22 +1786,28 @@ The pipeline could be deployed to a cloud target with:
 
 ## Current Implementation Summary
 
-| Capability | Status |
-|---|---|
-| Event publishing | Implemented |
-| Redpanda streaming | Implemented |
-| Python consumer | Implemented |
-| Event validation | Implemented |
-| PostgreSQL persistence | Implemented |
-| Dead-letter handling | Implemented |
-| Data quality logs | Implemented |
-| Data Quality dashboard | Implemented |
-| Airflow quality DAG | Implemented |
-| Airflow sales aggregation DAG | Implemented |
-| Monitoring integration | Implemented |
-| CI/CD validation | Implemented through GitHub Actions workflow |
-| Advanced replay automation | Future improvement |
-| Advanced broker observability | Future improvement |
+| Capability | Status | Evidence |
+|---|---|---|
+| Event publishing | Implemented | FastAPI `/events` endpoint and Customer View demo. |
+| Recent event inspection | Implemented | FastAPI `GET /events/recent`. |
+| Redpanda streaming | Implemented | `retailflow_events` topic and Redpanda container. |
+| Python consumer | Implemented | `pipeline/consumer/`. |
+| Event validation | Implemented | Validation rules for event id, event type, customer, product and timestamp. |
+| PostgreSQL persistence | Implemented | Valid events stored in `raw.events`. |
+| Dead-letter handling | Implemented | Rejected records stored in `governance.dead_letter_events`. |
+| Data quality logs | Implemented | Rule failures stored in `governance.data_quality_logs`. |
+| Invalid event demo | Implemented | Customer View can generate an invalid demo event. |
+| Data Quality dashboard | Implemented | `streamlit_app/pages/6_Data_Quality.py`. |
+| Airflow quality DAG | Implemented | `airflow/dags/daily_data_quality.py`. |
+| Airflow sales aggregation DAG | Implemented | `airflow/dags/daily_sales_aggregation.py`. |
+| Monitoring integration | Implemented | Prometheus, Grafana and Streamlit Observability. |
+| Prometheus alert rules | Implemented | FastAPI, PostgreSQL exporter, latency, error rate and connection alerts. |
+| Grafana dashboards | Implemented | RetailFlow API Overview and RetailFlow Platform Overview. |
+| Docker healthchecks | Implemented | Core service healthchecks in Docker Compose. |
+| CI/CD validation | Implemented | GitHub Actions tests, Docker validation, Docker builds and security reports. |
+| Final evidence matrix | Implemented | Project Evidence page with skills evidence matrix. |
+| Advanced replay automation | Future improvement | Controlled replay remains documented but not fully automated. |
+| Advanced broker observability | Future improvement | Broker-level lag and throughput monitoring can be expanded. |
 
 ---
 
@@ -1752,15 +1835,20 @@ This makes the pipeline reliable, auditable and suitable for a broader Retail In
 
 | Component | File or location | Role |
 |---|---|---|
-| Customer View | `streamlit_app/pages/2_Customer_View.py` | Generates customer interactions. |
-| Event API | `api/app/routes/events.py` | Publishes events. |
+| Customer View | `streamlit_app/pages/2_Customer_View.py` | Generates customer interactions and invalid demo events. |
+| Event API | `api/app/routes/events.py` | Publishes events and exposes recent event inspection. |
+| Event producer service | `api/app/services/event_producer.py` | Produces events to Redpanda. |
 | Event consumer | `pipeline/consumer/event_consumer.py` | Consumes and processes events. |
 | Validators | `pipeline/consumer/validators.py` | Applies quality rules. |
 | Writer | `pipeline/consumer/writer.py` | Writes events and errors to PostgreSQL. |
 | Topics config | `pipeline/config/topics.yaml` | Defines streaming topics. |
-| Data Quality page | `streamlit_app/pages/5_Data_Quality.py` | Displays quality monitoring. |
+| Producer metrics | `pipeline/reports/pipeline_metrics.json` | Stores lightweight pipeline performance evidence. |
+| Data Quality page | `streamlit_app/pages/6_Data_Quality.py` | Displays quality monitoring and dead-letter evidence. |
+| Observability page | `streamlit_app/pages/8_Observability.py` | Displays monitoring targets, alerts and Grafana links. |
+| Project Evidence page | `streamlit_app/pages/10_Project_Evidence.py` | Maps pipeline evidence to evaluation criteria and skills. |
 | Daily data quality DAG | `airflow/dags/daily_data_quality.py` | Schedules quality checks. |
 | Daily sales DAG | `airflow/dags/daily_sales_aggregation.py` | Refreshes sales analytics. |
+| Monitoring configuration | `monitoring/` | Stores Prometheus and Grafana configuration. |
 | PostgreSQL schema | `database/init/` | Defines storage structures. |
 
 ---
@@ -1786,6 +1874,25 @@ This makes the pipeline reliable, auditable and suitable for a broader Retail In
 | Customer exists | Customer id does not exist. |
 | Product exists | Product id does not exist for product event. |
 | Timestamp valid | Event timestamp is missing or invalid. |
+
+---
+
+## Appendix — Final Demo Validation Checklist
+
+The following checklist can be used to validate the pipeline during the final demonstration.
+
+| Step | Action | Expected proof |
+|---|---|---|
+| 1 | Open Streamlit Customer View. | Customer event demo is available. |
+| 2 | Generate a full demo journey. | Events are published and recent events can be inspected. |
+| 3 | Generate an invalid demo event. | The event is rejected and stored as a dead-letter record. |
+| 4 | Open Streamlit Data Quality. | Dead-letter event, error reason and raw payload are visible. |
+| 5 | Open FastAPI docs. | `/events`, `/events/recent` and `/quality/*` endpoints are visible. |
+| 6 | Open Prometheus. | FastAPI and PostgreSQL exporter targets are up. |
+| 7 | Open Prometheus Alerts. | RetailFlow alert rules are loaded and evaluated. |
+| 8 | Open Grafana dashboards. | API and platform dashboards are provisioned. |
+| 9 | Open Airflow. | `daily_data_quality` and `daily_sales_aggregation` DAGs are visible. |
+| 10 | Open Project Evidence. | Pipeline criteria and skills are mapped to concrete proofs. |
 
 ---
 

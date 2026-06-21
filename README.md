@@ -2,373 +2,277 @@
 
 ## End-to-End Retail Intelligence Platform
 
-**Real-Time Data Pipelines • AI-Powered Customer Intelligence • Data Governance • Observability**
+**Real-Time Data Pipelines • AI-Powered Customer Intelligence • Data Governance • Observability • CI/CD**
 
-RetailFlow is an end-to-end Retail Intelligence platform designed for modern e-commerce organizations that need to transform operational, behavioral and customer data into actionable business intelligence.
+**Official repository:** https://github.com/HugoB-AS/retailflow-platform.git
 
-The platform combines event-driven data ingestion, governed data storage, customer analytics, machine learning, API serving, operational monitoring and executive dashboards into a single integrated architecture.
+RetailFlow is an end-to-end Retail Intelligence platform designed for modern e-commerce organizations that need to transform operational, behavioral and customer data into governed, monitored and actionable business intelligence.
 
----
+The platform combines event-driven data ingestion, PostgreSQL data storage, data governance, customer analytics, machine learning, API serving, orchestration, CI/CD, observability and business-facing dashboards into one coherent architecture.
 
-## Table of Contents
+This README is structured in two parts.
 
-1. [Overview](#overview)
-2. [Product Vision](#product-vision)
-3. [Business Context](#business-context)
-4. [Problem Statement](#problem-statement)
-5. [Platform Objectives](#platform-objectives)
-6. [Key Capabilities](#key-capabilities)
-7. [Global Architecture](#global-architecture)
-8. [Architecture Principles](#architecture-principles)
-9. [Technology Stack](#technology-stack)
-10. [Capability Mapping](#capability-mapping)
-11. [Data Governance](#Data Governance#)
-12. Real-Time Data Pipelines
-13. AI & MLOps
-14. Observability
-15. Streamlit Platform
-16. API Layer
-17. Project Structure
-18. Installation
-19. Running the Platform
-20. Demonstration Flow
-21. Development Milestones
-22. Future Improvements
+**Part 1** presents the project vision, architecture, platform components, data domains, governance layer, real-time pipelines, AI and MLOps layer, observability layer, Streamlit application, API layer and repository structure.
+
+**Part 2** presents installation, execution, validation commands, operational workflows, demonstration flow, CI/CD, testing, troubleshooting, milestones, limitations and future roadmap.
 
 ---
 
-## Overview
+# Table of Contents
 
-RetailFlow is built as a complete data and AI platform for e-commerce intelligence.
+## Part 1 — Platform Overview, Architecture and Components
 
-It connects the main layers of a modern data architecture:
+1. [Overview](#1-overview)
+2. [Product Vision](#2-product-vision)
+3. [Business Context](#3-business-context)
+4. [Problem Statement](#4-problem-statement)
+5. [Platform Objectives](#5-platform-objectives)
+6. [Key Capabilities](#6-key-capabilities)
+7. [Global Architecture](#7-global-architecture)
+8. [Runtime Architecture](#8-runtime-architecture)
+9. [Architecture Principles](#9-architecture-principles)
+10. [Technology Stack](#10-technology-stack)
+11. [Data Architecture](#11-data-architecture)
+12. [Data Governance](#12-data-governance)
+13. [Real-Time Data Pipelines](#13-real-time-data-pipelines)
+14. [AI and MLOps](#14-ai-and-mlops)
+15. [Observability and Monitoring](#15-observability-and-monitoring)
+16. [Streamlit Platform](#16-streamlit-platform)
+17. [FastAPI Layer](#17-fastapi-layer)
+18. [Airflow Orchestration](#18-airflow-orchestration)
+19. [CI/CD and Operations Overview](#19-cicd-and-operations-overview)
+20. [Project Structure](#20-project-structure)
 
-- customer-facing event generation;
-- real-time event ingestion;
-- data validation and dead-letter handling;
-- governed PostgreSQL storage;
-- customer feature engineering;
-- churn prediction;
-- customer lifetime value estimation;
-- customer segmentation;
-- API-based serving;
-- Streamlit business dashboards;
-- Airflow orchestration;
-- Prometheus and Grafana observability.
+## Part 2 — Operations, Demo, Validation and Roadmap
 
-The goal of RetailFlow is not only to display analytics. The goal is to demonstrate how an e-commerce organization can build a coherent platform where business events become trusted data, trusted data becomes intelligence, and intelligence becomes operational decision support.
+21. Installation and prerequisites  
+22. Running the platform  
+23. Service URLs and credentials  
+24. Health checks and validation commands  
+25. Data generation and loading workflow  
+26. ML training, prediction and report generation  
+27. Airflow operational workflow  
+28. Prometheus and Grafana workflow  
+29. PostgreSQL administration and backup/restore  
+30. Demonstration flow  
+31. Git and repository workflow  
+32. CI/CD workflow and security checks  
+33. Automated tests  
+34. Troubleshooting  
+35. Operational runbook  
+36. Development milestones  
+37. Known boundaries and production roadmap  
+38. Future improvements  
+39. Conclusion  
 
-RetailFlow is designed around the following end-to-end path:
+---
+
+# 1. Overview
+
+RetailFlow is built as a complete local data and AI platform for e-commerce intelligence.
+
+The project demonstrates how an organization can connect customer behavior, streaming ingestion, data quality, governance, machine learning, API serving, orchestration and monitoring into a single product-oriented platform.
+
+RetailFlow is not limited to a dashboard or to isolated machine learning scripts. It is designed as an integrated system where customer events are captured, validated, stored, enriched, governed, transformed into customer intelligence and monitored through operational tools.
+
+The core value chain is:
 
 ```text
 Customer behavior
 → real-time event ingestion
 → validation and quality controls
 → PostgreSQL storage
-→ feature engineering
+→ governance and consent controls
+→ customer feature engineering
 → machine learning models
 → FastAPI serving
 → Streamlit dashboards
-→ operational monitoring
+→ monitoring and continuous improvement
 ```
 
+This architecture supports both a business demonstration and a technical review. A business stakeholder can navigate Streamlit to understand customer value, churn risk, segmentation, governance and platform health. A technical stakeholder can inspect FastAPI, PostgreSQL, Redpanda, Airflow, Prometheus, Grafana, GitHub Actions and the repository structure.
+
 ---
 
-## Product Vision
+# 2. Product Vision
 
-RetailFlow is positioned as a Retail Intelligence platform for e-commerce teams that need to understand and act on customer behavior.
+RetailFlow is positioned as a **Retail Intelligence Platform** for modern e-commerce organizations.
 
-The platform helps answer questions such as:
+The platform is designed to answer questions such as:
 
-- Which customers are most valuable?
+- Which customers have the highest value potential?
 - Which customers are at risk of churn?
-- Which customer segments should be targeted differently?
+- Which customer segments require different actions?
 - Are customer events being ingested correctly?
-- Are data quality issues isolated and traceable?
-- Are ML models monitored and interpretable?
-- Is the platform observable from an operational point of view?
+- Are invalid events isolated and traceable?
+- Are customer data usages aligned with consent?
+- Are AI models monitored and explainable?
+- Is the technical platform observable?
 
-The product vision is to provide one integrated platform for:
+The product vision is to transform customer events into trusted intelligence and to make this intelligence usable by business, data, AI and platform teams.
 
-| Area | RetailFlow capability |
+RetailFlow supports this vision through five major capability areas:
+
+| Capability area | RetailFlow implementation |
 |---|---|
-| Customer Intelligence | Churn, CLV, segmentation and recommendations |
-| Data Engineering | Real-time event ingestion and validation |
-| Data Governance | Consent, retention, anonymization and auditability |
-| MLOps | Model reports, drift monitoring and model serving |
-| Observability | Prometheus, Grafana, FastAPI metrics and platform health |
-| Business Demonstration | Streamlit interface for live platform exploration |
+| Customer Intelligence | Churn, CLV, segmentation, customer profiles and business recommendations |
+| Data Engineering | Real-time event ingestion, validation, persistence and quality controls |
+| Data Governance | Consent, retention, anonymization, auditability, risk and compliance evidence |
+| MLOps | Model reports, registry metadata, drift monitoring, retraining and AI serving |
+| Observability | Prometheus, Grafana, FastAPI metrics, PostgreSQL exporter and alert rules |
 
 ---
 
-## Business Context
+# 3. Business Context
 
-Modern e-commerce companies generate large volumes of heterogeneous data:
+RetailFlow is demonstrated in the context of a multi-category e-commerce organization.
 
-- product catalog data;
-- customer profiles;
-- orders and payments;
-- delivery and return information;
-- browsing sessions;
-- product views;
-- cart events;
-- checkout events;
-- support tickets;
-- reviews;
-- consent and governance records;
-- ML predictions and customer segments.
+The business generates customer and operational data through product browsing, cart interactions, checkout, purchases, returns, customer support, reviews and consent preferences. These data sources have value only when they are collected reliably, governed properly, processed consistently and converted into decisions.
 
-These data sources are valuable only if they are collected, governed, processed, monitored and transformed into decisions.
-
-RetailFlow addresses this challenge by connecting business events to a data platform that supports both operational and analytical use cases.
-
-The business goal is to improve decision-making across the customer lifecycle:
+The platform supports the customer lifecycle from behavior capture to business action:
 
 ```text
 Acquire customers
-→ understand behavior
+→ observe behavior
 → detect risks
-→ estimate value
-→ personalize actions
+→ estimate customer value
+→ group customers into segments
+→ recommend actions
 → monitor outcomes
 ```
 
-RetailFlow therefore supports a modern retail operating model where data engineering, governance, analytics and AI are not separate silos but parts of the same product platform.
+RetailFlow is therefore designed to serve several stakeholders.
+
+Business teams use the platform to understand customers and prioritize actions. Data teams use it to validate ingestion, quality and traceability. AI teams use it to train, monitor and serve models. Platform teams use it to observe services, health checks, dashboards and alerts. Governance stakeholders use it to review consent, retention, quality, audit evidence and risk.
 
 ---
 
-## Problem Statement
+# 4. Problem Statement
 
 The guiding problem is:
 
-> How can a modern e-commerce data platform combine real-time data pipelines, artificial intelligence and observability in order to improve business decision-making?
+> How can a modern e-commerce data platform combine real-time data pipelines, artificial intelligence, data governance and observability in order to improve business decision-making?
 
-This problem requires more than a dashboard and more than a standalone model.
+This problem requires more than a single dashboard or a standalone model.
 
-It requires a platform able to:
-
-1. collect customer events;
-2. validate and store them reliably;
-3. enforce governance and auditability;
-4. build customer intelligence features;
-5. train and monitor AI models;
-6. expose insights through APIs;
-7. provide interactive business dashboards;
-8. monitor platform health and operational behavior.
-
-RetailFlow answers this by implementing a full local platform using Docker Compose, PostgreSQL, Redpanda, FastAPI, Airflow, Streamlit, Prometheus, Grafana and Scikit-Learn.
+RetailFlow answers this problem by implementing a platform able to collect customer events, validate and persist them, govern customer data usage, build customer intelligence features, train and serve models, display actionable dashboards, orchestrate recurring workflows, validate changes through CI/CD and monitor service health.
 
 ---
 
-## Platform Objectives
+# 5. Platform Objectives
 
-RetailFlow was designed with the following objectives.
+RetailFlow was designed around seven main objectives.
 
-### 1. Build a coherent end-to-end platform
+| Objective | Description |
+|---|---|
+| End-to-end integration | Connect events, data, governance, AI, APIs, dashboards and monitoring |
+| Real-time event processing | Capture customer interactions through an event-driven pipeline |
+| Data quality visibility | Reject, isolate and explain invalid events |
+| Operational governance | Represent consent, retention, audit and risks in platform assets |
+| AI serving | Store predictions and expose them through FastAPI and Streamlit |
+| Monitoring | Monitor models, services, metrics, alerts and workflows |
+| Demonstrability | Provide a guided live demo through Streamlit and supporting tools |
 
-The platform must cover the complete path from customer events to business intelligence.
+The objective is not only to prove that each component can run. The objective is to show how all components work together as a coherent Retail Intelligence platform.
 
-This includes ingestion, storage, governance, ML and visualization.
+---
 
-### 2. Support real-time customer event processing
+# 6. Key Capabilities
 
-Customer actions such as product views, add-to-cart events and checkout events should be captured through an event-driven pipeline.
+## 6.1 Customer Intelligence
 
-### 3. Make data quality visible
+RetailFlow provides a customer intelligence layer built from behavioral, transactional and analytical features.
 
-Invalid events should not silently pollute the analytical layer.
+The Customer Intelligence page supports churn risk prioritization, customer lifetime value analysis, customer segmentation, customer profile exploration and business recommendations. It is designed for business users who need to understand which customers require attention and what actions may be appropriate.
 
-They must be rejected, isolated and traceable.
+When analytics consent is not granted for a selected customer profile, customer-level AI predictions are not available or not provided in the interface. This keeps the customer intelligence experience aligned with the governance model while preserving a clear user experience.
 
-### 4. Make governance operational
+## 6.2 Real-Time Pipelines
 
-Governance should not remain theoretical.
+RetailFlow uses Redpanda as a Kafka-compatible event broker and a Python consumer to process live customer events.
 
-It should be represented through tables, policies, consent data, retention logs and dashboards.
-
-### 5. Serve AI outputs through APIs
-
-ML outputs should not remain inside notebooks.
-
-Predictions and segments must be persisted, exposed through FastAPI and consumed by Streamlit dashboards.
-
-### 6. Monitor models and platform components
-
-RetailFlow must expose model metrics, drift signals, FastAPI metrics, PostgreSQL exporter metrics and platform health indicators.
-
-### 7. Provide a strong live demonstration path
-
-The platform must be easy to demonstrate through a narrative flow:
+The pipeline follows this pattern:
 
 ```text
-Platform Overview
-→ Customer View
-→ Customer Intelligence
-→ Data Governance
-→ Data Quality
-→ AI Monitoring
-→ Observability
+Streamlit Customer View
+→ FastAPI event endpoint
+→ Redpanda topic
+→ Python event consumer
+→ validation rules
+→ PostgreSQL storage
 ```
 
----
+Valid events are persisted in the raw data layer. Invalid events are isolated in governance tables and surfaced through the Data Quality page.
 
-## Key Capabilities
+## 6.3 Data Quality
 
-### Customer Intelligence
+Data quality is treated as an operational layer.
 
-RetailFlow provides a customer intelligence layer built on behavioral, transactional and analytical features.
+The event consumer validates identifiers, event types, customer references, product references and timestamps. Rejected records are stored as dead-letter events, while quality logs provide rule-level evidence. This prevents invalid records from silently entering trusted analytics and AI workflows.
 
-It includes:
+## 6.4 Data Governance
 
-- churn risk ranking;
-- customer lifetime value estimation;
-- customer segmentation;
-- customer-level AI profile;
-- segment-level exploration;
-- business recommendations;
-- consent-aware customer exploration.
+RetailFlow includes governance capabilities for consent, retention, anonymization, auditability, quality, risks and AI usage.
 
-The Customer Intelligence dashboard connects the AI layer to business decision-making.
+Governance is implemented through PostgreSQL schemas, FastAPI endpoints, Airflow workflows and Streamlit dashboards. It is not only described in documentation; it is visible in the platform.
 
-It allows users to identify:
+## 6.5 AI and MLOps
 
-- high-risk customers;
-- high-value customers;
-- segment-specific populations;
-- customers eligible for analytics exploration;
-- actions to prioritize by segment or risk profile.
+RetailFlow includes three AI use cases: churn prediction, CLV estimation and customer segmentation.
 
----
+The ML layer includes training scripts, model artifacts, reports, prediction persistence, API serving, model monitoring, drift reports, retraining workflow evidence and a model registry file.
 
-### Real-Time Pipelines
+## 6.6 Observability
 
-RetailFlow uses a Kafka-compatible event streaming architecture with Redpanda.
+RetailFlow includes Prometheus, Grafana, PostgreSQL exporter, FastAPI metrics, Airflow health checks and Streamlit observability pages.
 
-The real-time pipeline supports:
+The monitoring layer covers service health, API behavior, database availability, alert rules and dashboard links.
 
-- storefront event generation;
-- FastAPI event publishing;
-- Redpanda topic ingestion;
-- Python consumer processing;
-- validation rules;
-- PostgreSQL persistence;
-- dead-letter handling;
-- quality logs.
+## 6.7 CI/CD and Operations
 
-The pipeline demonstrates how an e-commerce platform can decouple customer-facing applications from analytical storage.
+RetailFlow includes GitHub Actions workflows for automated validation. The CI pipeline validates Python code, automated tests, Docker Compose configuration, Docker image build readiness and security-oriented checks.
+
+Operational maturity is reinforced through health checks, backup and restore scripts, environment configuration examples and a read-only database role.
 
 ---
 
-### Data Quality
-
-RetailFlow includes a data quality layer focused on event reliability.
-
-It supports:
-
-- event schema validation;
-- allowed event type validation;
-- customer existence validation;
-- product existence validation;
-- timestamp validation;
-- dead-letter event storage;
-- quality rule summaries;
-- Streamlit quality monitoring.
-
-This design prevents invalid data from silently entering trusted analytical tables.
-
----
-
-### Data Governance
-
-RetailFlow includes a governance layer covering:
-
-- customer consent tracking;
-- analytics consent filtering;
-- marketing consent indicators;
-- personalization consent indicators;
-- retention policies;
-- anonymization status;
-- retention action logs;
-- risk register;
-- governance dashboards.
-
-Governance is implemented in both the database layer and the Streamlit interface.
-
-It is connected to Customer Intelligence through consent-aware analytics filtering.
-
----
-
-### AI & MLOps
-
-RetailFlow includes a complete AI layer with:
-
-- churn model;
-- CLV model;
-- customer segmentation model;
-- model reports;
-- feature importance;
-- cross-validation reports;
-- drift monitoring;
-- prediction distribution monitoring;
-- FastAPI serving endpoints;
-- Streamlit AI Monitoring dashboard.
-
-The AI layer is designed to support decision-making, not just model experimentation.
-
----
-
-### Observability
-
-RetailFlow includes operational monitoring through:
-
-- Prometheus;
-- Grafana;
-- FastAPI `/metrics` endpoint;
-- PostgreSQL exporter;
-- Airflow health endpoint;
-- Prometheus target monitoring;
-- documented alerting rules;
-- Streamlit observability page.
-
-The observability layer shows that the platform is not only functional but also monitorable.
-
----
-
-## Global Architecture
+# 7. Global Architecture
 
 RetailFlow is deployed locally through Docker Compose.
 
-The platform is composed of several specialized services connected through a shared Docker network.
+The platform is composed of specialized services connected through a shared Docker network.
 
 ```mermaid
 flowchart LR
-    User[User / Business Stakeholder] --> Streamlit[Streamlit UI<br/>port 8501]
-    Streamlit --> FastAPI[FastAPI<br/>port 8000]
-    FastAPI --> Postgres[(PostgreSQL<br/>retailflow_db)]
-    FastAPI --> Redpanda[Redpanda<br/>Kafka-compatible broker]
+    User[Business User / Demo User] --> Streamlit[Streamlit UI]
+    Streamlit --> FastAPI[FastAPI Service Layer]
+    FastAPI --> Postgres[(PostgreSQL retailflow_db)]
+    FastAPI --> Redpanda[Redpanda Broker]
     Redpanda --> Consumer[Python Event Consumer]
-    Consumer --> Validation[Data Quality Rules]
-    Validation -->|valid events| RawEvents[(raw.events)]
-    Validation -->|invalid events| DeadLetters[(governance.dead_letter_events)]
+    Consumer --> Validation[Validation Rules]
+    Validation -->|Valid| RawEvents[(raw.events)]
+    Validation -->|Invalid| DeadLetters[(governance.dead_letter_events)]
     Validation --> QualityLogs[(governance.data_quality_logs)]
-    Postgres --> ML[ML Training & Prediction Scripts]
+    Postgres --> Features[(analytics.customer_features)]
+    Features --> ML[ML Training and Prediction]
     ML --> Predictions[(analytics.ml_predictions)]
     ML --> Segments[(analytics.customer_segments)]
     Predictions --> FastAPI
     Segments --> FastAPI
     FastAPI --> Prometheus[Prometheus]
-    Postgres --> PostgresExporter[PostgreSQL Exporter]
-    PostgresExporter --> Prometheus
-    Prometheus --> Grafana[Grafana]
+    PostgresExporter[PostgreSQL Exporter] --> Prometheus
+    Prometheus --> Grafana[Grafana Dashboards]
     Airflow[Airflow DAGs] --> Postgres
     Airflow --> ML
 ```
 
+This architecture separates the user interface, API layer, streaming broker, consumer logic, database, orchestration, ML workflows and monitoring stack.
+
 ---
 
-## Runtime Architecture
+# 8. Runtime Architecture
 
-The main runtime flow can be summarized as follows.
+The main runtime flow is:
 
 ```mermaid
 sequenceDiagram
@@ -383,132 +287,41 @@ sequenceDiagram
     participant G as Grafana
 
     U->>S: Interacts with Customer View
-    S->>A: POST /events
-    A->>R: Publish event
-    R->>C: Consume event
-    C->>C: Validate event
-    C->>D: Insert valid event
-    C->>D: Insert quality logs or dead letters
-    M->>D: Read customer features
-    M->>D: Store predictions and segments
-    S->>A: Request customer intelligence
-    A->>D: Read predictions and governance data
-    A->>S: Return insights
-    A->>P: Expose API metrics
-    D->>P: Expose DB metrics via exporter
-    P->>G: Feed dashboards
+    S->>A: Sends event request
+    A->>R: Publishes event message
+    R->>C: Delivers event
+    C->>C: Applies validation rules
+    C->>D: Stores event or governance evidence
+    M->>D: Reads features and writes predictions
+    S->>A: Requests customer intelligence
+    A->>D: Reads analytics and governance data
+    A->>S: Returns governed insights
+    A->>P: Exposes metrics
+    D->>P: Exposes database metrics through exporter
+    P->>G: Feeds dashboards
 ```
+
+This runtime pattern demonstrates how live business actions become data records, how data records become intelligence, and how the platform remains observable.
 
 ---
 
-## Data Flow Overview
+# 9. Architecture Principles
 
-RetailFlow uses several data flows.
+## 9.1 Modularity
 
-### 1. Historical operational data flow
+Each service has a focused responsibility. Streamlit handles user interaction. FastAPI handles services and event publication. Redpanda handles streaming. The event consumer handles validation and persistence. PostgreSQL stores data. Airflow orchestrates recurring workflows. Prometheus and Grafana monitor the platform.
 
-```text
-Data generation
-→ CSV files
-→ PostgreSQL loading
-→ core/raw/governance/analytics schemas
-```
+## 9.2 Separation of Concerns
 
-### 2. Live event data flow
+RetailFlow separates frontend interaction, API logic, event transport, validation, persistence, governance, analytics, AI outputs, orchestration and monitoring.
 
-```text
-Streamlit interaction
-→ FastAPI POST /events
-→ Redpanda topic
-→ Python consumer
-→ validation
-→ raw.events or governance.dead_letter_events
-```
+This makes the project easier to maintain and easier to explain during a technical review.
 
-### 3. AI data flow
+## 9.3 Event-Driven Design
 
-```text
-analytics.customer_features
-→ model training
-→ model reports
-→ predictions
-→ analytics.ml_predictions
-→ FastAPI /ai
-→ Streamlit dashboards
-```
+Customer interactions are not written directly from Streamlit to PostgreSQL.
 
-### 4. Governance data flow
-
-```text
-customer data
-→ consent fields
-→ retention policies
-→ retention logs
-→ governance endpoints
-→ Streamlit Data Governance
-```
-
-### 5. Observability data flow
-
-```text
-FastAPI metrics
-→ Prometheus
-→ Grafana
-
-PostgreSQL exporter
-→ Prometheus
-→ Grafana
-
-Airflow health
-→ Streamlit Observability
-```
-
----
-
-## Architecture Principles
-
-RetailFlow is designed around the following principles.
-
-### Modular architecture
-
-Each component has a clear responsibility.
-
-| Component | Responsibility |
-|---|---|
-| Streamlit | User interface and demonstration layer |
-| FastAPI | API and service layer |
-| PostgreSQL | Structured storage and analytics warehouse |
-| Redpanda | Event streaming broker |
-| Event Consumer | Streaming validation and persistence |
-| Airflow | Orchestration and scheduled workflows |
-| ML scripts | Training, prediction and drift reports |
-| Prometheus | Metrics collection |
-| Grafana | Metrics visualization |
-
----
-
-### Separation of concerns
-
-RetailFlow separates:
-
-- application interaction;
-- event transport;
-- validation logic;
-- storage;
-- governance;
-- analytics;
-- AI outputs;
-- monitoring.
-
-This separation improves maintainability and allows each layer to evolve independently.
-
----
-
-### Event-driven design
-
-Customer interactions are not written directly to the database from the UI.
-
-Instead, they follow an event-driven pattern:
+The platform uses a producer-broker-consumer pattern:
 
 ```text
 UI
@@ -519,65 +332,43 @@ UI
 → storage
 ```
 
-This pattern is closer to production architectures where event ingestion must be decoupled from frontend applications.
+This is closer to production e-commerce architectures, where ingestion must be decoupled from user-facing applications.
 
----
+## 9.4 Governance by Design
 
-### Governed analytics
+Governance is embedded in consent fields, retention policies, anonymization workflow, quality logs, dead-letter events, governance dashboards, API endpoints and AI usage rules.
 
-Customer analytics is connected to consent management.
+## 9.5 Observability by Design
 
-The Customer Intelligence dashboard supports filtering customers based on analytics consent.
+RetailFlow exposes health signals, metrics, targets, dashboards and alerting rules so the platform can be monitored as an operational system.
 
-This creates a direct link between governance and AI usage.
+## 9.6 Demonstrability
 
----
-
-### Production-oriented observability
-
-RetailFlow includes metrics and dashboards for operational monitoring.
-
-The platform includes:
-
-- service status;
-- API request metrics;
-- PostgreSQL health;
-- Prometheus targets;
-- Grafana dashboards;
-- documented alerting rules;
-- Airflow health checks.
-
----
-
-### Demonstrability
-
-The platform is designed to be demonstrated live.
-
-The Streamlit navigation follows a narrative order:
+The platform is designed to be demonstrated live through a structured flow:
 
 ```text
 Platform Overview
 → Customer View
 → Customer Intelligence
 → Data Governance
+→ Data Architecture
 → Data Quality
 → AI Monitoring
 → Observability
+→ CI/CD and Operations
+→ Project Evidence
 ```
-
-This makes it possible to explain the entire platform in a structured and business-oriented way.
 
 ---
 
-## Technology Stack
-
-### Summary
+# 10. Technology Stack
 
 | Layer | Technologies |
 |---|---|
 | User interface | Streamlit |
 | API layer | FastAPI |
 | Database | PostgreSQL |
+| Database administration | pgAdmin |
 | Streaming broker | Redpanda |
 | Streaming consumer | Python |
 | Orchestration | Apache Airflow |
@@ -586,579 +377,127 @@ This makes it possible to explain the entire platform in a structured and busine
 | Visualization | Grafana |
 | Database metrics | PostgreSQL Exporter |
 | Containerization | Docker, Docker Compose |
+| CI/CD | GitHub Actions |
 | Development environment | WSL2, Ubuntu, Python 3.11 |
 | Version control | Git, GitHub |
 
----
-
-### Streamlit
-
-Streamlit is used as the interactive platform interface.
-
-It provides:
-
-- a landing page;
-- a platform overview;
-- a customer-facing demo journey;
-- customer intelligence dashboards;
-- governance dashboards;
-- data quality dashboards;
-- AI monitoring dashboards;
-- observability views.
-
-Streamlit was chosen because it enables fast development of business-facing dashboards while remaining Python-native.
+The selected stack is intentionally practical. It allows the full platform to run locally while preserving patterns that are close to real production architectures.
 
 ---
 
-### FastAPI
-
-FastAPI is the service layer.
-
-It exposes:
-
-- health endpoints;
-- product endpoints;
-- event endpoints;
-- quality endpoints;
-- AI endpoints;
-- governance endpoints;
-- model report endpoints;
-- metrics endpoint.
-
-FastAPI was chosen because it provides:
-
-- strong performance;
-- automatic OpenAPI documentation;
-- clean endpoint structure;
-- easy integration with SQLAlchemy and Python services.
-
----
-
-### PostgreSQL
+# 11. Data Architecture
 
 PostgreSQL is the central data platform.
 
-It is organized into multiple schemas:
+It is organized into multiple logical schemas.
 
 | Schema | Role |
 |---|---|
-| `raw` | Raw events and ingested behavioral data |
-| `core` | Clean business entities |
+| `raw` | Event-level and ingestion-oriented data |
+| `core` | Clean business entities such as customers, products and orders |
 | `analytics` | Features, predictions, segments and aggregates |
-| `governance` | Consent, retention, quality and auditability |
+| `governance` | Consent, retention, quality, audit and dead-letter evidence |
 
-PostgreSQL was chosen because it provides a stable relational foundation for structured analytics, governance and operational queries.
+This schema separation supports modularity, governance and analytical clarity.
 
----
+## 11.1 Main Data Domains
 
-### Redpanda
+RetailFlow covers several domains:
 
-Redpanda is used as a Kafka-compatible streaming broker.
-
-It supports:
-
-- event topics;
-- producer/consumer architecture;
-- local deployment without Zookeeper;
-- Kafka-compatible client libraries.
-
-Redpanda was chosen to demonstrate event streaming patterns with a simpler local deployment model.
-
----
-
-### Airflow
-
-Airflow is used for orchestration.
-
-RetailFlow includes DAGs for:
-
-- daily data quality;
-- daily sales aggregation;
-- ML retraining;
-- retention cleanup.
-
-Airflow provides scheduling, workflow structure and visibility over recurring data operations.
-
----
-
-### Scikit-Learn
-
-Scikit-Learn is used for the ML layer.
-
-RetailFlow includes:
-
-- churn classification;
-- CLV regression;
-- customer segmentation;
-- feature importance reports;
-- cross-validation outputs;
-- drift analysis reports.
-
-Scikit-Learn was selected for its transparency, simplicity and suitability for explainable tabular ML workflows.
-
----
-
-### Prometheus
-
-Prometheus collects metrics from:
-
-- FastAPI;
-- PostgreSQL exporter;
-- platform targets.
-
-It is used to validate service health, request metrics and database monitoring.
-
----
-
-### Grafana
-
-Grafana visualizes the metrics collected by Prometheus.
-
-RetailFlow includes dashboards for API and platform observability.
-
----
-
-### Docker Compose
-
-Docker Compose is used to run the complete platform locally.
-
-It manages:
-
-- PostgreSQL;
-- pgAdmin;
-- Redpanda;
-- FastAPI;
-- event consumer;
-- Streamlit;
-- Airflow;
-- Prometheus;
-- Grafana;
-- PostgreSQL exporter.
-
-Docker Compose was selected because it provides a reliable local deployment strategy while keeping the architecture easy to reproduce.
-
----
-
-## Capability Mapping
-
-RetailFlow is organized around four major capability domains.
-
-These domains structure the platform and make the architecture easier to understand.
-
----
-
-### 1. Data Governance
-
-RetailFlow includes a governance layer covering:
-
-- customer consent management;
-- analytics consent usage;
-- data retention policies;
-- anonymization status;
-- retention action logs;
-- data quality logs;
-- dead-letter events;
-- risk management.
-
-Main implementation areas:
-
-| Asset | Description |
+| Domain | Main assets |
 |---|---|
-| `governance.customer_consents` | Consent history and governance records |
-| `governance.data_retention_policies` | Retention policy definitions |
-| `governance.retention_actions_log` | Retention and anonymization audit trail |
-| `governance.data_quality_logs` | Quality rule execution logs |
-| `governance.dead_letter_events` | Rejected events and error context |
-| `/governance/*` | FastAPI governance endpoints |
-| Data Governance page | Streamlit governance dashboard |
+| Customer | Customer profiles, status, loyalty and consent |
+| Product | Products, categories, prices and suppliers |
+| Commerce | Orders, order items, payments, shipments and returns |
+| Interaction | Sessions, raw events, reviews and support tickets |
+| Analytics | Customer features, daily sales and aggregates |
+| AI | Predictions, segments, reports and model metadata |
+| Governance | Consents, retention policies, logs, risks and quality evidence |
 
----
+## 11.2 Analytical Layer
 
-### 2. Data Architecture
+The analytical layer is designed around customer features, daily sales, machine learning predictions and customer segments.
 
-RetailFlow implements a modular data architecture.
-
-Main components:
-
-| Asset | Description |
-|---|---|
-| Docker Compose | Local multi-service deployment |
-| PostgreSQL | Central database and analytics warehouse |
-| Redpanda | Event streaming broker |
-| FastAPI | Service and API layer |
-| Streamlit | User-facing platform |
-| Airflow | Orchestration layer |
-| Prometheus | Metrics collection |
-| Grafana | Metrics visualization |
-
-The architecture is designed to support both analytical and operational workloads.
-
----
-
-### 3. Real-Time Data Pipelines
-
-RetailFlow implements a real-time pipeline for customer events.
-
-Main capabilities:
-
-- event publishing;
-- event streaming;
-- event consumption;
-- validation;
-- persistence;
-- rejection handling;
-- monitoring.
-
-Main implementation areas:
-
-| Asset | Description |
-|---|---|
-| `/events` | FastAPI event publishing endpoint |
-| `retailflow_events` | Redpanda topic |
-| `pipeline/consumer/event_consumer.py` | Python consumer |
-| `pipeline/consumer/validators.py` | Validation rules |
-| `raw.events` | Valid event storage |
-| `governance.dead_letter_events` | Invalid event storage |
-| Data Quality page | Streamlit pipeline quality dashboard |
-
----
-
-### 4. AI & MLOps
-
-RetailFlow implements an AI layer for customer intelligence.
-
-Main capabilities:
-
-- churn scoring;
-- customer lifetime value prediction;
-- customer segmentation;
-- model reports;
-- feature importance;
-- cross-validation;
-- drift monitoring;
-- prediction serving;
-- AI dashboards.
-
-Main implementation areas:
-
-| Asset | Description |
-|---|---|
-| `ml/src/train_churn.py` | Churn training workflow |
-| `ml/src/train_clv.py` | CLV training workflow |
-| `ml/src/train_segmentation.py` | Segmentation training workflow |
-| `ml/src/predict.py` | Batch prediction workflow |
-| `ml/src/evaluate_drift.py` | Drift report generation |
-| `analytics.ml_predictions` | Persisted churn and CLV predictions |
-| `analytics.customer_segments` | Persisted customer segments |
-| `/ai/*` | FastAPI AI endpoints |
-| AI Monitoring page | Streamlit AI monitoring dashboard |
-| Customer Intelligence page | Streamlit business AI dashboard |
-
----
-
-## Current Stable Release
-
-Current stable tag:
+Key tables include:
 
 ```text
-v17-ux-demo-polish-stable
+analytics.customer_features
+analytics.daily_sales
+analytics.ml_predictions
+analytics.customer_segments
 ```
 
-Current stable branch:
+These tables are used by FastAPI, Streamlit, Airflow and ML scripts.
+
+## 11.3 Governance Layer
+
+The governance schema is used to store consent, retention, data quality and audit evidence.
+
+Key tables include:
 
 ```text
-develop
+governance.customer_consents
+governance.data_retention_policies
+governance.retention_actions_log
+governance.dead_letter_events
+governance.data_quality_logs
 ```
 
-Latest stable milestone:
-
-```text
-UX, customer intelligence and demonstration platform
-```
-
-The platform is currently in a stable state after the V17 milestone.
-
-V17 transformed RetailFlow from a collection of technical components into a coherent, business-facing and demonstration-ready platform.
+This makes governance queryable, auditable and visible through dashboards.
 
 ---
 
-## Platform Navigation
+# 12. Data Governance
 
-RetailFlow Streamlit includes the following navigation structure:
+RetailFlow includes a governance layer designed to make customer data usage controlled, traceable and operationally auditable.
 
-| Page | Purpose |
-|---|---|
-| Home | Minimal product landing page |
-| Platform Overview | Problem, architecture, status and demo path |
-| Customer View | Product catalog, cart, checkout and event generation |
-| Customer Intelligence | Churn, CLV, segments, consent-aware exploration |
-| Data Governance | Consent, retention, anonymization and auditability |
-| Data Quality | Dead letters, quality rules and pipeline errors |
-| AI Monitoring | Model metrics, feature importance, drift and validation |
-| Observability | Prometheus, Grafana, Airflow and platform health |
+The governance approach covers consent management, retention, anonymization, data quality, risk management, ownership, accessibility, AI governance and auditability.
 
-This navigation supports a complete product demonstration from business context to operational monitoring.
-
----
-
-## Value Proposition
-
-RetailFlow delivers value across multiple roles.
-
-### For business teams
-
-RetailFlow helps business teams:
-
-- identify valuable customers;
-- detect churn risks;
-- understand customer segments;
-- prioritize retention actions;
-- monitor customer behavior;
-- connect customer intelligence to actions.
-
-### For data teams
-
-RetailFlow helps data teams:
-
-- ingest events reliably;
-- validate data quality;
-- structure data across schemas;
-- trace invalid events;
-- build features;
-- expose analytics through APIs.
-
-### For AI teams
-
-RetailFlow helps AI teams:
-
-- train customer models;
-- monitor metrics;
-- explain drivers;
-- detect drift;
-- expose predictions;
-- connect models to business dashboards.
-
-### For platform teams
-
-RetailFlow helps platform teams:
-
-- run services locally;
-- monitor API health;
-- monitor database health;
-- inspect Prometheus targets;
-- visualize metrics in Grafana;
-- document alerting rules.
-
----
-
-## Why RetailFlow Matters
-
-RetailFlow demonstrates how a modern e-commerce platform can evolve from raw operational data to actionable customer intelligence.
-
-It shows that a data product is not only a model or a dashboard.
-
-A complete data product requires:
-
-- governed data;
-- reliable ingestion;
-- quality controls;
-- explainable analytics;
-- operational monitoring;
-- API-based serving;
-- business-facing interfaces.
-
-RetailFlow brings these dimensions together in a single coherent platform.
-
-
----
-
-## 9. Data Governance
-
-RetailFlow includes a dedicated governance layer designed to make data usage controlled, traceable and operationally auditable.
-
-The governance approach is not limited to documentation.
-It is implemented through database schemas, consent attributes, retention policies, quality logs, dead-letter events and Streamlit dashboards.
-
-The goal is to show how governance principles can be translated into technical controls inside a data platform.
-
-### 9.1 Governance Goals
+## 12.1 Governance Objectives
 
 RetailFlow governance is built around the following objectives:
 
-| Goal | Description |
+| Objective | Platform implementation |
 |---|---|
-| Consent awareness | Customer analytics usage must be aligned with consent indicators. |
-| Data retention | Data domains must have explicit retention rules and actions. |
-| Auditability | Quality checks, retention actions and rejected events must be traceable. |
-| Data quality | Invalid events should be detected before contaminating analytical layers. |
-| Risk management | Privacy, quality, operational and ML risks must be visible. |
-| Accountability | Roles and responsibilities must be clearly mapped. |
+| Consent awareness | Consent fields and governance dashboards |
+| Data retention | Retention policy table and cleanup workflow |
+| Auditability | Retention logs, quality logs and dead-letter events |
+| Data quality | Validation rules and Data Quality page |
+| Risk management | Data risk register and governance evidence |
+| Accountability | Roles, stakeholders and governance operating model |
+| AI governance | Consent-aware intelligence, drift monitoring and model reports |
 
-The platform therefore connects governance to daily operations:
+## 12.2 Consent Management
 
-```text
-customer consent
-→ governed analytics
-→ data quality checks
-→ dead-letter isolation
-→ retention policies
-→ audit trail
-```
+RetailFlow uses three customer consent dimensions:
 
-### 9.2 Governance Schema
-
-The database contains a dedicated PostgreSQL schema:
-
-```text
-governance
-```
-
-This schema contains the governance and quality tables used by the platform.
-
-| Table | Purpose |
+| Consent field | Meaning |
 |---|---|
-| `governance.customer_consents` | Stores customer consent records. |
-| `governance.data_retention_policies` | Stores retention policies by table and domain. |
-| `governance.retention_actions_log` | Stores retention and anonymization execution logs. |
-| `governance.data_quality_logs` | Stores failed data quality checks. |
-| `governance.dead_letter_events` | Stores rejected streaming events. |
+| `marketing_consent` | Permission for marketing activation |
+| `analytics_consent` | Permission for analytics and customer intelligence exploration |
+| `personalization_consent` | Permission for personalization use cases |
 
-These tables make the governance layer observable from both the API and the Streamlit interface.
+The Customer Intelligence interface is connected to analytics consent. Customer-level AI predictions are provided only when analytics consent is available for the selected customer context.
 
-### 9.3 Consent Management
+## 12.3 Data Retention and Anonymization
 
-RetailFlow uses consent flags to control analytical usage.
-
-The main consent dimensions are:
-
-| Consent | Meaning |
-|---|---|
-| `marketing_consent` | Permission for marketing activation. |
-| `analytics_consent` | Permission for analytical usage and customer intelligence exploration. |
-| `personalization_consent` | Permission for personalized recommendations or targeting. |
-
-The Streamlit Customer Intelligence page uses the `analytics_consent` field to restrict the customer explorer by default.
-
-This creates a direct connection between:
-
-```text
-Data Governance
-↓
-Consent Management
-↓
-Customer Intelligence
-↓
-Responsible Analytics
-```
-
-### 9.4 Governed Customer Intelligence
-
-In the Customer Intelligence dashboard, the customer selector contains a governance-aware filter:
-
-```text
-Show only customers with analytics consent
-```
-
-When enabled, only customers with:
-
-```text
-analytics_consent = true
-```
-
-are available in the customer AI profile explorer.
-
-This is important because customer intelligence involves derived data such as:
-
-- churn scores;
-- predicted customer lifetime value;
-- behavioral features;
-- customer segments;
-- business recommendations.
-
-These outputs can influence marketing or retention decisions, so the dashboard demonstrates how governance rules can be integrated into analytics workflows.
-
-### 9.5 Data Retention Policies
-
-RetailFlow includes a retention policy table:
+Retention policies are stored in:
 
 ```text
 governance.data_retention_policies
 ```
 
-The purpose is to define how long each data domain should be retained and what action should be taken when a policy applies.
-
-Example policy dimensions:
-
-| Field | Meaning |
-|---|---|
-| `policy_id` | Unique policy identifier. |
-| `data_domain` | Business domain affected by the policy. |
-| `table_name` | Target table. |
-| `data_category` | Type of data concerned. |
-| `retention_days` | Retention duration. |
-| `retention_trigger` | Trigger condition. |
-| `retention_action` | Action to apply. |
-| `legal_basis` | Governance or compliance justification. |
-| `owner_role` | Responsible role. |
-
-Example retention actions include:
-
-- anonymize;
-- pseudonymize;
-- refresh;
-- archive;
-- delete.
-
-### 9.6 Retention Actions Log
-
-Retention operations are logged in:
+Retention actions are logged in:
 
 ```text
 governance.retention_actions_log
 ```
 
-This table provides an audit trail of actions applied to data records.
+The Airflow DAG `retention_cleanup` supports the retention workflow. It can identify records affected by retention rules, apply anonymization logic, update consent flags and write an audit trail.
 
-It supports questions such as:
+## 12.4 Data Quality and Dead Letters
 
-- Which policy was applied?
-- Which table was affected?
-- Which record was processed?
-- Was the action successful?
-- When was the action executed?
-- Which component executed the action?
-
-This auditability is exposed through the Data Governance page.
-
-### 9.7 Data Quality Logs
-
-The table:
-
-```text
-governance.data_quality_logs
-```
-
-stores failed quality checks produced by the pipeline.
-
-Typical fields include:
-
-| Field | Meaning |
-|---|---|
-| `check_id` | Unique quality check identifier. |
-| `rule_id` | Rule identifier. |
-| `rule_name` | Human-readable rule name. |
-| `table_name` | Target table. |
-| `record_id` | Identifier of the affected record. |
-| `status` | Passed or failed status. |
-| `severity` | Severity level. |
-| `action` | Action applied by the pipeline. |
-| `error_message` | Reason for failure. |
-| `checked_at` | Timestamp of the check. |
-| `source` | Component that produced the check. |
-
-The quality log is used by the Data Quality page to show failed rules and pipeline reliability.
-
-### 9.8 Dead-Letter Events
+Data quality is connected to governance because invalid events represent a risk for analytics and AI.
 
 Invalid streaming events are isolated in:
 
@@ -1166,100 +505,46 @@ Invalid streaming events are isolated in:
 governance.dead_letter_events
 ```
 
-A dead-letter event is a message that failed validation and was not inserted into the trusted event table.
+Quality rule failures are logged in:
 
-Dead-letter handling prevents invalid messages from contaminating:
+```text
+governance.data_quality_logs
+```
 
-- raw event history;
-- analytics features;
-- business dashboards;
-- ML training datasets;
-- operational monitoring.
+The Data Quality page makes these controls visible and reviewable.
 
-The dead-letter table captures:
+## 12.5 Governance Operating Model
 
-| Field | Meaning |
+RetailFlow uses a hybrid governance model with central standards and domain accountability.
+
+The operating model includes Executive Sponsor, Governance Council, Data Owner, Data Steward, Data Custodian, DPO / Compliance Lead, ML Owner, Business Owner and Data Users.
+
+The model clarifies who defines policies, who operates controls, who reviews data quality, who governs AI and who uses insights.
+
+## 12.6 Data Risk Register
+
+The governance layer includes a risk register covering personal data exposure, consent misuse, data quality propagation, retention failure, ML drift, operational opacity and accessibility gaps.
+
+The risk register helps explain how governance reduces platform and business risk.
+
+## 12.7 Data Governance Page
+
+The Streamlit Data Governance page presents:
+
+| Section | Purpose |
 |---|---|
-| `dead_letter_id` | Unique dead-letter identifier. |
-| `event_id` | Original event identifier. |
-| `source_topic` | Streaming topic. |
-| `event_type` | Event type. |
-| `error_reason` | Validation failure reason. |
-| `raw_payload` | Original message payload. |
-| `severity` | Error severity. |
-| `reprocessed` | Reprocessing status. |
-| `created_at` | Insertion timestamp. |
+| Governance overview | High-level governance status |
+| Consent management | Marketing, analytics and personalization consent |
+| Retention and anonymization | Retention policies and audit logs |
+| Operating model | Roles and responsibilities |
+| Risk register | Risks, impacts, mitigations and owners |
+| Governance evidence | Endpoints, tables and workflows |
 
-### 9.9 Governance API
-
-RetailFlow exposes governance data through FastAPI.
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /governance/summary` | Governance KPIs. |
-| `GET /governance/customer-consents` | Customer consent sample. |
-| `GET /governance/retention-policies` | Retention policy table. |
-| `GET /governance/retention-actions` | Retention action logs. |
-
-These endpoints are consumed by Streamlit.
-
-### 9.10 Data Governance Page
-
-The Streamlit Data Governance page shows:
-
-- governance overview KPIs;
-- customer consent rates;
-- retention policies;
-- anonymization indicators;
-- retention action logs;
-- stakeholder roles;
-- risk register;
-- governance evidence.
-
-It answers the following question:
-
-> How does RetailFlow control data usage, compliance, retention, quality and risk?
-
-### 9.11 Governance Roles
-
-RetailFlow defines a governance operating model with clear responsibilities.
-
-| Role | Responsibility |
-|---|---|
-| Data Owner | Owns business meaning and accountability for a data domain. |
-| Data Steward | Monitors quality, metadata and operational consistency. |
-| DPO / Compliance | Oversees privacy, retention and regulatory alignment. |
-| Data Engineer | Implements pipelines, controls and data storage layers. |
-| ML Engineer | Monitors ML lifecycle, serving, validation and drift. |
-| Business Owner | Uses insights for operational and marketing decisions. |
-
-### 9.12 Governance Risk Register
-
-RetailFlow identifies several governance risks.
-
-| Risk | Description | Mitigation |
-|---|---|---|
-| Personal data exposure | Customer data may include identifiable attributes. | Consent, retention and anonymization controls. |
-| Data quality propagation | Invalid events may affect analytics and ML outputs. | Validation, quality logs and dead-letter handling. |
-| ML drift | Customer behavior may change over time. | Drift monitoring and retraining process. |
-| Compliance gaps | Retention and consent rules may be inconsistently applied. | Policy tables and action logs. |
-| Operational opacity | Failures may be hard to diagnose. | Observability dashboards and logs. |
-
-### 9.13 Governance Value
-
-The governance layer demonstrates that RetailFlow is not only a technical platform.
-
-It also provides:
-
-- decision traceability;
-- data quality accountability;
-- compliance-oriented data handling;
-- visibility into consent and retention;
-- responsible use of customer intelligence.
+This page answers how RetailFlow controls data usage, compliance, retention, quality and risk.
 
 ---
 
-## 10. Real-Time Data Pipelines
+# 13. Real-Time Data Pipelines
 
 RetailFlow includes a real-time event pipeline designed to capture customer interactions and persist them after validation.
 
@@ -1271,68 +556,22 @@ Streamlit Customer View
 → Redpanda topic
 → Python consumer
 → validation rules
-→ PostgreSQL raw events or governance dead letters
+→ PostgreSQL raw events or governance dead-letter records
 ```
 
-### 10.1 Pipeline Objectives
-
-The real-time pipeline is built to demonstrate the following capabilities:
-
-| Capability | Description |
-|---|---|
-| Event ingestion | Capture customer actions from the storefront. |
-| Decoupling | Separate event production from database persistence. |
-| Validation | Check event integrity before insertion. |
-| Persistence | Store valid events in PostgreSQL. |
-| Isolation | Store invalid events in dead-letter tables. |
-| Monitoring | Expose event quality and recent events in dashboards. |
-
-### 10.2 Event Sources
+## 13.1 Event Sources
 
 Events are generated from the Customer View page.
 
-Typical customer actions include:
+Typical customer actions include product view, add to cart, checkout started and purchase. These events represent the main stages of an e-commerce funnel.
 
-| User Action | Event Type |
-|---|---|
-| Product consultation | `product_view` |
-| Add to cart | `add_to_cart` |
-| Start checkout | `checkout_started` |
-| Complete purchase | `purchase` |
+## 13.2 Event Producer
 
-These events are produced during the live demo.
+The producer logic lives in the FastAPI service.
 
-### 10.3 Event Payload
+The endpoint receives event requests, creates or forwards event information, publishes the message to Redpanda and returns the publication status to the user interface.
 
-A live event contains fields such as:
-
-```json
-{
-  "customer_id": "cust_000001",
-  "session_id": "sess_demo_xxxxxxxx",
-  "event_type": "add_to_cart",
-  "product_id": "prod_000001",
-  "page_url": "/product/prod_000001",
-  "raw_payload": {
-    "cart_size": 1,
-    "price_incl_tax": 129.99
-  }
-}
-```
-
-FastAPI enriches the event with an event identifier and publishes it to Redpanda.
-
-### 10.4 Redpanda Broker
-
-RetailFlow uses Redpanda as the event broker.
-
-Redpanda is Kafka-compatible and provides the same core streaming concepts:
-
-- topics;
-- producers;
-- consumers;
-- offsets;
-- message streaming.
+## 13.3 Redpanda Broker
 
 The main topic is:
 
@@ -1340,222 +579,69 @@ The main topic is:
 retailflow_events
 ```
 
-Redpanda was selected because it is simpler to run locally than a full Kafka cluster while preserving event streaming patterns.
+Redpanda decouples event production from event consumption. FastAPI does not need to know when the consumer will persist the event; it publishes the message and the consumer processes it asynchronously.
 
-### 10.5 Event Producer
+## 13.4 Event Consumer
 
-The producer lives inside the FastAPI service.
+The event consumer is implemented in Python.
 
-Main responsibility:
-
-```text
-POST /events
-→ validate request schema
-→ create live event id
-→ publish message to Redpanda
-→ return publication status
-```
-
-FastAPI does not directly insert live events into PostgreSQL.
-
-Instead, it produces a message to the broker.
-
-This design creates a clear separation:
-
-| Component | Responsibility |
-|---|---|
-| Streamlit | Simulates user interactions. |
-| FastAPI | Receives event requests and publishes messages. |
-| Redpanda | Buffers and transports events. |
-| Consumer | Validates and persists events. |
-| PostgreSQL | Stores trusted data and audit logs. |
-
-### 10.6 Event Consumer
-
-The consumer is implemented in Python.
-
-Location:
+Key files include:
 
 ```text
 pipeline/consumer/event_consumer.py
-```
-
-It performs the following steps:
-
-1. subscribe to the Redpanda topic;
-2. poll messages;
-3. parse event payloads;
-4. apply validation rules;
-5. write valid events to `raw.events`;
-6. write invalid events to `governance.dead_letter_events`;
-7. write quality failures to `governance.data_quality_logs`.
-
-### 10.7 Event Validation Rules
-
-Validation logic is implemented in:
-
-```text
 pipeline/consumer/validators.py
+pipeline/consumer/writer.py
 ```
 
-The core rules are:
+The consumer subscribes to the topic, parses messages, applies validation rules and writes either trusted events or governance evidence.
 
-| Rule ID | Rule | Purpose | Action |
-|---|---|---|---|
-| R001 | `event_id_not_null` | Ensure traceability. | reject |
-| R002 | `event_type_allowed` | Reject unsupported event types. | reject |
-| R003 | `customer_exists` | Ensure customer integrity. | reject |
-| R004 | `product_exists` | Ensure product integrity. | reject |
-| R005 | `timestamp_valid` | Detect invalid timestamps. | reject |
+## 13.5 Validation Rules
 
-These rules are designed to catch realistic integration issues.
+Core validation checks include event identifier, allowed event type, customer existence, product existence and timestamp validity.
 
-### 10.8 Valid Event Flow
+When a rule fails, the event is rejected from trusted persistence and is stored with diagnostic context.
 
-```mermaid
-sequenceDiagram
-    participant User as Customer View
-    participant API as FastAPI
-    participant Broker as Redpanda
-    participant Consumer as Event Consumer
-    participant DB as PostgreSQL
+## 13.6 Data Quality Integration
 
-    User->>API: POST /events add_to_cart
-    API->>Broker: Publish event
-    Broker->>Consumer: Consume message
-    Consumer->>Consumer: Validate event
-    Consumer->>DB: Insert into raw.events
-    DB-->>Consumer: Commit
-```
+The pipeline is connected to the Data Quality page and governance tables.
 
-### 10.9 Invalid Event Flow
-
-```mermaid
-sequenceDiagram
-    participant API as FastAPI
-    participant Broker as Redpanda
-    participant Consumer as Event Consumer
-    participant Gov as governance schema
-
-    API->>Broker: Publish invalid event
-    Broker->>Consumer: Consume message
-    Consumer->>Consumer: Apply validation rules
-    Consumer->>Gov: Insert dead_letter_events
-    Consumer->>Gov: Insert data_quality_logs
-```
-
-### 10.10 Data Quality Integration
-
-The pipeline is directly connected to the governance layer.
-
-When an event fails validation:
+This creates the following control flow:
 
 ```text
 invalid event
-→ dead-letter table
+→ dead-letter event
 → quality log
-→ Streamlit Data Quality page
-→ auditability
+→ Data Quality dashboard
+→ steward review
 ```
 
-This demonstrates that pipeline reliability is not only a technical concern but also a governance concern.
+## 13.7 Recent Events
 
-### 10.11 Recent Event Preview
-
-The Customer View page includes a recent event preview.
-
-It reads from:
+FastAPI exposes a recent events endpoint:
 
 ```text
 GET /events/recent
 ```
 
-This allows the user to verify that generated events are being processed and persisted.
-
-### 10.12 Pipeline Monitoring in Streamlit
-
-The Data Quality page shows:
-
-- dead-letter events;
-- rejected event types;
-- severity distribution;
-- failed quality rules;
-- rule frequency;
-- quality summaries;
-- technical evidence.
-
-This page answers:
-
-> How does RetailFlow detect, isolate and monitor data errors in real-time flows?
-
-### 10.13 Pipeline Value
-
-The real-time pipeline demonstrates:
-
-- event-driven design;
-- decoupled architecture;
-- streaming ingestion;
-- validation before persistence;
-- governance-aware error handling;
-- operational visibility.
-
-It is one of the most important components of RetailFlow because it connects the customer journey to the data platform.
+The Customer View page uses it to show evidence that live events have been processed and persisted.
 
 ---
 
-## 11. AI & MLOps
+# 14. AI and MLOps
 
 RetailFlow includes an AI layer designed to transform customer behavior into actionable intelligence.
 
 The AI layer supports three main use cases:
 
-1. churn risk prioritization;
-2. customer lifetime value estimation;
-3. customer segmentation.
-
-The goal is not to keep models isolated in notebooks.
-
-The models are trained, persisted, reported, stored in the database, exposed through FastAPI and visualized through Streamlit.
-
-### 11.1 AI Objectives
-
-| Objective | Description |
+| Use case | Objective |
 |---|---|
-| Churn prediction | Identify customers likely to disengage. |
-| CLV estimation | Estimate future customer value. |
-| Segmentation | Group customers into business-readable clusters. |
-| Explainability | Surface feature importance and model drivers. |
-| Monitoring | Track metrics, drift and validation reports. |
-| Serving | Expose predictions through API endpoints. |
+| Churn prediction | Identify customers with higher disengagement risk |
+| CLV prediction | Estimate customer value potential |
+| Customer segmentation | Group customers into interpretable behavioral segments |
 
-### 11.2 AI Architecture
+The models are trained, persisted, reported, stored in the database, served through FastAPI and displayed in Streamlit.
 
-```mermaid
-flowchart TD
-    Features[(analytics.customer_features)] --> ChurnTrain[train_churn.py]
-    Features --> CLVTrain[train_clv.py]
-    Features --> SegTrain[train_segmentation.py]
-
-    ChurnTrain --> ChurnModel[churn_model.joblib]
-    CLVTrain --> CLVModel[clv_model.joblib]
-    SegTrain --> SegModel[segmentation_model.joblib]
-
-    ChurnModel --> Predict[predict.py]
-    CLVModel --> Predict
-    SegModel --> Predict
-
-    Predict --> Predictions[(analytics.ml_predictions)]
-    Predict --> Segments[(analytics.customer_segments)]
-
-    Predictions --> AIAPI[FastAPI /ai]
-    Segments --> AIAPI
-    AIAPI --> Streamlit[Customer Intelligence and AI Monitoring]
-
-    Reports[ml/reports/*.json] --> AIAPI
-    Reports --> Streamlit
-```
-
-### 11.3 Feature Layer
+## 14.1 Feature Layer
 
 The main feature table is:
 
@@ -1563,869 +649,346 @@ The main feature table is:
 analytics.customer_features
 ```
 
-It contains customer-level behavioral indicators such as:
+It contains customer-level indicators such as total orders, total spent, average order value, recency, return rate, cart abandonment, sessions, pages viewed, support tickets, ratings, discount usage and preferred category.
 
-| Feature | Meaning |
-|---|---|
-| `total_orders` | Total number of orders. |
-| `total_spent` | Total customer spending. |
-| `avg_order_value` | Average basket value. |
-| `days_since_last_order` | Recency indicator. |
-| `return_rate` | Share of returned orders or products. |
-| `cart_abandon_rate` | Cart abandonment behavior. |
-| `session_count_30d` | Recent engagement. |
-| `pages_viewed_30d` | Browsing intensity. |
-| `support_tickets_count` | Support friction indicator. |
-| `avg_rating_given` | Customer satisfaction proxy. |
-| `discount_usage_rate` | Promotion sensitivity. |
-| `preferred_category` | Main product interest. |
+## 14.2 Training Scripts
 
-### 11.4 Churn Model
-
-The churn model is used to rank customers by risk level.
-
-Script:
+Training is implemented through:
 
 ```text
 ml/src/train_churn.py
-```
-
-Output:
-
-```text
-ml/models/churn_model.joblib
-ml/reports/churn_model_report.json
-ml/reports/churn_model_report.txt
-```
-
-Stored predictions:
-
-```text
-analytics.ml_predictions
-```
-
-Prediction labels:
-
-| Label | Meaning |
-|---|---|
-| `low_risk` | Low churn risk. |
-| `medium_risk` | Medium churn risk. |
-| `high_risk` | High churn risk. |
-
-The churn model is used primarily for prioritization.
-
-It supports business actions such as:
-
-- retention campaigns;
-- lifecycle marketing;
-- churn prevention;
-- customer care prioritization.
-
-### 11.5 CLV Model
-
-The CLV model estimates customer value.
-
-Script:
-
-```text
 ml/src/train_clv.py
-```
-
-Output:
-
-```text
-ml/models/clv_model.joblib
-ml/reports/clv_model_report.json
-ml/reports/clv_model_report.txt
-```
-
-Prediction labels:
-
-| Label | Meaning |
-|---|---|
-| `low_value` | Low predicted value. |
-| `medium_value` | Medium predicted value. |
-| `high_value` | High predicted value. |
-
-The CLV model supports:
-
-- loyalty strategy;
-- upsell prioritization;
-- retention budget allocation;
-- customer portfolio management.
-
-### 11.6 Segmentation Model
-
-The segmentation model groups customers into readable business categories.
-
-Script:
-
-```text
 ml/src/train_segmentation.py
 ```
 
-Output:
+Prediction generation is implemented through:
 
 ```text
-ml/models/segmentation_model.joblib
-ml/reports/segmentation_model_report.json
-ml/reports/segmentation_model_report.txt
+ml/src/predict.py
 ```
 
-Stored segments:
+Drift evaluation is implemented through:
 
 ```text
-analytics.customer_segments
+ml/src/evaluate_drift.py
 ```
 
-Business segment labels include:
+## 14.3 Model Artifacts and Reports
 
-| Segment | Business Interpretation |
-|---|---|
-| High Value Loyal Customers | Customers with high spending and strong purchase history. |
-| Standard Active Customers | Customers with balanced activity and medium value. |
-| Promo-Sensitive Browsers | Customers influenced by discounts and browsing behavior. |
-| Return-Prone Customers | Customers with comparatively high return behavior. |
-| Dormant Low Value Customers | Customers with long inactivity and weaker engagement. |
-
-### 11.7 Prediction Storage
-
-Predictions are stored in:
+Model artifacts are stored under:
 
 ```text
-analytics.ml_predictions
+ml/models/
 ```
 
-This table contains:
-
-| Field | Meaning |
-|---|---|
-| `prediction_id` | Unique prediction identifier. |
-| `customer_id` | Customer being scored. |
-| `model_name` | Model name. |
-| `model_version` | Model version. |
-| `prediction_value` | Numeric prediction. |
-| `prediction_label` | Business label. |
-| `prediction_timestamp` | Prediction timestamp. |
-| `input_features_hash` | Hash of input features. |
-
-Using a database table for predictions makes the outputs reusable by:
-
-- APIs;
-- dashboards;
-- monitoring;
-- business workflows;
-- future automation.
-
-### 11.8 AI Reports
-
-ML reports are stored in:
+Reports are stored under:
 
 ```text
 ml/reports/
 ```
 
-Main reports:
+Key reports include:
 
-| Report | Purpose |
-|---|---|
-| `model_summary.json` | Overall model summary. |
-| `churn_model_report.json` | Churn metrics and feature importance. |
-| `clv_model_report.json` | CLV metrics and feature importance. |
-| `segmentation_model_report.json` | Segmentation metrics and cluster summaries. |
-| `drift_report.json` | Lightweight drift monitoring report. |
+```text
+ml/reports/churn_model_report.json
+ml/reports/clv_model_report.json
+ml/reports/segmentation_model_report.json
+ml/reports/model_summary.json
+ml/reports/drift_report.json
+ml/reports/retraining_runs.json
+```
 
-These reports are exposed through FastAPI and displayed in the AI Monitoring page.
+A generated model registry is available in:
 
-### 11.9 Drift Monitoring
+```text
+ml/model_registry.json
+```
 
-RetailFlow includes lightweight drift monitoring.
+## 14.4 Prediction Storage
 
-The drift report compares reference and current customer feature distributions.
+Churn and CLV outputs are stored in:
 
-The output includes:
+```text
+analytics.ml_predictions
+```
 
-- drift status;
-- drifted feature count;
-- threshold;
-- feature-level distribution changes.
+Customer segments are stored in:
 
-The AI Monitoring page explains drift in business terms:
+```text
+analytics.customer_segments
+```
 
-> Drift can indicate that customer behavior has changed and that model reliability should be reassessed.
+Persisting predictions makes AI outputs reusable by APIs, dashboards, monitoring and future operational workflows.
 
-### 11.10 AI API
+## 14.5 AI Serving
 
-FastAPI exposes the AI layer through endpoints.
+FastAPI exposes AI endpoints such as:
 
-| Endpoint | Purpose |
-|---|---|
-| `GET /ai/summary` | Prediction and segment summary. |
-| `GET /ai/churn-top` | Highest churn risk customers. |
-| `GET /ai/clv-top` | Highest predicted CLV customers. |
-| `GET /ai/segments` | Segment summaries. |
-| `GET /ai/customers` | Enriched customer list with consent and AI outputs. |
-| `GET /ai/customer/{customer_id}` | Complete customer AI profile. |
-| `GET /ai/model-reports` | Available ML reports. |
-| `GET /ai/model-report/{report_name}` | Detailed report content. |
+```text
+GET /ai/summary
+GET /ai/churn-top
+GET /ai/clv-top
+GET /ai/segments
+GET /ai/customers
+GET /ai/customer/{customer_id}
+GET /ai/model-reports
+GET /ai/model-report/{report_name}
+```
 
-### 11.11 Customer Intelligence Page
+These endpoints are consumed by the Customer Intelligence and AI Monitoring pages.
+
+## 14.6 Customer Intelligence
 
 The Customer Intelligence page is the business-facing AI dashboard.
 
-It includes:
+It presents business overview metrics, retention priorities, customer value views, segment exploration, customer decision explorer, recommendations and governed AI profile access.
 
-- business overview KPIs;
-- top churn risk customers;
-- top predicted CLV customers;
-- customer segments;
-- segment-level customer explorer;
-- segment business recommendations;
-- consent-aware customer selector;
-- customer AI profile;
-- behavioral features;
-- business recommendations.
+When analytics consent is not granted, customer-level AI predictions are not provided for that profile.
 
-It answers:
-
-> How does RetailFlow help an e-commerce business understand and act on customer behavior?
-
-### 11.12 AI Monitoring Page
+## 14.7 AI Monitoring
 
 The AI Monitoring page is the model-facing dashboard.
 
-It includes:
+It presents AI use cases, prediction availability, model registry, training and retraining evidence, model reports, drift monitoring, MLOps controls and the AI operational lifecycle.
 
-- executive model overview;
-- churn metrics;
-- CLV metrics;
-- segmentation summaries;
-- prediction distribution;
-- feature importance;
-- drift monitoring;
-- cross-validation details;
-- interpretation guides.
+The page uses high-level availability metrics such as Predicted customers and Prediction rows without requiring the user to inspect the underlying implementation details.
 
-It answers:
+## 14.8 Retraining
 
-> Are the models performant, monitored and explainable?
+The Airflow DAG `ml_retraining` orchestrates the ML lifecycle.
 
-### 11.13 Metric Interpretation
+It can run churn training, CLV training, segmentation training, prediction refresh and drift evaluation.
 
-The AI Monitoring page includes French interpretation guides for model metrics.
+Retraining runs are documented through the ML reports and displayed in AI Monitoring.
 
-This helps a mixed audience understand:
+## 14.9 Responsible AI
 
-- what the metric measures;
-- how it should be interpreted;
-- what it means for business decisions.
+RetailFlow treats AI as decision support.
 
-Examples:
-
-| Metric | Business Meaning |
-|---|---|
-| ROC AUC | Ability to rank customers by churn risk. |
-| F1 Score | Balance between detecting risk and avoiding false alerts. |
-| Precision | Reliability of churn alerts. |
-| Recall | Coverage of at-risk customers. |
-| Brier Score | Quality of probability calibration. |
-| MAE | Average monetary error for CLV. |
-| RMSE | Sensitivity to large CLV errors. |
-| R² | Share of CLV variance explained by the model. |
-
-### 11.14 MLOps Value
-
-RetailFlow demonstrates a practical MLOps lifecycle:
-
-```text
-features
-→ training
-→ model artifacts
-→ reports
-→ predictions
-→ API serving
-→ dashboard monitoring
-→ drift reporting
-→ retraining orchestration
-```
-
-This is not only a modeling exercise.
-
-It is a platform integration exercise.
+Model outputs are translated into business-readable labels and recommendations. The platform supports human oversight, model monitoring, feature importance, drift awareness and consent-aware customer intelligence.
 
 ---
 
-## 12. Observability
+# 15. Observability and Monitoring
 
-RetailFlow includes a monitoring and observability layer based on Prometheus and Grafana.
+RetailFlow includes an observability layer based on Prometheus, Grafana, PostgreSQL exporter, FastAPI metrics and Streamlit monitoring views.
 
-Observability is used to monitor platform health, API metrics, PostgreSQL status, Airflow health and alerting rules.
-
-### 12.1 Observability Objectives
-
-| Objective | Description |
-|---|---|
-| Platform health | Verify that critical services are available. |
-| API monitoring | Track FastAPI metrics and request behavior. |
-| Database monitoring | Track PostgreSQL availability and connections. |
-| Orchestration monitoring | Check Airflow scheduler and metadata database. |
-| Alerting | Document operational alert rules. |
-| Demonstrability | Provide visibility for the live demo. |
-
-### 12.2 Monitoring Stack
+## 15.1 Monitoring Stack
 
 | Component | Role |
 |---|---|
-| Prometheus | Collects metrics from FastAPI and PostgreSQL exporter. |
-| Grafana | Visualizes platform metrics. |
-| PostgreSQL Exporter | Exposes PostgreSQL metrics to Prometheus. |
-| FastAPI Metrics | Exposes API metrics on `/metrics`. |
-| Airflow Health | Exposes orchestration health on `/health`. |
-| Streamlit Observability Page | Aggregates health signals in the UI. |
+| Prometheus | Collects service and database metrics |
+| Grafana | Visualizes operational dashboards |
+| PostgreSQL Exporter | Exposes PostgreSQL metrics |
+| FastAPI `/metrics` | Exposes API metrics |
+| Airflow `/health` | Exposes scheduler and metadata health |
+| Streamlit Observability | Consolidates monitoring evidence |
 
-### 12.3 Prometheus
+## 15.2 Prometheus
 
-Prometheus is configured with scrape jobs for:
-
-```text
-retailflow-fastapi
-retailflow-postgres
-```
-
-Configuration file:
+Prometheus is configured through:
 
 ```text
 monitoring/prometheus/prometheus.yml
 ```
 
-Key endpoint:
+Alert rules are configured under:
 
 ```text
-http://127.0.0.1:9090
+monitoring/prometheus/rules/
 ```
 
-The Prometheus targets page allows verification that metrics are being scraped successfully.
+Prometheus targets provide evidence that FastAPI and PostgreSQL exporter are being scraped.
 
-### 12.4 FastAPI Metrics
+## 15.3 Grafana
 
-FastAPI exposes Prometheus-compatible metrics through:
+Grafana dashboards are provisioned under:
 
 ```text
-GET /metrics
+monitoring/grafana/
 ```
 
-Metrics include HTTP request counters and latency metrics.
+The project includes dashboards such as RetailFlow API Overview and RetailFlow Platform Overview.
 
-These metrics are scraped by Prometheus and visualized in Grafana.
+## 15.4 Alert Rules
 
-### 12.5 PostgreSQL Exporter
-
-PostgreSQL exporter exposes database metrics on:
+RetailFlow includes Prometheus alert rules for:
 
 ```text
-http://127.0.0.1:9187/metrics
+RetailFlowFastAPIDown
+RetailFlowPostgresExporterDown
+RetailFlowHighFastAPIRequestLatency
+RetailFlowFastAPIHighErrorRate
+RetailFlowPostgresTooManyConnections
 ```
 
-Prometheus queries include:
+These rules demonstrate a production-oriented monitoring approach.
 
-```promql
-pg_up
-```
+## 15.5 Observability Page
 
-and PostgreSQL connection metrics.
+The Streamlit Observability page presents health and monitoring evidence from FastAPI, PostgreSQL, Airflow, Prometheus, Grafana and alert rules.
 
-The exporter confirms that the database is reachable from the monitoring layer.
-
-### 12.6 Grafana
-
-Grafana is available at:
-
-```text
-http://127.0.0.1:3000
-```
-
-It contains dashboards for platform observability.
-
-Dashboard files are stored in:
-
-```text
-monitoring/grafana/dashboards/
-```
-
-Grafana provisioning is stored in:
-
-```text
-monitoring/grafana/provisioning/
-```
-
-### 12.7 Alerting Rules
-
-Alerting documentation is stored in:
-
-```text
-monitoring/grafana/alerts/alert_rules.md
-```
-
-Documented alerts include:
-
-| Alert | Query / Trigger | Meaning |
-|---|---|---|
-| FastAPI Down | `up{job="retailflow-fastapi"} == 0` | API unreachable. |
-| PostgreSQL Down | `pg_up{job="retailflow-postgres"} == 0` | Database unavailable. |
-| High API Error Rate | HTTP 5xx rate | API generating server errors. |
-| High API Latency | p95 latency threshold | API response time too high. |
-| Drift Detected | Conceptual ML alert | Drift report indicates model risk. |
-
-### 12.8 Airflow Health
-
-Airflow exposes health status through:
-
-```text
-http://127.0.0.1:8080/health
-```
-
-The Observability page reads this endpoint and displays:
-
-- metadatabase health;
-- scheduler health;
-- DAG processor status;
-- triggerer status.
-
-This avoids incorrectly scraping the Airflow health endpoint as Prometheus metrics.
-
-### 12.9 Observability Page
-
-The Streamlit Observability page displays:
-
-- FastAPI status;
-- PostgreSQL status;
-- Airflow scheduler status;
-- Grafana health;
-- Prometheus targets;
-- API request metrics;
-- PostgreSQL metrics;
-- Airflow health JSON;
-- links to tools;
-- alerting rules.
-
-It answers:
-
-> How is the RetailFlow platform monitored?
-
-### 12.10 Observability Architecture
-
-```mermaid
-flowchart LR
-    FastAPI[FastAPI /metrics] --> Prometheus[Prometheus]
-    PostgresExporter[PostgreSQL Exporter] --> Prometheus
-    Prometheus --> Grafana[Grafana Dashboards]
-    Airflow[Airflow /health] --> Streamlit[Observability Page]
-    Prometheus --> Streamlit
-    Grafana --> Streamlit
-```
-
-### 12.11 Operational Value
-
-The observability layer demonstrates:
-
-- production mindset;
-- operational readiness;
-- service health monitoring;
-- database monitoring;
-- documented alerting;
-- clear separation between metrics, dashboards and health checks.
+It also provides direct links to monitoring tools and shows which operational signals should be reviewed during a demo.
 
 ---
 
-## 13. Streamlit Platform
+# 16. Streamlit Platform
 
-Streamlit is the main user interface of RetailFlow.
+Streamlit is the main user-facing application.
 
-It provides a guided demonstration across business, data engineering, governance, AI and observability views.
+It provides a guided demonstration across business, data engineering, governance, AI, observability and evidence views.
 
-The interface is designed to be used during a live demo.
+## 16.1 Streamlit Pages
 
-### 13.1 Streamlit Role
+The current Streamlit pages are:
 
-Streamlit acts as:
+| Page | Purpose |
+|---|---|
+| `1_Platform_Overview.py` | Business context, architecture, status and demo path |
+| `2_Customer_View.py` | Customer journey simulation and event generation |
+| `3_Customer_Intelligence.py` | Churn, CLV, segmentation and governed AI profile exploration |
+| `4_Data_Governance.py` | Consent, retention, risks, roles and governance evidence |
+| `5_Data_Architecture.py` | Architecture layers, services, data model and operational design |
+| `6_Data_Quality.py` | Dead letters, quality rules, invalid events and remediation workflow |
+| `7_AI_Monitoring.py` | Model registry, reports, drift, retraining and MLOps controls |
+| `8_Observability.py` | Prometheus, Grafana, Airflow, platform health and alerts |
+| `9_CI_CD_and_Operations.py` | GitHub Actions, security checks, backups, healthchecks and operations |
+| `10_Project_Evidence.py` | Final evidence matrix and Skills evidence matrix |
 
-- a product demo interface;
-- a customer journey simulator;
-- a business intelligence dashboard;
-- a governance dashboard;
-- a data quality monitoring interface;
-- an AI monitoring cockpit;
-- an observability console.
+## 16.2 Shared UI Components
 
-### 13.2 Streamlit Structure
-
-Current pages:
-
-```text
-streamlit_app/app.py
-streamlit_app/pages/1_Platform_Overview.py
-streamlit_app/pages/2_Customer_View.py
-streamlit_app/pages/3_Customer_Intelligence.py
-streamlit_app/pages/4_Data_Governance.py
-streamlit_app/pages/5_Data_Quality.py
-streamlit_app/pages/6_AI_Monitoring.py
-streamlit_app/pages/7_Observability.py
-```
-
-Shared UI components:
+Shared components are implemented in:
 
 ```text
 streamlit_app/components.py
 streamlit_app/styles/custom.css
 ```
 
-### 13.3 Home Page
+The shared components support consistent cards, page sections, block badges, technical evidence, academic mapping and footer notes.
 
-File:
+## 16.3 Streamlit Design Direction
 
-```text
-streamlit_app/app.py
-```
+The interface is designed to be professional, readable and demonstration-oriented.
 
-Purpose:
-
-- minimal landing page;
-- introduce RetailFlow;
-- summarize capabilities;
-- recommend the demo flow.
-
-The page is intentionally lightweight.
-
-The detailed project explanation lives in Platform Overview.
-
-### 13.4 Platform Overview
-
-File:
-
-```text
-streamlit_app/pages/1_Platform_Overview.py
-```
-
-Purpose:
-
-- explain the problem statement;
-- show platform status;
-- display architecture overview;
-- map the platform to major capability areas;
-- show Airflow orchestration;
-- recommend live demo flow.
-
-This is the best starting point for the demo.
-
-### 13.5 Customer View
-
-File:
-
-```text
-streamlit_app/pages/2_Customer_View.py
-```
-
-Purpose:
-
-- simulate an e-commerce customer journey;
-- browse products;
-- select products;
-- add to cart;
-- start checkout;
-- complete purchase;
-- generate live events;
-- display recent event stream preview.
-
-This page connects the business journey to the real-time pipeline.
-
-### 13.6 Customer Intelligence
-
-File:
-
-```text
-streamlit_app/pages/3_Customer_Intelligence.py
-```
-
-Purpose:
-
-- show top churn risk customers;
-- show top predicted CLV customers;
-- show customer segments;
-- explore customers by segment;
-- display segment recommendations;
-- filter customers by analytics consent;
-- display a complete AI profile.
-
-This page is the main business-facing AI dashboard.
-
-### 13.7 Data Governance
-
-File:
-
-```text
-streamlit_app/pages/4_Data_Governance.py
-```
-
-Purpose:
-
-- show governance KPIs;
-- display consent indicators;
-- display retention policies;
-- show retention action logs;
-- explain stakeholder roles;
-- present risk register;
-- connect governance to operational controls.
-
-### 13.8 Data Quality
-
-File:
-
-```text
-streamlit_app/pages/5_Data_Quality.py
-```
-
-Purpose:
-
-- show dead-letter events;
-- show quality rule failures;
-- show severity distribution;
-- show impacted event types;
-- explain validation logic;
-- support pipeline quality monitoring.
-
-### 13.9 AI Monitoring
-
-File:
-
-```text
-streamlit_app/pages/6_AI_Monitoring.py
-```
-
-Purpose:
-
-- show model overview;
-- display churn metrics;
-- display CLV metrics;
-- display segmentation summaries;
-- show prediction distribution;
-- show feature importance;
-- show drift monitoring;
-- explain metrics in business terms.
-
-### 13.10 Observability
-
-File:
-
-```text
-streamlit_app/pages/7_Observability.py
-```
-
-Purpose:
-
-- show platform health;
-- show Prometheus targets;
-- show FastAPI metrics;
-- show PostgreSQL metrics;
-- show Airflow health;
-- link to Grafana, Prometheus, Airflow and FastAPI docs;
-- present alerting rules.
-
-### 13.11 UI Design
-
-RetailFlow uses a custom dark dashboard style.
-
-Shared styling is located in:
-
-```text
-streamlit_app/styles/custom.css
-```
-
-The design direction is:
-
-- dark professional interface;
-- custom cards;
-- reusable sections;
-- minimal animations;
-- clear academic and business storytelling.
-
-### 13.12 Demo Navigation
-
-Demo order:
-
-1. Home;
-2. Platform Overview;
-3. Customer View;
-4. Customer Intelligence;
-5. Data Governance;
-6. Data Quality;
-7. AI Monitoring;
-8. Observability.
-
-This order follows the platform narrative:
-
-```text
-problem and architecture
-→ customer journey
-→ customer intelligence
-→ governance
-→ quality
-→ AI monitoring
-→ platform monitoring
-```
+The visible pages prioritize business interpretation and practical evidence. More technical details are available through expandable sections so the interface remains clear during a live presentation.
 
 ---
 
-## 14. API Layer
+# 17. FastAPI Layer
 
 FastAPI is the backend service layer of RetailFlow.
 
-It exposes business data, product data, events, quality, governance, AI and monitoring endpoints.
+It connects Streamlit to PostgreSQL, Redpanda, governance tables, AI outputs, ML reports and metrics.
 
-### 14.1 API Role
+## 17.1 API Responsibilities
 
 FastAPI is responsible for:
 
-- connecting Streamlit to PostgreSQL;
-- exposing product and customer data;
-- publishing live events to Redpanda;
-- exposing recent events;
-- exposing quality monitoring;
-- exposing governance data;
-- exposing AI predictions;
-- exposing ML reports;
-- exposing health and metrics endpoints.
-
-### 14.2 API Structure
-
-Main files:
-
 ```text
-api/app/main.py
-api/app/database.py
-api/app/routes/
-api/app/services/
+product data
+customer data
+event publication
+recent events
+quality summaries
+dead-letter records
+governance data
+AI predictions
+ML reports
+health checks
+Prometheus metrics
 ```
 
-Main route files:
+## 17.2 Main Route Groups
 
-| File | Role |
+| Route group | Purpose |
 |---|---|
-| `health.py` | Health checks. |
-| `customers.py` | Customer profile API. |
-| `analytics.py` | Business analytics API. |
-| `products.py` | Product catalog API. |
-| `events.py` | Event publishing and recent events. |
-| `quality.py` | Data quality and dead-letter monitoring. |
-| `ai.py` | AI predictions and ML reports. |
-| `governance.py` | Governance dashboards data. |
+| `/products` | Product catalog and product details |
+| `/events` | Event publishing and recent events |
+| `/quality` | Data quality summaries and dead-letter events |
+| `/governance` | Consent, retention and governance KPIs |
+| `/ai` | Predictions, segments, customers and model reports |
+| `/health` | API and database health |
+| `/metrics` | Prometheus-compatible metrics |
 
-### 14.3 API Health
+## 17.3 API Documentation
 
-Endpoint:
-
-```text
-GET /health
-```
-
-Purpose:
-
-- confirm API availability;
-- confirm PostgreSQL connectivity.
-
-Example response:
-
-```json
-{
-  "status": "ok",
-  "database": "connected",
-  "service": "retailflow-api"
-}
-```
-
-### 14.4 Product Endpoints
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /products` | Product catalog. |
-| `GET /products/{product_id}` | Product details. |
-
-These endpoints are used by Customer View.
-
-### 14.5 Event Endpoints
-
-| Endpoint | Purpose |
-|---|---|
-| `POST /events` | Publish a live event to Redpanda. |
-| `GET /events/recent` | Read recent persisted events from PostgreSQL. |
-
-The live event endpoint is central to the streaming demo.
-
-### 14.6 Quality Endpoints
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /quality/dead-letters` | List rejected events. |
-| `GET /quality/summary` | Data quality rule summary. |
-| `GET /quality/dead-letter-summary` | Dead-letter aggregation. |
-
-These endpoints are used by Data Quality.
-
-### 14.7 Governance Endpoints
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /governance/summary` | Governance KPIs. |
-| `GET /governance/retention-policies` | Retention policy table. |
-| `GET /governance/retention-actions` | Retention action logs. |
-| `GET /governance/customer-consents` | Consent sample. |
-
-These endpoints are used by Data Governance.
-
-### 14.8 AI Endpoints
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /ai/summary` | Global prediction and segment summary. |
-| `GET /ai/churn-top` | Top churn risk customers. |
-| `GET /ai/clv-top` | Top predicted CLV customers. |
-| `GET /ai/segments` | Segment summaries. |
-| `GET /ai/customers` | Enriched customer list with consent and AI outputs. |
-| `GET /ai/customer/{customer_id}` | Full AI profile for one customer. |
-| `GET /ai/model-reports` | Available report paths. |
-| `GET /ai/model-report/{report_name}` | Report JSON content. |
-
-### 14.9 Metrics Endpoint
-
-Endpoint:
-
-```text
-GET /metrics
-```
-
-Purpose:
-
-- expose Prometheus-compatible application metrics.
-
-This endpoint is scraped by Prometheus.
-
-### 14.10 API Documentation
-
-FastAPI automatically exposes Swagger UI:
+Swagger UI is available at:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-This is useful for:
-
-- exploring endpoints;
-- testing requests;
-- explaining API contracts;
-- demonstrating the serving layer.
+This page is useful for testing endpoints and explaining the service contract.
 
 ---
 
-## 15. Project Structure
+# 18. Airflow Orchestration
+
+Airflow orchestrates scheduled workflows for analytics, data quality, ML and governance.
+
+## 18.1 Main DAGs
+
+| DAG | Purpose |
+|---|---|
+| `daily_sales_aggregation` | Refresh daily sales aggregates |
+| `daily_data_quality` | Check quality indicators and dead-letter volumes |
+| `ml_retraining` | Retrain models, refresh predictions and evaluate drift |
+| `retention_cleanup` | Apply retention and anonymization logic |
+
+Airflow provides workflow visibility and demonstrates that RetailFlow is not limited to ad hoc scripts.
+
+## 18.2 Orchestration Value
+
+Airflow supports:
+
+```text
+scheduled execution
+task visibility
+workflow dependency management
+data quality checks
+ML lifecycle automation
+retention and anonymization evidence
+```
+
+---
+
+# 19. CI/CD and Operations Overview
+
+RetailFlow includes GitHub Actions as the automated validation layer.
+
+The CI/CD workflow validates the repository through Python compilation, automated tests, Docker Compose validation, Docker image build checks and security-oriented reports.
+
+## 19.1 CI/CD Capabilities
+
+| Capability | Implementation |
+|---|---|
+| Python validation | `python -m compileall` |
+| Automated tests | `pytest` |
+| Docker Compose validation | `docker compose config` |
+| Docker image build validation | FastAPI, Streamlit and consumer images |
+| Security checks | Python dependency and code security reports |
+| Report artifacts | CI-generated artifacts for review |
+
+## 19.2 Operations Capabilities
+
+RetailFlow includes operational assets such as:
+
+| Capability | Location |
+|---|---|
+| Example environment configuration | `.env.example` |
+| PostgreSQL backup script | `scripts/backup_postgres.sh` |
+| PostgreSQL restore script | `scripts/restore_postgres.sh` |
+| Docker healthchecks | `docker-compose.yml` |
+| Read-only database role | PostgreSQL initialization scripts |
+| Monitoring documentation | `docs/MONITORING.md` and `docs/MONITORING_EVIDENCE.md` |
+| CI/CD documentation | `docs/CI_CD.md` |
+| Infrastructure operations documentation | `docs/INFRA_OPERATIONS.md` |
+
+The CI/CD and Operations Streamlit page makes these proofs visible in the application.
+
+---
+
+# 20. Project Structure
 
 RetailFlow follows a modular repository structure.
 
@@ -2442,33 +1005,37 @@ retailflow-platform/
 ├── ml/
 ├── monitoring/
 ├── pipeline/
+├── scripts/
 ├── streamlit_app/
 ├── tests/
 ├── docker-compose.yml
 ├── Makefile
 ├── README.md
-└── requirements.txt
+├── requirements.txt
+└── requirements-dev.txt
 ```
 
-### 15.1 Repository Areas
+## 20.1 Repository Areas
 
 | Directory | Purpose |
 |---|---|
-| `airflow/` | DAGs and orchestration logic. |
-| `api/` | FastAPI backend. |
-| `data/` | Raw and generated datasets. |
-| `data_generator/` | Dataset generation and loading scripts. |
-| `database/` | PostgreSQL schema initialization scripts. |
-| `docs/` | Detailed documentation by capability area. |
-| `k8s/` | Future Kubernetes manifests. |
-| `kafka_kraft/` | Kafka KRaft experimentation area. |
-| `ml/` | ML training, prediction, models and reports. |
-| `monitoring/` | Prometheus and Grafana configuration. |
-| `pipeline/` | Streaming producer/consumer logic. |
-| `streamlit_app/` | Streamlit user interface. |
-| `tests/` | Automated tests. |
+| `airflow/` | DAGs and orchestration logic |
+| `api/` | FastAPI backend |
+| `data/` | Generated and processed datasets |
+| `data_generator/` | Dataset generation and loading scripts |
+| `database/` | PostgreSQL initialization scripts and migrations |
+| `docs/` | Technical documentation |
+| `k8s/` | Future Kubernetes manifests |
+| `kafka_kraft/` | Kafka KRaft experimentation area |
+| `ml/` | ML training, prediction, models, reports and registry |
+| `monitoring/` | Prometheus and Grafana configuration |
+| `pipeline/` | Event producer and consumer logic |
+| `scripts/` | Operational scripts such as backup and restore |
+| `streamlit_app/` | Streamlit application and shared UI components |
+| `tests/` | Automated tests |
+| `.github/workflows/` | GitHub Actions CI/CD workflows |
 
-### 15.2 API Directory
+## 20.2 API Directory
 
 ```text
 api/
@@ -2482,7 +1049,7 @@ api/
 └── requirements.txt
 ```
 
-### 15.3 Streamlit Directory
+## 20.3 Streamlit Directory
 
 ```text
 streamlit_app/
@@ -2494,285 +1061,197 @@ streamlit_app/
 │   ├── 2_Customer_View.py
 │   ├── 3_Customer_Intelligence.py
 │   ├── 4_Data_Governance.py
-│   ├── 5_Data_Quality.py
-│   ├── 6_AI_Monitoring.py
-│   └── 7_Observability.py
+│   ├── 5_Data_Architecture.py
+│   ├── 6_Data_Quality.py
+│   ├── 7_AI_Monitoring.py
+│   ├── 8_Observability.py
+│   ├── 9_CI_CD_and_Operations.py
+│   └── 10_Project_Evidence.py
 ├── requirements.txt
 └── styles/
     └── custom.css
 ```
 
-### 15.4 ML Directory
+## 20.4 ML Directory
 
 ```text
 ml/
 ├── models/
-│   ├── churn_model.joblib
-│   ├── clv_model.joblib
-│   └── segmentation_model.joblib
 ├── reports/
-│   ├── churn_model_report.json
-│   ├── clv_model_report.json
-│   ├── drift_report.json
-│   ├── model_summary.json
-│   └── segmentation_model_report.json
 ├── src/
-│   ├── build_features.py
-│   ├── db.py
-│   ├── evaluate_drift.py
-│   ├── ml_utils.py
-│   ├── predict.py
-│   ├── train_churn.py
-│   ├── train_clv.py
-│   └── train_segmentation.py
-└── tests/
+├── tests/
+└── model_registry.json
 ```
 
-### 15.5 Pipeline Directory
-
-```text
-pipeline/
-├── config/
-│   └── topics.yaml
-├── consumer/
-│   ├── Dockerfile
-│   ├── event_consumer.py
-│   ├── validators.py
-│   └── writer.py
-├── producer/
-│   ├── ecommerce_event_producer.py
-│   └── order_event_producer.py
-└── requirements.txt
-```
-
-### 15.6 Monitoring Directory
+## 20.5 Monitoring Directory
 
 ```text
 monitoring/
 ├── grafana/
-│   ├── alerts/
 │   ├── dashboards/
 │   └── provisioning/
 └── prometheus/
-    └── prometheus.yml
+    ├── prometheus.yml
+    └── rules/
 ```
 
-### 15.7 Documentation Directory
+## 20.6 Documentation Directory
 
 ```text
 docs/
-├── bloc1_governance/
-├── bloc2_architecture/
-├── bloc3_pipeline/
-└── bloc4_ai/
+├── CI_CD.md
+├── INFRA_OPERATIONS.md
+├── MONITORING.md
+├── MONITORING_EVIDENCE.md
+└── ...
 ```
-
-This directory will be expanded during the documentation phase.
-
-### 15.8 Data Directory
-
-```text
-data/
-├── governance/
-├── processed/
-├── raw/
-└── reference/
-```
-
-The `data/raw/` folder contains generated CSV files used to populate the platform.
-
-### 15.9 Tests
-
-Current tests are stored in:
-
-```text
-tests/
-├── test_api.py
-├── test_data_quality.py
-└── test_ml.py
-```
-
-Tests cover core platform areas and should be expanded in future iterations.
-
-## 14. Installation
-
-RetailFlow is designed to run locally through Docker Compose.
-
-The platform is composed of multiple services:
-
-- PostgreSQL for structured storage.
-- Redpanda for Kafka-compatible event streaming.
-- FastAPI for backend APIs and event publishing.
-- Streamlit for the product and monitoring interface.
-- Airflow for orchestration.
-- Prometheus for metrics collection.
-- Grafana for metrics visualization.
-- PostgreSQL Exporter for database observability.
-- A Python event consumer for real-time ingestion and validation.
-
-The installation process is intentionally centered on local reproducibility.
 
 ---
 
-### 14.1 Prerequisites
+## 21. Installation and Local Runtime
 
-Environment:
+RetailFlow is designed to run locally through Docker Compose. The local runtime reproduces the main platform components required to demonstrate the full Retail Intelligence lifecycle: PostgreSQL, Redpanda, FastAPI, the event consumer, Streamlit, Airflow, Prometheus, Grafana and PostgreSQL exporter.
 
-| Requirement | Recommended version / setup |
+The recommended environment is WSL2 Ubuntu with Python 3.11 and Docker Compose V2. The platform can also run on a Linux environment with Docker Engine, provided that the ports used by the platform are available.
+
+### 21.1 Prerequisites
+
+| Requirement | Recommended setup |
 |---|---|
 | Operating system | Linux or WSL2 Ubuntu |
 | Python | 3.11 |
 | Docker | Docker Desktop or Docker Engine |
 | Docker Compose | Compose V2 |
-| Git | Latest stable version |
-| Terminal | Bash-compatible shell |
-| Browser | Chrome, Edge, Firefox, or equivalent |
+| Git | Current stable version |
+| Shell | Bash-compatible terminal |
+| Browser | Chrome, Edge, Firefox or equivalent |
 
-Local development setup:
+The project is normally operated from the repository root:
 
 ```bash
-Windows
-└── WSL2 Ubuntu
-    └── Docker Desktop integration
-        └── Python 3.11 virtual environment
-            └── RetailFlow repository
+cd ~/projects/Master_Thesis/retailflow-platform
 ```
 
----
-
-### 14.2 Clone the repository
+### 21.2 Clone the Repository
 
 ```bash
 git clone https://github.com/HugoB-AS/retailflow-platform.git
 cd retailflow-platform
-```
-
-Working branch:
-
-```bash
 git checkout develop
 ```
 
-The current stable version is:
+The `develop` branch is the validated project branch used for the current RetailFlow implementation.
 
-```text
-v17-ux-demo-polish-stable
-```
+### 21.3 Python Environment
 
-To checkout the stable release:
-
-```bash
-git checkout v17-ux-demo-polish-stable
-```
-
----
-
-### 14.3 Create and activate the Python environment
-
-Create a local virtual environment:
+A Python virtual environment is useful for local scripts, tests, code validation and development tools. Most runtime services are executed through Docker Compose.
 
 ```bash
 python3.11 -m venv .venv
-```
-
-Activate it:
-
-```bash
 source .venv/bin/activate
-```
-
-Upgrade core packaging tools:
-
-```bash
 python -m pip install --upgrade pip setuptools wheel
 ```
 
-Install development dependencies if needed:
+Install development dependencies when local validation or testing is needed:
 
 ```bash
 pip install -r requirements-dev.txt
 ```
 
-Install component-specific dependencies only when running scripts outside Docker:
+Component dependencies can also be installed locally when running scripts outside Docker:
 
 ```bash
 pip install -r data_generator/requirements.txt
 pip install -r ml/requirements.txt
 pip install -r api/requirements.txt
+pip install -r pipeline/requirements.txt
 pip install -r streamlit_app/requirements.txt
 ```
 
-Most runtime components are executed through Docker Compose, so installing every requirement locally is not always required.
+### 21.4 Environment Configuration
 
----
+RetailFlow includes an example environment file to document expected configuration values. The goal is to keep credentials, hostnames and runtime settings explicit without hardcoding them in the application code.
 
-### 14.4 Start the platform
+```bash
+cp .env.example .env
+```
 
-Start all services:
+The default Docker Compose environment is designed for local demonstration. For production or shared environments, credentials and secrets must be managed through a dedicated secret management mechanism.
+
+### 21.5 Start the Platform
+
+From the repository root, start the platform with:
 
 ```bash
 docker compose up -d
 ```
 
-Check containers:
+To rebuild images after code changes:
+
+```bash
+docker compose up -d --build
+```
+
+To rebuild only the user interface after Streamlit changes:
+
+```bash
+docker compose up -d --build streamlit
+```
+
+To rebuild the API and UI together:
+
+```bash
+docker compose up -d --build fastapi streamlit
+```
+
+### 21.6 Check Container Status
 
 ```bash
 docker compose ps
 ```
 
-Expected services:
+Expected core services include PostgreSQL, pgAdmin, Redpanda, FastAPI, the event consumer, Streamlit, Airflow webserver and scheduler, Prometheus, Grafana and PostgreSQL exporter.
 
-| Service | Container | Role |
-|---|---|---|
-| `postgres` | `retailflow_postgres` | Main database |
-| `pgadmin` | `retailflow_pgadmin` | PostgreSQL admin UI |
-| `redpanda` | `retailflow_redpanda` | Event streaming broker |
-| `fastapi` | `retailflow_fastapi` | Backend API |
-| `event_consumer` | `retailflow_event_consumer` | Streaming consumer |
-| `streamlit` | `retailflow_streamlit` | User interface |
-| `airflow-webserver` | `retailflow_airflow_webserver` | Airflow UI |
-| `airflow-scheduler` | `retailflow_airflow_scheduler` | Airflow scheduler |
-| `airflow_postgres` | `retailflow_airflow_postgres` | Airflow metadata DB |
-| `prometheus` | `retailflow_prometheus` | Metrics collection |
-| `grafana` | `retailflow_grafana` | Dashboards |
-| `postgres_exporter` | `retailflow_postgres_exporter` | PostgreSQL metrics |
-| `airflow_init` | `retailflow_airflow_init` | Airflow initialization |
-
----
-
-### 14.5 Service URLs
+### 21.7 Service URLs
 
 | Component | URL |
 |---|---|
 | Streamlit UI | `http://127.0.0.1:8501` |
-| FastAPI Docs | `http://127.0.0.1:8000/docs` |
-| FastAPI Health | `http://127.0.0.1:8000/health` |
-| PostgreSQL | `localhost:5432` |
+| FastAPI documentation | `http://127.0.0.1:8000/docs` |
+| FastAPI health | `http://127.0.0.1:8000/health` |
 | pgAdmin | `http://127.0.0.1:5050` |
 | Airflow | `http://127.0.0.1:8080` |
 | Prometheus | `http://127.0.0.1:9090` |
 | Grafana | `http://127.0.0.1:3000` |
-| PostgreSQL Exporter | `http://127.0.0.1:9187/metrics` |
+| PostgreSQL exporter | `http://127.0.0.1:9187/metrics` |
 | Redpanda Admin API | `http://127.0.0.1:9644` |
+
+### 21.8 Default Local Access
+
+The local PostgreSQL database is exposed on `localhost:5432`. Inside the Docker network, services use the hostname `postgres`. The default database is `retailflow_db`.
+
+pgAdmin can be used to inspect tables, schemas, events, governance logs and predictions. In pgAdmin, the PostgreSQL server should be configured with host `postgres`, port `5432`, database `retailflow_db`, user `retailflow` and password `retailflow`.
+
+Grafana is available locally on port `3000`. The default local demonstration credentials are `admin / admin` unless changed in the environment configuration.
 
 ---
 
-### 14.6 Health checks
+## 22. Running and Validating the Platform
 
-FastAPI:
+After the containers are started, the platform should be validated before running a demonstration. Validation confirms that the API, database, UI, orchestration and monitoring components are reachable.
+
+### 22.1 Core Health Checks
+
+FastAPI health:
 
 ```bash
 curl http://127.0.0.1:8000/health
 ```
 
-Expected response:
+Streamlit health:
 
-```json
-{
-  "status": "ok",
-  "database": "connected",
-  "service": "retailflow-api"
-}
+```bash
+curl -i http://127.0.0.1:8501/_stcore/health
 ```
 
 Prometheus readiness:
@@ -2793,32 +1272,18 @@ Airflow health:
 curl http://127.0.0.1:8080/health
 ```
 
-PostgreSQL exporter:
+PostgreSQL exporter metrics:
 
 ```bash
 curl http://127.0.0.1:9187/metrics | head
 ```
 
----
+### 22.2 API Validation
 
-### 14.7 API checks
-
-Core API:
+Product catalog:
 
 ```bash
 curl "http://127.0.0.1:8000/products?limit=3"
-```
-
-AI summary:
-
-```bash
-curl -s "http://127.0.0.1:8000/ai/summary" | python -m json.tool
-```
-
-Customer intelligence endpoint:
-
-```bash
-curl -s "http://127.0.0.1:8000/ai/customers?limit=3&analytics_consent_only=true" | python -m json.tool
 ```
 
 Governance summary:
@@ -2827,188 +1292,273 @@ Governance summary:
 curl -s "http://127.0.0.1:8000/governance/summary" | python -m json.tool
 ```
 
+AI summary:
+
+```bash
+curl -s "http://127.0.0.1:8000/ai/summary" | python -m json.tool
+```
+
+Consent-aware customer list:
+
+```bash
+curl -s "http://127.0.0.1:8000/ai/customers?limit=3&analytics_consent_only=true" | python -m json.tool
+```
+
 Quality summary:
 
 ```bash
 curl -s "http://127.0.0.1:8000/quality/summary" | python -m json.tool
 ```
 
-Prometheus target state:
+Recent events:
+
+```bash
+curl -s "http://127.0.0.1:8000/events/recent?limit=5" | python -m json.tool
+```
+
+### 22.3 Monitoring Validation
+
+Prometheus targets:
 
 ```bash
 curl -s "http://127.0.0.1:9090/api/v1/targets" | python -m json.tool
 ```
 
-PostgreSQL exporter health metric:
+PostgreSQL exporter status in Prometheus:
 
 ```bash
-curl -s "http://127.0.0.1:9090/api/v1/query?query=pg_up"
+curl -s "http://127.0.0.1:9090/api/v1/query?query=pg_up" | python -m json.tool
 ```
 
-Expected result:
+FastAPI target status in Prometheus:
 
-```json
-{
-  "status": "success",
-  "data": {
-    "resultType": "vector",
-    "result": [
-      {
-        "metric": {
-          "__name__": "pg_up",
-          "instance": "postgres_exporter:9187",
-          "job": "retailflow-postgres"
-        },
-        "value": [
-          "...",
-          "1"
-        ]
-      }
-    ]
-  }
-}
+```bash
+curl -s "http://127.0.0.1:9090/api/v1/query?query=up%7Bjob%3D%22retailflow-fastapi%22%7D" | python -m json.tool
+```
+
+### 22.4 Python and Compose Validation
+
+Before committing changes, the recommended local validation is:
+
+```bash
+python -m compileall api ml pipeline data_generator tests streamlit_app
+docker compose config --quiet
+```
+
+When Streamlit is modified, rebuild and check the UI service:
+
+```bash
+docker compose up -d --build streamlit
+curl -i http://127.0.0.1:8501/_stcore/health
+```
+
+When API code is modified, rebuild and check FastAPI:
+
+```bash
+docker compose up -d --build fastapi
+curl http://127.0.0.1:8000/health
 ```
 
 ---
 
-## 15. Running the Platform
+## 23. Streamlit Demonstration Flow
 
-This section describes the operational workflow once the platform is installed.
+The Streamlit application is the main demonstration interface. It is designed to guide the audience through the complete RetailFlow narrative, from business context to operational evidence.
 
----
-
-### 15.1 Standard startup workflow
-
-From the project root:
-
-```bash
-cd ~/projects/Master_Thesis/retailflow-platform
-source .venv/bin/activate
-git checkout develop
-docker compose up -d
-docker compose ps
-```
-
-Open the main UI:
-
-```text
-http://127.0.0.1:8501
-```
-
-Entry point:
+### 23.1 Recommended Demo Order
 
 ```text
 Home
 → Platform Overview
+→ Customer View
+→ Customer Intelligence
+→ Data Governance
+→ Data Architecture
+→ Data Quality
+→ AI Monitoring
+→ Observability
+→ CI/CD and Operations
+→ Project Evidence
 ```
+
+This order presents RetailFlow as an integrated platform rather than a set of independent tools. It starts with the product vision, demonstrates customer behavior, shows the intelligence layer, explains governance and architecture, then closes with monitoring, operations and evidence.
+
+### 23.2 Platform Overview
+
+The Platform Overview page introduces the project scope, platform positioning, main architecture and demonstration logic. It is the best starting point for explaining that RetailFlow combines real-time data pipelines, governance, AI and observability in a single Retail Intelligence platform.
+
+The key message is that RetailFlow is an end-to-end platform. It does not only display dashboards. It connects customer events, governed data, AI outputs, APIs, orchestration and operational monitoring.
+
+### 23.3 Customer View
+
+The Customer View page simulates an e-commerce customer journey. It allows the user to browse products, select items, generate customer events, start checkout and complete a purchase. These actions are sent to FastAPI, published to Redpanda and processed by the event consumer.
+
+The page also shows recent events so the user can verify that the event pipeline is active and that generated events are visible from the application layer.
+
+### 23.4 Customer Intelligence
+
+The Customer Intelligence page is the business-facing AI dashboard. It presents churn, customer lifetime value, segmentation and business recommendations. It connects predictions and segments to practical decision support.
+
+The page includes a customer decision explorer. When a customer does not have analytics consent, customer-level AI outputs are not provided in the interface. This demonstrates that the customer intelligence experience is connected to the governance layer while keeping the business narrative understandable for non-technical users.
+
+### 23.5 Data Governance
+
+The Data Governance page presents consent management, retention policies, anonymization evidence, stakeholder responsibilities, regulatory alignment, risk management and governance operating principles.
+
+This page shows that governance is implemented through the platform. It is visible in PostgreSQL tables, FastAPI endpoints, Airflow workflows and Streamlit dashboards.
+
+### 23.6 Data Architecture
+
+The Data Architecture page explains the platform structure, PostgreSQL schemas, service responsibilities, data flows, runtime infrastructure and operational design choices. It is useful for explaining why the platform is modular, how services communicate and how the architecture supports maintainability.
+
+The page connects the theoretical architecture to implemented services such as PostgreSQL, Redpanda, FastAPI, Streamlit, Airflow, Prometheus and Grafana.
+
+### 23.7 Data Quality
+
+The Data Quality page demonstrates how invalid events are detected, isolated and reviewed. It exposes dead-letter events, failed quality rules, severity, impacted event types and remediation logic.
+
+The page is a key proof that the real-time pipeline does not blindly persist invalid data. Data quality is treated as an operational and governance concern.
+
+### 23.8 AI Monitoring
+
+The AI Monitoring page is the MLOps dashboard. It presents prediction availability, model registry information, retraining runs, model reports, drift monitoring and MLOps controls.
+
+The page uses consent-aware counts for visible AI-authorized prediction indicators. It also exposes model artifacts and operational evidence such as reports, drift output and retraining logs.
+
+### 23.9 Observability
+
+The Observability page consolidates platform monitoring. It shows FastAPI status, PostgreSQL status, Prometheus targets, Grafana dashboard access, Airflow health and alert rules.
+
+This page demonstrates that RetailFlow is not only functional, but also monitorable. It provides links and evidence for platform health, service metrics and operational alerting.
+
+### 23.10 CI/CD and Operations
+
+The CI/CD and Operations page explains the engineering workflow, GitHub Actions validation, Docker build checks, security reports, backup and restore scripts, healthchecks and operational documentation.
+
+This page is important for demonstrating professional software engineering practice. It connects the codebase to continuous validation and operational readiness.
+
+### 23.11 Project Evidence
+
+The Project Evidence page is the final proof matrix. It links implementation assets to academic blocks, skills and evaluation evidence. It includes a final evidence matrix, a skills evidence matrix, a live demo path and a tool map.
+
+This page is designed to be used near the end of the demonstration to prove that the platform covers governance, architecture, pipelines, AI, monitoring, CI/CD and operations.
 
 ---
 
-### 15.2 Standard shutdown workflow
+## 24. FastAPI Service Layer
 
-Stop all services:
+FastAPI is the backend service layer of RetailFlow. It connects Streamlit to PostgreSQL, publishes live events to Redpanda, exposes governance and quality data, serves AI outputs and provides metrics to Prometheus.
 
-```bash
-docker compose down
+### 24.1 Main Route Groups
+
+| Route group | Purpose |
+|---|---|
+| `/health` | API and database health checks |
+| `/products` | Product catalog and product details |
+| `/events` | Live event publishing and recent event access |
+| `/quality` | Dead-letter and data quality summaries |
+| `/governance` | Consent, retention and governance KPIs |
+| `/ai` | Predictions, customer intelligence and model reports |
+| `/metrics` | Prometheus-compatible metrics |
+
+### 24.2 API Documentation
+
+FastAPI automatically exposes Swagger documentation:
+
+```text
+http://127.0.0.1:8000/docs
 ```
 
-Leave the Python environment:
+The documentation can be used to test endpoints, inspect payload structures and demonstrate the API serving layer.
 
-```bash
-deactivate
+### 24.3 Event API
+
+The event API receives customer journey events and publishes them to Redpanda. This design keeps the UI separate from event persistence and allows the event consumer to apply validation rules before storage.
+
+Main endpoints:
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /events` | Publish a customer event |
+| `GET /events/recent` | Return recent persisted events |
+
+### 24.4 Governance API
+
+The governance API exposes consent, retention and governance indicators to Streamlit. It is consumed by both Data Governance and AI Monitoring when governance-linked metrics are needed.
+
+Main endpoints:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /governance/summary` | Governance KPIs and consent summary |
+| `GET /governance/customer-consents` | Customer consent sample |
+| `GET /governance/retention-policies` | Retention policy definitions |
+| `GET /governance/retention-actions` | Retention and anonymization actions |
+
+### 24.5 Quality API
+
+The quality API exposes dead-letter and quality information. It makes rejected events visible to Streamlit and supports pipeline quality monitoring.
+
+Main endpoints:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /quality/dead-letters` | List rejected events |
+| `GET /quality/summary` | Data quality rule summary |
+| `GET /quality/dead-letter-summary` | Aggregated dead-letter statistics |
+
+### 24.6 AI API
+
+The AI API exposes customer intelligence and model reporting. It allows Streamlit to consume model outputs without directly reading model files or querying raw prediction tables.
+
+Main endpoints:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /ai/summary` | Prediction and segment summary |
+| `GET /ai/churn-top` | Highest churn risk customers |
+| `GET /ai/clv-top` | Highest predicted CLV customers |
+| `GET /ai/segments` | Customer segment summaries |
+| `GET /ai/customers` | Enriched customer list with AI and consent fields |
+| `GET /ai/customer/{customer_id}` | Full customer AI profile when available |
+| `GET /ai/model-reports` | Available model reports |
+| `GET /ai/model-report/{report_name}` | Detailed model report content |
+
+### 24.7 Metrics API
+
+The metrics endpoint exposes Prometheus-compatible metrics:
+
+```text
+GET /metrics
 ```
+
+Prometheus scrapes this endpoint and Grafana visualizes the collected metrics.
 
 ---
 
-### 15.3 Rebuild selected services
+## 25. Data and ML Workflows
 
-Rebuild FastAPI only:
+RetailFlow includes data generation, PostgreSQL loading, feature engineering, model training, prediction generation and drift evaluation. These workflows can be run manually for development and through Airflow for scheduled orchestration.
 
-```bash
-docker compose up -d --build fastapi
-```
+### 25.1 Data Generation
 
-Rebuild Streamlit only:
-
-```bash
-docker compose up -d --build streamlit
-```
-
-Rebuild FastAPI and Streamlit together:
-
-```bash
-docker compose up -d --build fastapi streamlit
-```
-
-Rebuild all services:
-
-```bash
-docker compose up -d --build
-```
-
----
-
-### 15.4 Logs
-
-FastAPI logs:
-
-```bash
-docker logs retailflow_fastapi --tail 100
-```
-
-Streamlit logs:
-
-```bash
-docker logs retailflow_streamlit --tail 100
-```
-
-Event consumer logs:
-
-```bash
-docker logs retailflow_event_consumer --tail 100
-```
-
-Airflow scheduler logs:
-
-```bash
-docker logs retailflow_airflow_scheduler --tail 100
-```
-
-Airflow webserver logs:
-
-```bash
-docker logs retailflow_airflow_webserver --tail 100
-```
-
-Prometheus logs:
-
-```bash
-docker logs retailflow_prometheus --tail 100
-```
-
-Grafana logs:
-
-```bash
-docker logs retailflow_grafana --tail 100
-```
-
----
-
-### 15.5 Data generation workflow
-
-Generate the dataset:
+Generate a local dataset:
 
 ```bash
 python data_generator/generate_dataset.py --profile medium
 ```
 
-Load data into PostgreSQL:
+Load the generated dataset into PostgreSQL:
 
 ```bash
 python data_generator/loaders/load_to_postgres.py
 ```
 
-Run ML training:
+The generated data covers customers, products, suppliers, orders, payments, returns, sessions, events, support tickets, reviews, consent fields, customer features and analytics-ready tables.
+
+### 25.2 ML Training
+
+Train the three core models:
 
 ```bash
 python -m ml.src.train_churn
@@ -3016,104 +1566,583 @@ python -m ml.src.train_clv
 python -m ml.src.train_segmentation
 ```
 
-Generate predictions:
+The training scripts produce model artifacts and reports under `ml/models/` and `ml/reports/`.
+
+### 25.3 Prediction Refresh
+
+Refresh predictions and segments:
 
 ```bash
 python -m ml.src.predict
 ```
 
-Evaluate drift:
+Predictions are stored in PostgreSQL and served through the AI API.
+
+### 25.4 Drift Evaluation
+
+Generate the drift report:
 
 ```bash
 python -m ml.src.evaluate_drift
 ```
 
-Rebuild API and UI after refreshing reports or predictions:
+The drift report is made available to the AI Monitoring page.
 
-```bash
-docker compose up -d --build fastapi streamlit
-```
+### 25.5 Model Registry and Retraining Logs
 
----
+RetailFlow includes generated model registry evidence and retraining run logs. These files support MLOps traceability and are displayed in AI Monitoring.
 
-### 15.6 ML workflow
+Important artifacts include:
 
-The ML workflow is composed of five steps:
+| Artifact | Purpose |
+|---|---|
+| `ml/model_registry.json` | Model registry evidence |
+| `ml/reports/retraining_runs.json` | Retraining execution log |
+| `ml/reports/model_summary.json` | Consolidated model summary |
+| `ml/reports/drift_report.json` | Drift monitoring output |
 
-```text
-customer features
-→ churn training
-→ CLV training
-→ segmentation training
-→ prediction generation
-→ report generation
-```
+### 25.6 Airflow Orchestration
 
-Run all core ML commands manually:
+Airflow provides the scheduled workflow layer. Main DAGs include daily sales aggregation, daily data quality, weekly ML retraining and retention cleanup.
 
-```bash
-python -m ml.src.train_churn
-python -m ml.src.train_clv
-python -m ml.src.train_segmentation
-python -m ml.src.predict
-python -m ml.src.evaluate_drift
-```
+| DAG | Purpose |
+|---|---|
+| `daily_sales_aggregation` | Refresh analytical sales aggregates |
+| `daily_data_quality` | Execute scheduled data quality checks |
+| `ml_retraining` | Train models, refresh predictions and evaluate drift |
+| `retention_cleanup` | Apply retention and anonymization logic |
 
-Generated model artifacts:
-
-```text
-ml/models/churn_model.joblib
-ml/models/clv_model.joblib
-ml/models/segmentation_model.joblib
-```
-
-Generated reports:
-
-```text
-ml/reports/model_summary.json
-ml/reports/churn_model_report.json
-ml/reports/clv_model_report.json
-ml/reports/segmentation_model_report.json
-ml/reports/drift_report.json
-```
-
----
-
-### 15.7 Airflow workflow
-
-Airflow is used to orchestrate operational jobs.
-
-Main DAGs:
-
-```text
-daily_sales_aggregation
-daily_data_quality
-ml_retraining
-retention_cleanup
-```
-
-Open Airflow:
+Airflow is available at:
 
 ```text
 http://127.0.0.1:8080
 ```
 
-Check Airflow health:
+---
 
-```bash
-curl http://127.0.0.1:8080/health
+## 26. Monitoring, Alerting and Operations
+
+RetailFlow includes operational monitoring through Prometheus, Grafana, PostgreSQL exporter, healthchecks and Streamlit Observability. The monitoring layer helps prove that services are available, metrics are collected and operational risks are visible.
+
+### 26.1 Prometheus
+
+Prometheus is available at:
+
+```text
+http://127.0.0.1:9090
 ```
 
-Airflow supports the platform by demonstrating:
+Prometheus scrapes FastAPI metrics and PostgreSQL exporter metrics. The main configuration is stored in:
 
-- scheduled analytics jobs;
-- data quality jobs;
-- ML retraining jobs;
-- retention and governance jobs.
+```text
+monitoring/prometheus/prometheus.yml
+```
+
+Alerting rules are stored under:
+
+```text
+monitoring/prometheus/rules/
+```
+
+### 26.2 Grafana
+
+Grafana is available at:
+
+```text
+http://127.0.0.1:3000
+```
+
+Grafana dashboards provide visual monitoring for the RetailFlow API and the platform overview. Dashboard provisioning is stored under:
+
+```text
+monitoring/grafana/
+```
+
+### 26.3 PostgreSQL Exporter
+
+PostgreSQL exporter exposes database metrics to Prometheus. It allows the platform to monitor PostgreSQL availability and connection metrics.
+
+Key validation command:
+
+```bash
+curl -s "http://127.0.0.1:9090/api/v1/query?query=pg_up" | python -m json.tool
+```
+
+### 26.4 Alert Rules
+
+RetailFlow includes Prometheus alert rules covering service availability, API latency, API error rate and PostgreSQL connection risk.
+
+Main alerts include:
+
+| Alert | Purpose |
+|---|---|
+| `RetailFlowFastAPIDown` | Detect FastAPI unavailability |
+| `RetailFlowPostgresExporterDown` | Detect PostgreSQL exporter unavailability |
+| `RetailFlowHighFastAPIRequestLatency` | Detect high API latency |
+| `RetailFlowFastAPIHighErrorRate` | Detect high API server error rate |
+| `RetailFlowPostgresTooManyConnections` | Detect PostgreSQL connection pressure |
+
+### 26.5 Healthchecks
+
+Docker Compose healthchecks are used for core services. They help the local runtime report whether services are healthy and support a more reliable demonstration environment.
+
+### 26.6 Backup and Restore
+
+RetailFlow includes PostgreSQL backup and restore scripts. They support operational recovery and demonstrate that database continuity is considered in the platform design.
+
+Typical workflow:
+
+```bash
+./scripts/backup_postgres.sh
+```
+
+```bash
+./scripts/restore_postgres.sh backups/<backup_file>.sql
+```
+
+Local backup files are ignored by Git to avoid committing environment-specific database dumps.
+
+### 26.7 Read-Only Database Role
+
+The platform includes a read-only PostgreSQL role. This supports the principle of least privilege and demonstrates a practical security control for database access.
+
+This role can be used for inspection, reporting or restricted analytical use cases where write access is not required.
 
 ---
 
-### 15.8 Monitoring workflow
+## 27. CI/CD and Quality Validation
+
+GitHub Actions is used as the continuous integration layer. The workflow validates the codebase, tests, Docker Compose configuration and Docker image builds.
+
+### 27.1 CI/CD Objectives
+
+The CI/CD pipeline provides automated confidence that core platform components remain valid after code changes. It supports software engineering discipline, reduces regression risk and demonstrates a production-oriented development process.
+
+### 27.2 Workflow Coverage
+
+The CI workflow includes Python validation, automated tests, Docker Compose validation, Docker image build validation and security reporting.
+
+| Area | CI/CD contribution |
+|---|---|
+| Python code | Syntax validation and tests |
+| API layer | OpenAPI and endpoint-level checks |
+| Data quality | Validator and rejection behavior tests |
+| ML artifacts | Report and registry validation |
+| Docker Compose | Configuration validation |
+| Docker images | Build validation for deployable services |
+| Security | Automated dependency and code security reports |
+
+### 27.3 Recommended Local Checks Before Commit
+
+```bash
+python -m compileall api ml pipeline data_generator tests streamlit_app
+python -m pytest tests/test_*.py -q
+docker compose config --quiet
+```
+
+### 27.4 GitHub Actions Result
+
+The `develop` branch should remain green in GitHub Actions before being considered stable for demonstration. A green CI result confirms that the repository passed the automated validation checks associated with the workflow.
+
+### 27.5 Security Reports
+
+The CI includes automated security checks to detect vulnerable Python dependencies and common security-sensitive code patterns. These checks generate report artifacts that can be reviewed from GitHub Actions.
+
+---
+
+## 28. Operational Runbook
+
+This runbook summarizes the most common operational commands.
+
+### 28.1 Full Restart
+
+```bash
+docker compose down
+docker compose up -d
+docker compose ps
+```
+
+### 28.2 Full Rebuild
+
+```bash
+docker compose down
+docker compose up -d --build
+docker compose ps
+```
+
+### 28.3 Rebuild Selected Services
+
+```bash
+docker compose up -d --build fastapi
+```
+
+```bash
+docker compose up -d --build streamlit
+```
+
+```bash
+docker compose up -d --build fastapi streamlit
+```
+
+### 28.4 Logs
+
+```bash
+docker logs retailflow_fastapi --tail 100
+```
+
+```bash
+docker logs retailflow_streamlit --tail 100
+```
+
+```bash
+docker logs retailflow_event_consumer --tail 100
+```
+
+```bash
+docker logs retailflow_airflow_scheduler --tail 100
+```
+
+```bash
+docker logs retailflow_prometheus --tail 100
+```
+
+```bash
+docker logs retailflow_grafana --tail 100
+```
+
+### 28.5 PostgreSQL Access
+
+From the host:
+
+```bash
+psql -h localhost -p 5432 -U retailflow -d retailflow_db
+```
+
+From Docker:
+
+```bash
+docker exec -it retailflow_postgres psql -U retailflow -d retailflow_db
+```
+
+### 28.6 Inspect Important Tables
+
+```sql
+SELECT COUNT(*) FROM raw.events;
+SELECT COUNT(*) FROM governance.dead_letter_events;
+SELECT COUNT(*) FROM governance.data_quality_logs;
+SELECT COUNT(*) FROM analytics.ml_predictions;
+SELECT COUNT(*) FROM analytics.customer_segments;
+```
+
+### 28.7 Validate Streamlit Inside Docker
+
+```bash
+docker exec -it retailflow_streamlit ls /app/streamlit_app/pages
+```
+
+```bash
+docker exec -it retailflow_streamlit ls /app/ml/reports
+```
+
+### 28.8 Validate Prometheus Alerts
+
+```bash
+curl -s "http://127.0.0.1:9090/api/v1/rules" | python -m json.tool
+```
+
+```bash
+curl -s "http://127.0.0.1:9090/api/v1/alerts" | python -m json.tool
+```
+
+---
+
+## 29. Troubleshooting
+
+### 29.1 Docker Is Not Running
+
+If Docker is not running, commands may fail with a daemon connection error. Start Docker Desktop or Docker Engine, wait until it is ready and retry:
+
+```bash
+docker ps
+```
+
+### 29.2 Containers Do Not Start
+
+Inspect service status and logs:
+
+```bash
+docker compose ps
+docker compose logs --tail=100
+```
+
+If required, rebuild the platform:
+
+```bash
+docker compose up -d --build
+```
+
+### 29.3 FastAPI Cannot Reach PostgreSQL
+
+Check PostgreSQL and FastAPI logs:
+
+```bash
+docker compose ps postgres
+docker logs retailflow_fastapi --tail 100
+curl http://127.0.0.1:8000/health
+```
+
+Inside Docker, the database hostname is `postgres`, not `localhost`.
+
+### 29.4 Streamlit Cannot Reach FastAPI
+
+Check Streamlit logs and FastAPI health:
+
+```bash
+docker logs retailflow_streamlit --tail 100
+curl http://127.0.0.1:8000/health
+```
+
+Inside Docker, Streamlit uses `http://fastapi:8000`.
+
+### 29.5 Streamlit Shows an Old Version
+
+Rebuild the Streamlit image and force-refresh the browser:
+
+```bash
+docker compose up -d --build streamlit
+curl -i http://127.0.0.1:8501/_stcore/health
+```
+
+Then use `Ctrl + F5` or a private browser window.
+
+### 29.6 Prometheus Target Is Down
+
+Open the Prometheus targets page:
+
+```text
+http://127.0.0.1:9090/targets
+```
+
+Check configuration and restart Prometheus if needed:
+
+```bash
+cat monitoring/prometheus/prometheus.yml
+docker compose restart prometheus
+```
+
+### 29.7 PostgreSQL Exporter Is Not Up
+
+```bash
+docker compose ps postgres_exporter
+curl http://127.0.0.1:9187/metrics | head
+curl -s "http://127.0.0.1:9090/api/v1/query?query=pg_up"
+```
+
+### 29.8 Airflow Needs Time to Initialize
+
+Airflow may require additional startup time. Wait, then retry the health endpoint:
+
+```bash
+sleep 10
+curl http://127.0.0.1:8080/health
+```
+
+### 29.9 Model Reports Are Missing
+
+Check report files and regenerate the ML layer if needed:
+
+```bash
+ls -lh ml/reports
+python -m ml.src.train_churn
+python -m ml.src.train_clv
+python -m ml.src.train_segmentation
+python -m ml.src.predict
+python -m ml.src.evaluate_drift
+```
+
+Rebuild services that read reports from the container image:
+
+```bash
+docker compose up -d --build fastapi streamlit
+```
+
+### 29.10 Git Working Tree Is Not Clean
+
+Check local changes:
+
+```bash
+git status
+git diff --stat
+```
+
+Commit intended changes or restore unintended ones before continuing.
+
+---
+
+## 30. Repository Workflow
+
+RetailFlow uses Git and GitHub as the source control workflow. The `develop` branch is the validated project branch.
+
+### 30.1 Standard Workflow
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/my-feature
+```
+
+After changes:
+
+```bash
+git status
+git add .
+git commit -m "Describe the change"
+git push origin feature/my-feature
+```
+
+Merge into develop once the change is validated.
+
+### 30.2 Commit Guidelines
+
+Commits should be small, explicit and tied to a clear change. Recommended commit messages use direct wording such as `add Prometheus alert rules`, `improve Streamlit AI monitoring page` or `document infrastructure operations`.
+
+### 30.3 Stable Validation
+
+A change is considered stable when:
+
+```text
+local validation passes
+→ Docker services start
+→ Streamlit and FastAPI are healthy
+→ GitHub Actions is green
+→ working tree is clean
+```
+
+### 30.4 Current Validated Baseline
+
+The current validated baseline is on the `develop` branch with GitHub Actions green. The latest Streamlit and documentation improvements include the final consistency fixes and AI monitoring consent metrics.
+
+---
+
+## 31. Project Evidence and Evaluation Mapping
+
+RetailFlow includes a Project Evidence page that connects the implementation to academic blocks and expected skills. This page is designed to support the final evaluation by showing where each proof can be found in the platform.
+
+### 31.1 Evidence Matrix
+
+The evidence matrix maps each major block to the concrete implementation areas.
+
+| Block | Main evidence |
+|---|---|
+| Bloc 1 | Data governance, consent, retention, risks, auditability and accessibility |
+| Bloc 2 | Data architecture, Docker Compose, PostgreSQL, services, monitoring and operations |
+| Bloc 3 | Real-time pipeline, event validation, dead-letter handling, quality and traceability |
+| Bloc 4 | AI models, MLOps, serving, monitoring, retraining, drift and CI/CD |
+
+### 31.2 Skills Evidence Matrix
+
+The Skills Evidence Matrix maps detailed evaluation criteria to the implementation. It identifies the relevant tools, files and pages to inspect for each skill. This provides a structured way to prove coverage of governance, architecture, real-time pipelines, AI and professional engineering practices.
+
+### 31.3 Live Evidence Tools
+
+Key evidence tools include Streamlit, FastAPI Docs, pgAdmin, Airflow, Prometheus, Grafana, GitHub Actions and VSCode. Each tool supports a different type of proof: business demonstration, API contract, database inspection, orchestration, monitoring, CI validation and source code review.
+
+---
+
+## 32. Future Improvements
+
+RetailFlow already demonstrates a complete end-to-end Retail Intelligence platform. Future improvements would focus on enterprise hardening, cloud deployment, advanced MLOps and stronger governance automation.
+
+### 32.1 Enterprise Access Control
+
+Future versions should add authentication, authorization, role-based access control, user-level audit logging and API scopes. This would allow the platform to separate business users, data stewards, ML engineers, platform engineers and administrators.
+
+### 32.2 Data Catalog and Automated Lineage
+
+A formal data catalog would improve discoverability, ownership visibility and metadata management. Automated lineage could connect source events, transformations, database tables, API endpoints and dashboards.
+
+### 32.3 Production Model Registry
+
+A production-grade model registry would improve model versioning, model promotion, rollback, approval workflows and governance around ML artifacts.
+
+### 32.4 Advanced Drift and Fairness Monitoring
+
+The existing drift report can be extended with automated alerts, feature-level thresholds, fairness checks and business impact analysis.
+
+### 32.5 Cloud and Kubernetes Deployment
+
+Future deployment could use a container registry, managed PostgreSQL, managed Kafka-compatible streaming, Kubernetes, cloud monitoring and managed Airflow.
+
+### 32.6 Advanced Alerting and Incident Response
+
+Prometheus alert rules can be extended with Grafana-managed alerting, Slack or email notifications, escalation policies and incident runbooks.
+
+### 32.7 Near Real-Time Feature Refresh
+
+The platform can evolve toward near real-time customer feature updates. This would allow faster refresh of customer intelligence signals after behavioral events.
+
+### 32.8 Recommendation Engine
+
+A future AI use case could provide product recommendations or next-best-action logic based on segment, category preference, churn risk and CLV.
+
+### 32.9 Production Readiness Checklist
+
+Before a production deployment, RetailFlow would require stronger IAM, secret management, backup retention policy, disaster recovery testing, load testing, security testing, privacy impact assessment, model approval workflows and automated deployment.
+
+---
+
+## 33. Conclusion
+
+RetailFlow demonstrates how a modern e-commerce organization can connect customer behavior, governed data, real-time pipelines, AI and observability inside one coherent platform.
+
+The project covers the complete path from event generation to business decision support. Customer interactions are ingested through an event-driven pipeline, validated before persistence, stored in PostgreSQL, transformed into features, used by ML models, exposed through FastAPI and visualized in Streamlit.
+
+Governance is embedded through consent management, retention policies, anonymization evidence, data quality logs, dead-letter handling and auditability. AI is treated as a platform capability with model reports, prediction storage, serving endpoints, drift monitoring and retraining workflows. Observability is supported by Prometheus, Grafana, PostgreSQL exporter, alert rules and healthchecks.
+
+RetailFlow is therefore not only a technical prototype. It is a professional demonstration of a data and AI platform that connects data engineering, governance, machine learning, operations and business value.
+
+---
+
+## 34. Quick Reference
+
+Repository:
+
+```text
+https://github.com/HugoB-AS/retailflow-platform.git
+```
+
+Main branch:
+
+```text
+develop
+```
+
+Start platform:
+
+```bash
+docker compose up -d
+```
+
+Validate platform:
+
+```bash
+curl http://127.0.0.1:8000/health
+curl -i http://127.0.0.1:8501/_stcore/health
+curl http://127.0.0.1:9090/-/ready
+curl http://127.0.0.1:3000/api/health
+```
+
+Main UI:
+
+```text
+http://127.0.0.1:8501
+```
+
+FastAPI Docs:
+
+```text
+http://127.0.0.1:8000/docs
+```
 
 Prometheus:
 
@@ -3127,1868 +2156,8 @@ Grafana:
 http://127.0.0.1:3000
 ```
 
-Key Prometheus queries:
+Airflow:
 
-```promql
-up{job="retailflow-fastapi"}
-```
-
-```promql
-pg_up{job="retailflow-postgres"}
-```
-
-```promql
-sum(rate(http_requests_total[1m])) * 60
-```
-
-```promql
-sum(rate(http_requests_total{status=~"5.."}[1m]))
-```
-
-```promql
-histogram_quantile(
-  0.95,
-  sum by (le) (
-    rate(http_request_duration_seconds_bucket[5m])
-  )
-)
-```
-
----
-
-## 16. Demonstration Flow
-
-The demonstration is designed as a narrative sequence.
-
-The goal is not to show disconnected tools.  
-The goal is to show how RetailFlow turns customer behavior into governed, monitored, AI-powered business intelligence.
-
----
-
-### 16.1 Live demo path
-
-```text
-Home
-→ Platform Overview
-→ Customer View
-→ Customer Intelligence
-→ Data Governance
-→ Data Quality
-→ AI Monitoring
-→ Observability
-```
-
----
-
-### 16.2 Demo step 1 — Home
-
-Open:
-
-```text
-http://127.0.0.1:8501
-```
-
-Purpose:
-
-- introduce RetailFlow;
-- present the platform positioning;
-- guide the audience toward the full demo.
-
-Main message:
-
-```text
-RetailFlow is an end-to-end Retail Intelligence platform combining real-time pipelines, AI, governance and observability.
-```
-
----
-
-### 16.3 Demo step 2 — Platform Overview
-
-Open:
-
-```text
-Platform Overview
-```
-
-Show:
-
-- problem statement;
-- platform status;
-- architecture overview;
-- academic block mapping;
-- Airflow orchestration;
-- Demo flow.
-
-Main message:
-
-```text
-The project is a complete platform, not a collection of independent dashboards.
-```
-
-Explanation:
-
-```text
-The architecture starts from customer events, routes them through the streaming pipeline, stores them in PostgreSQL, exposes them through FastAPI, and visualizes them in Streamlit and Grafana.
-```
-
----
-
-### 16.4 Demo step 3 — Customer View
-
-Open:
-
-```text
-Customer View
-```
-
-Show:
-
-- customer session;
-- product catalog;
-- product details;
-- product view event;
-- add to cart;
-- checkout;
-- purchase;
-- recent event stream preview.
-
-Suggested actions:
-
-1. Select a product.
-2. Generate a product view event.
-3. Add the product to cart.
-4. Start checkout.
-5. Complete purchase.
-6. Show the recent event stream.
-
-Main message:
-
-```text
-Customer behavior generates events that can be captured by the real-time pipeline.
-```
-
----
-
-### 16.5 Demo step 4 — Customer Intelligence
-
-Open:
-
-```text
-Customer Intelligence
-```
-
-Show:
-
-- top churn customers;
-- top CLV customers;
-- customer segments;
-- segment customer explorer;
-- business recommendations;
-- analytics consent filter;
-- customer AI profile.
-
-Suggested actions:
-
-1. Show the business overview.
-2. Explain churn and CLV use cases.
-3. Select a customer segment.
-4. Show the customer table for that segment.
-5. Open the customer explorer.
-6. Enable analytics-consented customers only.
-7. Load a customer AI profile.
-8. Show recommendations.
-
-Main message:
-
-```text
-Customer data is converted into actionable intelligence: risk, value, segments and recommendations.
-```
-
----
-
-### 16.6 Demo step 5 — Data Governance
-
-Open:
-
-```text
-Data Governance
-```
-
-Show:
-
-- governance overview;
-- roles and responsibilities;
-- consent management;
-- retention policies;
-- anonymization and audit trail;
-- risk register;
-- GDPR alignment.
-
-Main message:
-
-```text
-Governance is operationalized through database tables, API endpoints and dashboard visibility.
-```
-
-Good explanation:
-
-```text
-The platform does not only analyze customers. It also tracks consent, retention, anonymization and auditability.
-```
-
----
-
-### 16.7 Demo step 6 — Data Quality
-
-Open:
-
-```text
-Data Quality
-```
-
-Show:
-
-- dead-letter events;
-- failed rules;
-- severity;
-- impacted event types;
-- quality control logic;
-- dead letters by severity;
-- dead letters by event type;
-- quality rules summary.
-
-Main message:
-
-```text
-Invalid events are detected, isolated and traced instead of silently polluting analytical tables.
-```
-
-Good explanation:
-
-```text
-The data quality layer protects the downstream analytics and AI layers.
-```
-
----
-
-### 16.8 Demo step 7 — AI Monitoring
-
-Open:
-
-```text
-AI Monitoring
-```
-
-Show:
-
-- model overview;
-- churn metrics;
-- CLV metrics;
-- segmentation;
-- prediction distribution;
-- feature importance;
-- drift monitoring;
-- validation details.
-
-Suggested actions:
-
-1. Show executive model overview.
-2. Open the churn metric guide.
-3. Open the CLV metric guide.
-4. Show feature importance.
-5. Show drift monitoring.
-6. Explain validation details.
-
-Main message:
-
-```text
-The platform monitors model performance, explainability and behavioral drift signals.
-```
-
----
-
-### 16.9 Demo step 8 — Observability
-
-Open:
-
-```text
-Observability
-```
-
-Show:
-
-- FastAPI status;
-- PostgreSQL status;
-- Airflow health;
-- Grafana health;
-- API requests/min;
-- PostgreSQL connections;
-- Prometheus targets;
-- FastAPI observability;
-- PostgreSQL observability;
-- alerting rules.
-
-Suggested actions:
-
-1. Show platform health metrics.
-2. Show Prometheus targets.
-3. Open Grafana.
-4. Open Prometheus.
-5. Open FastAPI docs.
-6. Show alerting rules.
-
-Main message:
-
-```text
-RetailFlow is not only functional; it is observable.
-```
-
----
-
-### 16.10 Optional technical proof commands during demo
-
-FastAPI health:
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-AI summary:
-
-```bash
-curl -s "http://127.0.0.1:8000/ai/summary" | python -m json.tool
-```
-
-Governance summary:
-
-```bash
-curl -s "http://127.0.0.1:8000/governance/summary" | python -m json.tool
-```
-
-Prometheus targets:
-
-```bash
-curl -s "http://127.0.0.1:9090/api/v1/targets" | python -m json.tool
-```
-
-PostgreSQL exporter:
-
-```bash
-curl -s "http://127.0.0.1:9090/api/v1/query?query=pg_up"
-```
-
----
-
-### 16.11 Short demo script
-
-A short live demo can be done in five minutes:
-
-```text
-1. Open Platform Overview.
-2. Explain the architecture.
-3. Open Customer View.
-4. Generate product and checkout events.
-5. Open Customer Intelligence.
-6. Show churn, CLV and segments.
-7. Open AI Monitoring.
-8. Show metrics and drift.
-9. Open Observability.
-10. Show Prometheus/Grafana readiness.
-```
-
----
-
-### 16.12 Full demo script
-
-A complete demo can be done in fifteen to twenty minutes:
-
-```text
-1. Business context.
-2. Architecture overview.
-3. Customer event generation.
-4. Real-time ingestion.
-5. Customer intelligence.
-6. Data governance.
-7. Data quality.
-8. ML monitoring.
-9. Platform observability.
-10. Technical conclusion.
-```
-
----
-
-### 16.13 Narrative transitions
-
-Transition from architecture to customer journey:
-
-```text
-Now that the architecture is clear, the next step is to show how customer behavior enters the platform.
-```
-
-Transition from customer journey to intelligence:
-
-```text
-These events and customer features become the basis for customer intelligence.
-```
-
-Transition from customer intelligence to governance:
-
-```text
-Because these insights rely on customer data, governance is a core part of the platform.
-```
-
-Transition from governance to quality:
-
-```text
-Governance is not only documentation; it is enforced through data quality controls.
-```
-
-Transition from quality to AI monitoring:
-
-```text
-Once data is controlled, AI models can be monitored and interpreted.
-```
-
-Transition from AI monitoring to observability:
-
-```text
-Finally, the platform itself must be monitored as an operational system.
-```
-
----
-
-## 17. Development Milestones
-
-RetailFlow was built incrementally across stable milestones.
-
-This section documents the evolution from project foundation to a complete demo-ready Retail Intelligence platform.
-
----
-
-### 17.1 Milestone overview
-
-| Version | Milestone | Major achievement |
-|---|---|---|
-| V1 | Foundation Setup | Project foundation and repository structure |
-| V2 | Data Model Design | PostgreSQL schemas and e-commerce data model |
-| V3 | Dataset Generation | Retail dataset generation workflow |
-| V4 | PostgreSQL Integration | Database initialization and loading |
-| V5 | Real-Time Event Architecture | Event-driven design with Redpanda |
-| V6 | Event Consumer Pipeline | Streaming consumer and persistence |
-| V7 | Data Quality Foundations | Validation rules and dead-letter handling |
-| V8 | Airflow Orchestration | Orchestrated workflows and scheduled jobs |
-| V9 | Customer Intelligence Features | Feature engineering for customer analytics |
-| V10 | Machine Learning Platform | Churn, CLV and segmentation models |
-| V11 | API & Serving Layer | FastAPI serving and business endpoints |
-| V12 | Monitoring & Observability | Prometheus and Grafana foundations |
-| V13 | ML Realism & Drift | More realistic ML validation and drift monitoring |
-| V14 | AI API Hardening | Hardened AI endpoints and customer intelligence API |
-| V15 | AI Monitoring Dashboard | Streamlit AI monitoring and report visualization |
-| V16 | Platform Observability & Alerting | PostgreSQL exporter, dashboards and alert rules |
-| V17 | UX Demo Polish | Complete Streamlit demo platform and governed intelligence |
-
----
-
-### 17.2 V1 — Foundation Setup
-
-Objective:
-
-```text
-Create the initial project foundation.
-```
-
-Main work:
-
-- repository structure;
-- Python environment;
-- Docker-first direction;
-- initial folders;
-- development workflow;
-- first stable project baseline.
-
-Outcome:
-
-```text
-RetailFlow exists as a structured data platform project.
-```
-
----
-
-### 17.3 V2 — Data Model Design
-
-Objective:
-
-```text
-Design the core e-commerce data model.
-```
-
-Main work:
-
-- database schemas;
-- table design;
-- entity relationships;
-- separation between raw, core, analytics and governance layers.
-
-Outcome:
-
-```text
-The data architecture is defined around clear domain layers.
-```
-
----
-
-### 17.4 V3 — Dataset Generation
-
-Objective:
-
-```text
-Create a controlled retail dataset generation workflow.
-```
-
-Main work:
-
-- customers;
-- products;
-- suppliers;
-- orders;
-- payments;
-- shipments;
-- returns;
-- sessions;
-- support tickets;
-- reviews;
-- events;
-- customer features;
-- consent data.
-
-Outcome:
-
-```text
-The platform has a complete retail data foundation.
-```
-
----
-
-### 17.5 V4 — PostgreSQL Integration
-
-Objective:
-
-```text
-Persist the retail dataset into PostgreSQL.
-```
-
-Main work:
-
-- PostgreSQL initialization scripts;
-- data loader;
-- schema creation;
-- reference data;
-- views.
-
-Outcome:
-
-```text
-Retail data is centralized in PostgreSQL.
-```
-
----
-
-### 17.6 V5 — Real-Time Event Architecture
-
-Objective:
-
-```text
-Introduce event-driven architecture.
-```
-
-Main work:
-
-- Redpanda service;
-- Kafka-compatible topic;
-- event publishing pattern;
-- event architecture design.
-
-Outcome:
-
-```text
-RetailFlow starts moving from static analytics to real-time events.
-```
-
----
-
-### 17.7 V6 — Event Consumer Pipeline
-
-Objective:
-
-```text
-Consume customer events and persist them.
-```
-
-Main work:
-
-- Python consumer;
-- Redpanda polling;
-- event parsing;
-- database writing;
-- Dockerized consumer.
-
-Outcome:
-
-```text
-The streaming pipeline becomes functional.
-```
-
----
-
-### 17.8 V7 — Data Quality Foundations
-
-Objective:
-
-```text
-Protect the pipeline from invalid events.
-```
-
-Main work:
-
-- validation rules;
-- event type control;
-- customer existence checks;
-- product existence checks;
-- timestamp validation;
-- dead-letter events;
-- data quality logs.
-
-Outcome:
-
-```text
-Invalid events are rejected, isolated and auditable.
-```
-
----
-
-### 17.9 V8 — Airflow Orchestration
-
-Objective:
-
-```text
-Add workflow orchestration to the platform.
-```
-
-Main work:
-
-- Airflow services;
-- Airflow metadata database;
-- DAG structure;
-- daily data quality;
-- daily sales aggregation;
-- ML retraining;
-- retention cleanup.
-
-Outcome:
-
-```text
-RetailFlow gains workflow orchestration capabilities.
-```
-
----
-
-### 17.10 V9 — Customer Intelligence Features
-
-Objective:
-
-```text
-Prepare customer-level analytical features.
-```
-
-Main work:
-
-- customer aggregation;
-- behavioral indicators;
-- purchase features;
-- support features;
-- return features;
-- engagement features.
-
-Outcome:
-
-```text
-The customer intelligence layer gets its feature foundation.
-```
-
----
-
-### 17.11 V10 — Machine Learning Platform
-
-Objective:
-
-```text
-Build the AI layer.
-```
-
-Main work:
-
-- churn model;
-- CLV model;
-- segmentation model;
-- model persistence;
-- prediction generation;
-- database storage of scores.
-
-Outcome:
-
-```text
-RetailFlow gains AI-powered customer intelligence.
-```
-
----
-
-### 17.12 V11 — API & Serving Layer
-
-Objective:
-
-```text
-Expose platform data and intelligence through APIs.
-```
-
-Main work:
-
-- FastAPI routes;
-- product endpoints;
-- event endpoints;
-- analytics endpoints;
-- quality endpoints;
-- AI endpoints.
-
-Outcome:
-
-```text
-The platform becomes service-oriented.
-```
-
----
-
-### 17.13 V12 — Monitoring & Observability
-
-Objective:
-
-```text
-Make the platform observable.
-```
-
-Main work:
-
-- FastAPI metrics;
-- Prometheus integration;
-- Grafana dashboards;
-- API monitoring;
-- metrics endpoint.
-
-Outcome:
-
-```text
-The platform can be monitored through operational metrics.
-```
-
----
-
-### 17.14 V13 — ML Realism & Drift
-
-Objective:
-
-```text
-Strengthen ML quality and monitoring.
-```
-
-Main work:
-
-- improved ML reporting;
-- calibrated churn probabilities;
-- model validation;
-- feature importance;
-- drift reporting;
-- model summary artifacts.
-
-Outcome:
-
-```text
-ML outputs become more interpretable and easier to defend.
-```
-
----
-
-### 17.15 V14 — AI API Hardening
-
-Objective:
-
-```text
-Harden the AI serving layer.
-```
-
-Main work:
-
-- customer intelligence endpoints;
-- churn top endpoint;
-- CLV top endpoint;
-- segment endpoint;
-- customer AI profile;
-- model report API;
-- summary API.
-
-Outcome:
-
-```text
-AI results become reliably consumable by dashboards and external clients.
-```
-
----
-
-### 17.16 V15 — AI Monitoring Dashboard
-
-Objective:
-
-```text
-Expose model monitoring through Streamlit.
-```
-
-Main work:
-
-- model report visualization;
-- churn metrics;
-- CLV metrics;
-- segmentation summary;
-- feature importance;
-- drift view.
-
-Outcome:
-
-```text
-The AI layer becomes visible and explainable.
-```
-
----
-
-### 17.17 V16 — Platform Observability & Alerting
-
-Objective:
-
-```text
-Strengthen operational monitoring.
-```
-
-Main work:
-
-- PostgreSQL exporter;
-- Prometheus PostgreSQL scrape job;
-- Grafana platform dashboard;
-- alerting rules documentation;
-- Airflow health approach;
-- platform overview monitoring.
-
-Outcome:
-
-```text
-RetailFlow gains platform-level observability.
-```
-
----
-
-### 17.18 V17 — UX Demo Polish
-
-Objective:
-
-```text
-Transform the technical components into a coherent demo platform.
-```
-
-Main work:
-
-- new Streamlit structure;
-- reusable components;
-- custom CSS;
-- homepage redesign;
-- Platform Overview page;
-- Customer View page;
-- Customer Intelligence page;
-- Data Governance page;
-- Data Quality page;
-- AI Monitoring page;
-- Observability page;
-- analytics consent filtering;
-- segment-level customer explorer;
-- business recommendations.
-
-Outcome:
-
-```text
-RetailFlow becomes a complete, demo-ready Retail Intelligence platform.
-```
-
----
-
-### 17.19 Current stable release
-
-Current stable tag:
-
-```text
-v17-ux-demo-polish-stable
-```
-
-Current stable branch:
-
-```text
-develop
-```
-
-Current stable commit:
-
-```text
-27fc5c3
-```
-
----
-
-## 18. Future Improvements
-
-RetailFlow is already a complete end-to-end platform, but several improvements would make it closer to a production-grade SaaS data product.
-
----
-
-### 18.1 CI/CD pipeline
-
-Improvements:
-
-- GitHub Actions workflow;
-- Python linting;
-- tests on pull requests;
-- Docker build checks;
-- API smoke tests;
-- Streamlit smoke tests;
-- container health validation.
-
-Potential workflow:
-
-```text
-push / pull request
-→ install dependencies
-→ run unit tests
-→ run API tests
-→ build Docker images
-→ run smoke checks
-```
-
-Example checks:
-
-```bash
-pytest tests/
-```
-
-```bash
-docker compose config
-```
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
----
-
-### 18.2 Test coverage improvements
-
-Existing tests can be extended with:
-
-- API route tests;
-- data quality validator tests;
-- ML report validation tests;
-- schema validation tests;
-- event payload tests;
-- governance endpoint tests;
-- Streamlit smoke tests.
-
-Test categories:
-
-| Test category | Goal |
-|---|---|
-| API tests | Ensure routes respond correctly |
-| Database tests | Validate schema and table availability |
-| Quality tests | Validate event rejection rules |
-| ML tests | Validate report structure and metrics |
-| Pipeline tests | Validate event consumer logic |
-| Governance tests | Validate retention and consent endpoints |
-
----
-
-### 18.3 Model registry
-
-A model registry would improve:
-
-- model versioning;
-- model promotion;
-- traceability;
-- rollback;
-- production governance.
-
-Direction:
-
-```text
-training run
-→ registered model
-→ validation
-→ promotion
-→ serving
-→ monitoring
-```
-
-Potential tools:
-
-- MLflow Model Registry;
-- custom registry table;
-- artifact storage;
-- model metadata table.
-
----
-
-### 18.4 Advanced drift monitoring
-
-Current drift monitoring can be extended into:
-
-- scheduled drift reports;
-- feature-level thresholds;
-- data drift alerts;
-- prediction drift alerts;
-- segment drift monitoring;
-- integration with Grafana or alerting.
-
-Potential workflow:
-
-```text
-reference data
-→ current data
-→ drift calculation
-→ report
-→ alert if threshold exceeded
-```
-
----
-
-### 18.5 Data catalog
-
-A data catalog would improve governance and discoverability.
-
-Potential catalog content:
-
-- table ownership;
-- column descriptions;
-- sensitivity classification;
-- business definitions;
-- lineage;
-- retention policy;
-- data quality rules.
-
-Possible implementation:
-
-```text
-docs/data_catalog.md
-```
-
-or a dedicated metadata table:
-
-```text
-governance.data_catalog
-```
-
----
-
-### 18.6 Data lineage automation
-
-Current lineage is documented conceptually.
-
-A future improvement would track lineage automatically:
-
-```text
-source table
-→ transformation
-→ target table
-→ consuming endpoint
-→ dashboard page
-```
-
-Potential implementation:
-
-- metadata tables;
-- dbt lineage;
-- OpenLineage;
-- Airflow lineage;
-- manual YAML registry.
-
----
-
-### 18.7 Role-based access control
-
-Future platform versions could add:
-
-- admin role;
-- analyst role;
-- data steward role;
-- marketing role;
-- ML engineer role;
-- viewer role.
-
-Example access model:
-
-| Role | Access |
-|---|---|
-| Admin | All pages and endpoints |
-| Data Steward | Governance and quality pages |
-| Marketing | Customer intelligence |
-| ML Engineer | AI monitoring |
-| Platform Engineer | Observability |
-| Viewer | Read-only overview |
-
----
-
-### 18.8 API authentication
-
-Future improvements:
-
-- API keys;
-- OAuth2;
-- JWT;
-- service-to-service credentials;
-- role-based scopes.
-
-Potential endpoints:
-
-```text
-/auth/login
-/auth/token
-/auth/me
-```
-
----
-
-### 18.9 Secrets management
-
-Future improvements:
-
-- `.env` management;
-- Docker secrets;
-- Vault;
-- cloud secret manager;
-- no credentials committed to Git.
-
-Direction:
-
-```text
-development .env
-production secrets manager
-```
-
----
-
-### 18.10 Cloud deployment
-
-Potential deployment targets:
-
-- GCP Cloud Run;
-- GCP GKE;
-- AWS ECS;
-- Azure Container Apps;
-- Kubernetes cluster.
-
-Architecture:
-
-```text
-Container registry
-→ managed database
-→ managed metrics
-→ deployed API
-→ deployed UI
-```
-
----
-
-### 18.11 Kubernetes deployment
-
-The `k8s/` folder can be expanded with:
-
-- API deployment;
-- Streamlit deployment;
-- consumer deployment;
-- service manifests;
-- config maps;
-- secrets;
-- ingress;
-- horizontal pod autoscaling.
-
-Possible future manifests:
-
-```text
-k8s/api-deployment.yaml
-k8s/api-service.yaml
-k8s/streamlit-deployment.yaml
-k8s/streamlit-service.yaml
-k8s/consumer-deployment.yaml
-k8s/postgres-secret.yaml
-k8s/configmap.yaml
-```
-
----
-
-### 18.12 dbt transformation layer
-
-A dbt layer would improve:
-
-- transformation documentation;
-- testability;
-- lineage;
-- SQL modularity;
-- analytics engineering quality.
-
-Potential models:
-
-```text
-stg_customers
-stg_orders
-stg_events
-int_customer_activity
-mart_customer_features
-mart_daily_sales
-mart_ml_predictions
-```
-
----
-
-### 18.13 Recommendation engine
-
-Future AI use case:
-
-```text
-product recommendations by segment and customer behavior
-```
-
-Possible first version:
-
-- recommend popular products by segment;
-- recommend products from preferred category;
-- exclude already purchased items;
-- rank by margin or conversion probability.
-
-Potential endpoint:
-
-```text
-GET /ai/recommendations/{customer_id}
-```
-
-Potential Streamlit section:
-
-```text
-Customer Intelligence
-→ Recommended products
-```
-
----
-
-### 18.14 Real-time feature refresh
-
-Future improvement:
-
-```text
-events
-→ streaming aggregation
-→ feature update
-→ near-real-time intelligence
-```
-
-This would make RetailFlow closer to a real-time decision platform.
-
-Potential tools:
-
-- Python consumer aggregations;
-- PostgreSQL materialized views;
-- streaming feature store;
-- Redis;
-- Flink;
-- Spark Structured Streaming.
-
----
-
-### 18.15 Advanced alerting
-
-Current alert rules are documented.
-
-Future alerting could include:
-
-- Slack alerts;
-- email alerts;
-- webhook alerts;
-- Grafana-managed alert rules;
-- incident severity;
-- alert runbooks.
-
-Possible alert categories:
-
-| Alert | Trigger |
-|---|---|
-| FastAPI Down | `up == 0` |
-| PostgreSQL Down | `pg_up == 0` |
-| High API Latency | p95 > threshold |
-| High Error Rate | 5xx rate > threshold |
-| Drift Detected | drift flag true |
-| High Dead-Letter Rate | rejected events > threshold |
-
----
-
-### 18.16 Business experimentation layer
-
-RetailFlow could evolve into a platform supporting:
-
-- retention campaign testing;
-- churn intervention analysis;
-- segment-level campaign performance;
-- A/B testing;
-- uplift modeling.
-
-Potential tables:
-
-```text
-analytics.campaigns
-analytics.customer_campaign_assignments
-analytics.campaign_outcomes
-analytics.uplift_scores
-```
-
----
-
-### 18.17 Production deployment checklist
-
-Before production deployment, the platform would require:
-
-- authentication;
-- authorization;
-- secrets management;
-- backup strategy;
-- disaster recovery plan;
-- CI/CD;
-- infrastructure as code;
-- real monitoring alerts;
-- data catalog;
-- model registry;
-- production-grade drift monitoring;
-- privacy impact assessment;
-- load testing;
-- security testing.
-
----
-
-## 19. Troubleshooting
-
-This section summarizes common problems and fixes.
-
----
-
-### 19.1 Docker is not running
-
-Symptom:
-
-```text
-Cannot connect to the Docker daemon
-```
-
-Fix:
-
-1. Start Docker Desktop.
-2. Wait until Docker is fully running.
-3. Restart the command.
-
-Check:
-
-```bash
-docker ps
-```
-
----
-
-### 19.2 Containers are not starting
-
-Check status:
-
-```bash
-docker compose ps
-```
-
-Check logs:
-
-```bash
-docker compose logs --tail=100
-```
-
-Rebuild:
-
-```bash
-docker compose up -d --build
-```
-
----
-
-### 19.3 FastAPI cannot connect to PostgreSQL
-
-Check PostgreSQL:
-
-```bash
-docker compose ps postgres
-```
-
-Check FastAPI logs:
-
-```bash
-docker logs retailflow_fastapi --tail 100
-```
-
-Check health:
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
----
-
-### 19.4 Streamlit cannot reach FastAPI
-
-Check Streamlit logs:
-
-```bash
-docker logs retailflow_streamlit --tail 100
-```
-
-Check FastAPI from host:
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-Inside Docker, Streamlit uses:
-
-```text
-http://fastapi:8000
-```
-
-not:
-
-```text
-http://127.0.0.1:8000
-```
-
----
-
-### 19.5 Prometheus target is down
-
-Open:
-
-```text
-http://127.0.0.1:9090/targets
-```
-
-Check config:
-
-```bash
-cat monitoring/prometheus/prometheus.yml
-```
-
-Restart Prometheus:
-
-```bash
-docker compose restart prometheus
-```
-
----
-
-### 19.6 PostgreSQL exporter is not up
-
-Check exporter:
-
-```bash
-docker compose ps postgres_exporter
-```
-
-Check metrics:
-
-```bash
-curl http://127.0.0.1:9187/metrics | head
-```
-
-Check Prometheus query:
-
-```bash
-curl -s "http://127.0.0.1:9090/api/v1/query?query=pg_up"
-```
-
----
-
-### 19.7 Airflow health endpoint connection reset
-
-Airflow may need time to initialize.
-
-Wait and retry:
-
-```bash
-sleep 10
-curl http://127.0.0.1:8080/health
-```
-
-Check containers:
-
-```bash
-docker compose ps airflow-webserver airflow-scheduler
-```
-
----
-
-### 19.8 Streamlit page does not appear in sidebar
-
-Streamlit page discovery depends on the `pages/` folder.
-
-Check file names:
-
-```bash
-ls streamlit_app/pages
-```
-
-Expected pages:
-
 ```text
-1_Platform_Overview.py
-2_Customer_View.py
-3_Customer_Intelligence.py
-4_Data_Governance.py
-5_Data_Quality.py
-6_AI_Monitoring.py
-7_Observability.py
+http://127.0.0.1:8080
 ```
-
-Rebuild Streamlit:
-
-```bash
-docker compose up -d --build streamlit
-```
-
----
-
-### 19.9 HTML appears as code in Streamlit
-
-Cause:
-
-- HTML block interpreted as Markdown code due to indentation.
-
-Fix:
-
-- use compact HTML strings;
-- render through helper functions;
-- ensure `unsafe_allow_html=True`.
-
-Relevant file:
-
-```text
-streamlit_app/components.py
-```
-
----
-
-### 19.10 Model reports not found
-
-Check reports:
-
-```bash
-ls -lh ml/reports
-```
-
-Regenerate:
-
-```bash
-python -m ml.src.train_churn
-python -m ml.src.train_clv
-python -m ml.src.train_segmentation
-python -m ml.src.predict
-python -m ml.src.evaluate_drift
-```
-
-Rebuild FastAPI:
-
-```bash
-docker compose up -d --build fastapi
-```
-
----
-
-## 20. Operational Runbook
-
-This runbook provides common operational actions.
-
----
-
-### 20.1 Full restart
-
-```bash
-docker compose down
-docker compose up -d
-docker compose ps
-```
-
----
-
-### 20.2 Full rebuild
-
-```bash
-docker compose down
-docker compose up -d --build
-docker compose ps
-```
-
----
-
-### 20.3 Rebuild API and UI only
-
-```bash
-docker compose up -d --build fastapi streamlit
-```
-
----
-
-### 20.4 Validate platform
-
-```bash
-curl http://127.0.0.1:8000/health
-curl http://127.0.0.1:9090/-/ready
-curl http://127.0.0.1:3000/api/health
-curl http://127.0.0.1:8080/health
-```
-
----
-
-### 20.5 Validate AI layer
-
-```bash
-curl -s "http://127.0.0.1:8000/ai/summary" | python -m json.tool
-curl -s "http://127.0.0.1:8000/ai/model-report/model_summary" | python -m json.tool
-curl -s "http://127.0.0.1:8000/ai/customers?limit=3&analytics_consent_only=true" | python -m json.tool
-```
-
----
-
-### 20.6 Validate governance layer
-
-```bash
-curl -s "http://127.0.0.1:8000/governance/summary" | python -m json.tool
-curl -s "http://127.0.0.1:8000/governance/retention-policies" | python -m json.tool
-curl -s "http://127.0.0.1:8000/governance/customer-consents?limit=3" | python -m json.tool
-```
-
----
-
-### 20.7 Validate quality layer
-
-```bash
-curl -s "http://127.0.0.1:8000/quality/dead-letters?limit=3" | python -m json.tool
-curl -s "http://127.0.0.1:8000/quality/summary" | python -m json.tool
-curl -s "http://127.0.0.1:8000/quality/dead-letter-summary" | python -m json.tool
-```
-
----
-
-### 20.8 Validate observability
-
-```bash
-curl -s "http://127.0.0.1:9090/api/v1/targets" | python -m json.tool
-curl -s "http://127.0.0.1:9090/api/v1/query?query=pg_up"
-curl http://127.0.0.1:9187/metrics | head
-```
-
----
-
-## 21. Repository Workflow
-
-Workflow:
-
-```text
-develop
-→ feature branch
-→ commit
-→ push
-→ merge into develop
-→ tag stable release
-```
-
----
-
-### 21.1 Create a feature branch
-
-```bash
-git checkout develop
-git pull origin develop
-git checkout -b feature/my-feature
-```
-
----
-
-### 21.2 Commit changes
-
-```bash
-git status
-git add .
-git commit -m "Describe the change"
-git push origin feature/my-feature
-```
-
----
-
-### 21.3 Merge into develop
-
-```bash
-git checkout develop
-git merge feature/my-feature
-git push origin develop
-```
-
----
-
-### 21.4 Create a stable tag
-
-```bash
-git tag vXX-description-stable
-git push origin vXX-description-stable
-```
-
----
-
-### 21.5 Current stable chain
-
-```text
-v12-monitoring-observability-stable
-v13-ml-realism-improvement-stable
-v14-api-ml-hardening-stable
-v15-streamlit-ai-monitoring-stable
-v16-platform-observability-alerting-stable
-v17-ux-demo-polish-stable
-```
-
----
-
-## 22. Design Principles
-
-RetailFlow follows several design principles.
-
----
-
-### 22.1 End-to-end over isolated components
-
-The goal is not to build a single model or a single dashboard.
-
-The goal is to connect:
-
-```text
-events
-→ data quality
-→ storage
-→ orchestration
-→ AI
-→ API
-→ monitoring
-→ decision support
-```
-
----
-
-### 22.2 Demo stability over unnecessary complexity
-
-The platform favors:
-
-- Docker Compose;
-- local reproducibility;
-- clear service boundaries;
-- observable components.
-
-It avoids unnecessary complexity unless it strengthens the architecture.
-
----
-
-### 22.3 Business readability
-
-The interface is designed so that both technical and business stakeholders can understand:
-
-- what the platform does;
-- why the data matters;
-- how AI outputs support decisions;
-- how governance and monitoring reduce risk.
-
----
-
-### 22.4 Operational transparency
-
-RetailFlow exposes:
-
-- health checks;
-- metrics;
-- reports;
-- governance summaries;
-- quality logs;
-- model monitoring.
-
----
-
-### 22.5 Governance by design
-
-Governance is not a separate document only.
-
-It is embedded in:
-
-- consent tracking;
-- retention policies;
-- anonymization logs;
-- data quality logs;
-- dead-letter events;
-- governed customer exploration.
-
----
-
-### 22.6 AI as a platform capability
-
-AI is treated as one layer of the platform.
-
-It is:
-
-- trained;
-- reported;
-- persisted;
-- served;
-- visualized;
-- monitored.
-
----
-
-## 23. Conclusion
-
-RetailFlow demonstrates how a modern retail organization can connect customer behavior, data governance, real-time data pipelines, machine learning and observability into a single coherent platform.
-
-The platform provides:
-
-- a retail data foundation;
-- a real-time event pipeline;
-- a governed analytical layer;
-- customer intelligence models;
-- API-based serving;
-- monitoring and observability;
-- a Streamlit demonstration interface.
-
-The current stable release, `v17-ux-demo-polish-stable`, provides a complete end-to-end demonstration of the platform.
-
-It is suitable for:
-
-- technical architecture review;
-- data engineering demonstration;
-- AI and customer intelligence demonstration;
-- governance and quality discussion;
-- platform observability walkthrough;
-- portfolio presentation.
-
-RetailFlow is designed to be understandable, reproducible and extensible.
-
-It demonstrates not only how to build data and AI components, but how to integrate them into a product-oriented data platform.

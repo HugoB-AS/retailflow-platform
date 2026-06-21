@@ -10,6 +10,8 @@
 
 **Document scope:** governance strategy, operating model, policies, standards, GDPR alignment, consent management, quality controls, auditability, AI governance, KPIs, change management and roadmap.
 
+**Updated version:** this version integrates the latest RetailFlow implementation updates: final Streamlit consistency fixes, consent-aware AI display enforcement, AI Monitoring metrics based on `analytics_consent_count`, Project Evidence skills matrix, Prometheus alert rules, Grafana dashboard evidence, CI/CD security reports, healthchecks, backup/restore scripts and read-only database role evidence.
+
 ---
 
 ## Table of Contents
@@ -85,13 +87,13 @@ The most important governance implementation areas are:
 
 | Area | Implementation in RetailFlow |
 |---|---|
-| Consent management | Customer consent indicators and consent-aware analytics filtering |
+| Consent management | Customer consent indicators, consent-aware analytics filtering and AI display blocking when analytics consent is absent |
 | Data retention | Retention policy table and automated retention cleanup workflow |
 | Anonymization | Customer anonymization logic and audit trail |
 | Data quality | Validation rules, dead-letter events and quality logs |
 | Auditability | Retention action logs, quality logs, dead-letter tables and operational evidence |
 | AI governance | Consent-aware customer intelligence, model monitoring and drift reporting |
-| Monitoring | Streamlit governance dashboard, FastAPI endpoints and Airflow workflows |
+| Monitoring | Streamlit governance dashboard, FastAPI endpoints, Airflow workflows, Prometheus alert rules and Grafana dashboards |
 
 The result is a governance framework that is aligned with business value, technical implementation and regulatory expectations.
 
@@ -237,10 +239,18 @@ Customer intelligence can influence marketing, retention and personalization dec
 For this reason, I implemented a consent-aware analytics principle:
 
 ```text
-Customer intelligence exploration should prioritize customers with analytics consent.
+Customer-level AI predictions must only be displayed when analytics consent is granted.
 ```
 
-This is visible in the Customer Intelligence interface, where the user can filter customers by analytics consent.
+This is visible in the Customer Intelligence interface.
+
+The user can filter customers by analytics consent.
+
+If the filter is disabled for governance demonstration purposes and a customer without analytics consent is selected, the platform does not display churn, CLV, segmentation or AI recommendations.
+
+Instead, Streamlit displays a governance message explaining that AI predictions are not available because analytics consent was not granted.
+
+This makes the consent rule observable and testable inside the application rather than only documented as a policy.
 
 ### 4.4 Control data quality
 
@@ -896,11 +906,11 @@ The platform tracks consent at customer level.
 I defined the following principles:
 
 1. Consent must be explicit enough to support the intended purpose.
-2. Analytics exploration should prioritize customers with analytics consent.
+2. Customer-level AI predictions should be displayed only when analytics consent is granted.
 3. Marketing activation should require marketing consent.
 4. Personalization use cases should require personalization consent.
 5. Consent values must be visible to data users where they affect usage.
-6. Consent must be considered before using AI outputs for customer-level actions.
+6. Consent must be checked before using or displaying AI outputs for customer-level actions.
 
 ### 13.3 Consent-aware analytics
 
@@ -912,7 +922,25 @@ The customer explorer contains a default filter:
 Show only customers with analytics consent
 ```
 
-This ensures that AI profile exploration is aligned with consent-aware governance.
+This filter is enabled by default.
+
+The page also implements a stronger governance rule.
+
+When a customer does not have analytics consent, RetailFlow hides customer-level AI outputs from the interface:
+
+- churn prediction;
+- CLV prediction;
+- segmentation result;
+- AI-driven recommended actions;
+- raw AI profile.
+
+The page displays the following business-readable governance message:
+
+```text
+Ce client n’a pas donné son consentement analytics. Les prédictions IA ne sont donc pas disponibles.
+```
+
+This demonstrates that analytics consent is enforced at the application display layer and not only stored in the database.
 
 ### 13.4 Consent flow
 
@@ -939,7 +967,21 @@ The dashboard tracks:
 - anonymized customers;
 - customer count.
 
-This makes consent not only stored but also monitored.
+The AI Monitoring page also uses `analytics_consent_count` as the visible count for AI-authorized customer outputs.
+
+This means the AI monitoring view is aligned with the same governance rule as the Customer Intelligence dashboard.
+
+This makes consent not only stored, but also monitored and connected to AI visibility.
+
+### 13.6 Current consent implementation evidence
+
+| Evidence | Implementation | Where to verify |
+|---|---|---|
+| Customer consent storage | `marketing_consent`, `analytics_consent`, `personalization_consent` | PostgreSQL `core.customers` and governance dashboards |
+| Governance summary | Consent counts exposed by API | FastAPI `GET /governance/summary` |
+| Consent-aware customer list | Analytics consent filter in customer API | FastAPI `GET /ai/customers?analytics_consent_only=true` |
+| AI display control | Churn, CLV, segmentation and recommendations hidden when analytics consent is absent | Streamlit `Customer Intelligence` |
+| AI monitoring count | `analytics_consent_count` used for visible AI-authorized customer outputs | Streamlit `AI Monitoring` |
 
 ---
 
@@ -1185,12 +1227,13 @@ I therefore designed a specific AI governance policy.
 I defined the following principles:
 
 1. AI predictions must support decisions, not replace human judgment.
-2. Customer-level AI exploration must consider analytics consent.
+2. Customer-level AI exploration must enforce analytics consent before displaying predictions.
 3. Models must be monitored with metrics and drift signals.
 4. Model outputs must be explainable to business users.
 5. Retraining must be scheduled and traceable.
 6. AI outputs must be versioned and timestamped.
 7. Business users must understand the limits of model predictions.
+8. AI dashboards must make the consent boundary visible and testable.
 
 ### 17.3 Model monitoring
 
@@ -1224,6 +1267,18 @@ The Airflow DAG `ml_retraining` orchestrates:
 - CLV model training;
 - prediction refresh;
 - drift evaluation.
+
+### 17.6 Current AI governance implementation evidence
+
+| Control | Current RetailFlow implementation | Evidence location |
+|---|---|---|
+| Consent-aware AI display | Customer-level AI outputs are hidden when `analytics_consent = false`. | Streamlit `Customer Intelligence` |
+| AI-authorized customer count | AI Monitoring uses `analytics_consent_count` to represent visible AI-authorized customer outputs. | Streamlit `AI Monitoring` |
+| Human-readable actioning | Decision framework translates churn, CLV and segment outputs into business recommendations. | Streamlit `Customer Intelligence` |
+| Model registry | Model registry is generated and displayed. | `ml/model_registry.json`, Streamlit `AI Monitoring` |
+| Model reports | Churn, CLV, segmentation, model summary and drift reports are displayed. | `ml/reports/`, Streamlit `AI Monitoring` |
+| Retraining traceability | Retraining runs are logged and exposed in the monitoring page. | `ml/reports/retraining_runs.json`, Airflow `ml_retraining` |
+| CI/CD validation | Tests and security checks run in GitHub Actions. | GitHub Actions, `.github/workflows/ci.yml` |
 
 ### 17.6 AI governance lifecycle
 
@@ -1425,6 +1480,11 @@ Governance decisions and technical controls must produce evidence.
 | Prometheus metrics | Prove platform monitoring. |
 | Grafana dashboards | Visualize operational health. |
 | Streamlit governance page | Provides governance visibility. |
+| Streamlit Customer Intelligence page | Proves that customer-level AI predictions are blocked when analytics consent is absent. |
+| Streamlit AI Monitoring page | Proves that AI-authorized prediction visibility is aligned with `analytics_consent_count`. |
+| Streamlit Project Evidence page | Provides a final evidence matrix and skills evidence matrix for traceability to evaluation criteria. |
+| Prometheus alert rules | Prove operational monitoring controls for service availability, latency, error rate and PostgreSQL status. |
+| GitHub Actions reports | Prove CI/CD validation, tests and automated security checks. |
 
 ### 22.2 Audit questions RetailFlow can answer
 
@@ -1441,6 +1501,9 @@ RetailFlow can answer governance questions such as:
 - Are AI models monitored?
 - Has drift been detected?
 - Are platform services healthy?
+- Are AI predictions hidden for customers without analytics consent?
+- How many customers are authorized for AI visibility according to `analytics_consent_count`?
+- Which implemented page or tool proves each academic skill or block requirement?
 
 ### 22.3 Audit flow
 
@@ -1474,7 +1537,11 @@ RetailFlow uses technical tools to make governance operational.
 | Governance dashboard | Streamlit Data Governance page |
 | Quality dashboard | Streamlit Data Quality page |
 | AI monitoring | Streamlit AI Monitoring page |
-| Operational monitoring | Prometheus and Grafana |
+| Project evidence traceability | Streamlit Project Evidence page with final evidence matrix and skills evidence matrix |
+| Operational monitoring | Prometheus alert rules and Grafana dashboards |
+| CI/CD governance evidence | GitHub Actions tests and security reports |
+| Database access control evidence | PostgreSQL read-only role |
+| Backup and restore evidence | PostgreSQL backup and restore scripts |
 | Workflow orchestration | Airflow |
 
 ### 23.2 Governance dashboard architecture
@@ -1499,6 +1566,7 @@ I defined governance KPIs to make governance measurable.
 | KPI | Definition | Target | Owner |
 |---|---|---|---|
 | Analytics consent coverage | Share of customers with analytics consent enabled. | >= 75% | DPO / Compliance Lead |
+| AI-authorized customer count | Number of customers whose AI outputs may be displayed according to `analytics_consent_count`. | Monitored and explained | DPO / Compliance Lead and ML Owner |
 | Marketing consent coverage | Share of customers with marketing consent enabled. | >= 50% | Business Owner |
 | Personalization consent coverage | Share of customers with personalization consent enabled. | >= 50% | Business Owner |
 | Retention policy coverage | Share of critical governed domains covered by a retention policy. | 100% for critical domains | DPO / Compliance Lead |
@@ -1507,6 +1575,7 @@ I defined governance KPIs to make governance measurable.
 | Dead-letter rate | Share of rejected events among ingested events. | < 2% | Data Steward |
 | High severity issue resolution time | Average time to resolve high severity quality issues. | < 5 business days | Data Steward |
 | ML monitoring coverage | Share of production ML models with metrics and drift monitoring. | 100% | ML Owner |
+| Evidence coverage | Share of major academic criteria mapped to an implemented proof. | 100% for defended scope | Governance Council |
 | Governance review cadence | Share of planned governance reviews completed. | >= 90% | Governance Council |
 
 ### 24.2 KPI dashboard logic
@@ -1544,12 +1613,12 @@ I defined a governance risk register to identify and mitigate data risks.
 | Risk | Description | Impact | Mitigation | Owner |
 |---|---|---|---|---|
 | Personal data exposure | Customer data may be accessed or used beyond intended purpose. | High | Consent management, classification, access principles, anonymization | DPO / Compliance Lead |
-| Consent misuse | Customer data may be used for analytics or marketing without appropriate consent. | High | Consent-aware dashboards and policy review | DPO / Compliance Lead |
+| Consent misuse | Customer data may be used for analytics or marketing without appropriate consent. | High | Consent-aware dashboards, AI display blocking when analytics consent is absent and policy review | DPO / Compliance Lead |
 | Retention failure | Data may be kept longer than needed. | High | Retention policies, Airflow cleanup, audit logs | Data Custodian |
 | Poor data quality | Invalid events may affect analytics and ML models. | High | Validation rules, quality logs, dead-letter handling | Data Steward |
 | ML drift | Customer behavior may change and reduce model reliability. | Medium | Drift monitoring and retraining DAG | ML Owner |
 | Unclear ownership | Issues may remain unresolved if accountability is unclear. | Medium | Operating model and role mapping | Governance Council |
-| Dashboard misuse | Users may overinterpret AI outputs. | Medium | Training, metric guides and human oversight | Business Owner |
+| Dashboard misuse | Users may overinterpret AI outputs. | Medium | Training, metric guides, human oversight and business-readable governance messages | Business Owner |
 | Metadata gaps | Users may misunderstand data meaning or lineage. | Medium | Glossary and future catalog roadmap | Data Steward |
 | Accessibility gap | Some users may not be able to follow standard training formats. | Medium | Accessible materials and multi-format training | Executive Sponsor |
 
@@ -1689,7 +1758,7 @@ The roadmap therefore includes both completed work and future improvements.
 | Area | Completed implementation |
 |---|---|
 | Consent management | Customer consent fields and consent dashboard |
-| Analytics consent | Consent-aware customer explorer |
+| Analytics consent | Consent-aware customer explorer and AI display blocking when analytics consent is absent |
 | Retention policies | Retention policy table |
 | Retention workflow | Airflow `retention_cleanup` DAG |
 | Anonymization | Customer anonymization logic |
@@ -1698,7 +1767,11 @@ The roadmap therefore includes both completed work and future improvements.
 | Dead-letter handling | Invalid events stored in governance dead-letter table |
 | Governance dashboard | Streamlit Data Governance page |
 | Data Quality dashboard | Streamlit Data Quality page |
-| AI governance | AI monitoring, drift and explainability views |
+| AI governance | AI monitoring, drift, model registry, retraining evidence and consent-aware AI visibility |
+| Project evidence | Final evidence matrix and skills evidence matrix mapped to blocks and skills |
+| Observability evidence | Prometheus alert rules, Grafana dashboards and Streamlit Observability page |
+| CI/CD governance evidence | GitHub Actions tests, Docker validation and security reports |
+| Operational resilience evidence | Healthchecks, backup/restore scripts and PostgreSQL read-only role |
 | Orchestration | Airflow governance and ML workflows |
 
 ### 28.2 Future roadmap
@@ -1805,6 +1878,9 @@ Accessibility should be reviewed periodically for:
 
 - training content;
 - dashboards;
+- Project Evidence and Skills Evidence matrices;
+- AI Monitoring metrics aligned with `analytics_consent_count`;
+- Prometheus alert rules, Grafana dashboards and CI/CD evidence;
 - documentation;
 - diagrams;
 - onboarding material.
@@ -1817,16 +1893,19 @@ I designed the RetailFlow data governance framework as an operational component 
 
 The framework covers ownership, policies, consent, retention, anonymization, quality, AI monitoring, auditability, inclusion and continuous improvement.
 
-The main strength of the approach is that governance is embedded directly into the platform design.
+The main strength of the approach is that governance is embedded directly into the platform design and visible in the final application experience.
 
 This is visible through:
 
-- consent-aware customer intelligence;
+- consent-aware customer intelligence with AI prediction blocking when analytics consent is absent;
 - retention policies and anonymization workflow;
 - dead-letter event handling;
 - quality logs;
 - governance APIs;
 - dashboards;
+- Project Evidence and Skills Evidence matrices;
+- AI Monitoring metrics aligned with `analytics_consent_count`;
+- Prometheus alert rules, Grafana dashboards and CI/CD evidence;
 - Airflow workflows;
 - AI monitoring;
 - risk and KPI management.
