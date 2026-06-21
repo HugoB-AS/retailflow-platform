@@ -4,7 +4,16 @@ import pandas as pd
 import requests
 import streamlit as st
 
-from components import load_css, section_title, info_card, footer_note
+from components import (
+    load_css,
+    section_title,
+    info_card,
+    proof_card,
+    block_badges,
+    technical_evidence,
+    academic_mapping,
+    footer_note,
+)
 
 
 API_URL = os.getenv("API_URL", "http://fastapi:8000")
@@ -25,11 +34,13 @@ def api_get(path: str, params=None):
 
 
 st.title("🛡️ Data Governance")
+block_badges(["Bloc 1", "Bloc 2", "Bloc 3", "Bloc 4"])
+
 st.markdown(
     """
-    Cette page couvre le **Bloc 1 — Data Governance**.  
-    Elle montre comment RetailFlow encadre l’usage, la conformité, la rétention,
-    l’anonymisation et l’auditabilité des données clients.
+    Cette page présente le cadre de gouvernance des données RetailFlow :
+    rôles, consentements, rétention, anonymisation, risques, conformité,
+    accessibilité et auditabilité.
     """
 )
 
@@ -61,45 +72,58 @@ try:
 
     section_title("Governance operating model")
 
-    r1, r2, r3 = st.columns(3)
+    st.markdown(
+        """
+        Le modèle de gouvernance répartit les responsabilités entre les acteurs métier,
+        techniques, conformité et décisionnels. Les rôles ne sont pas forcément des postes
+        dédiés : ils peuvent être portés par des personnes existantes dans l'organisation.
+        """
+    )
 
-    with r1:
-        info_card(
-            "Data Owner",
-            "Defines business ownership, data usage priorities and accountability for key data domains.",
-        )
+    stakeholders = [
+        {
+            "Role": "Executive Sponsor",
+            "Responsibility": "Porte la vision, arbitre les priorités et donne l'autorité au programme data.",
+            "Main evidence": "Sponsor du cadre de gouvernance et des décisions de priorité.",
+        },
+        {
+            "Role": "Governance Council",
+            "Responsibility": "Réunit métier, IT, data, conformité et sécurité pour piloter les règles communes.",
+            "Main evidence": "Instance de décision pour politiques, risques et arbitrages.",
+        },
+        {
+            "Role": "Data Owner",
+            "Responsibility": "Responsable métier d'un domaine de données et de ses usages.",
+            "Main evidence": "Définit les règles d'usage et les priorités métier.",
+        },
+        {
+            "Role": "Data Steward",
+            "Responsibility": "Suit qualité, documentation, cohérence opérationnelle et règles de gestion.",
+            "Main evidence": "Surveille qualité, metadata et anomalies.",
+        },
+        {
+            "Role": "Data Custodian / IT",
+            "Responsibility": "Gère l'infrastructure, les accès, les sauvegardes et la sécurité technique.",
+            "Main evidence": "PostgreSQL, Docker Compose, backup/restore, readonly role.",
+        },
+        {
+            "Role": "DPO / Compliance",
+            "Responsibility": "Veille RGPD, consentement, rétention, anonymisation et conformité.",
+            "Main evidence": "Consent tracking, retention policies, audit trail.",
+        },
+        {
+            "Role": "ML Engineer",
+            "Responsibility": "Maintient lifecycle ML, retraining, model registry, monitoring et drift.",
+            "Main evidence": "AI Monitoring, retraining runs, drift report.",
+        },
+        {
+            "Role": "Business Users",
+            "Responsibility": "Utilisent les insights clients et remontent les besoins métier.",
+            "Main evidence": "Customer Intelligence, segments, churn, CLV.",
+        },
+    ]
 
-    with r2:
-        info_card(
-            "Data Steward",
-            "Monitors quality, documentation, metadata and operational consistency of datasets.",
-        )
-
-    with r3:
-        info_card(
-            "DPO / Compliance",
-            "Ensures GDPR alignment, consent management, retention policies and audit readiness.",
-        )
-
-    r4, r5, r6 = st.columns(3)
-
-    with r4:
-        info_card(
-            "Data Engineer",
-            "Implements reliable ingestion, transformation, orchestration and quality controls.",
-        )
-
-    with r5:
-        info_card(
-            "ML Engineer",
-            "Maintains model lifecycle, retraining, serving, drift monitoring and explainability.",
-        )
-
-    with r6:
-        info_card(
-            "Business Owner",
-            "Uses insights for retention, segmentation, customer value and decision-making.",
-        )
+    st.dataframe(pd.DataFrame(stakeholders), use_container_width=True, hide_index=True)
 
     section_title("Consent management")
 
@@ -122,89 +146,304 @@ try:
             personalization_rate = consent.get("personalization_consent_count", 0) / customers_count
             st.metric("Personalization consent", f"{personalization_rate:.1%}")
 
-        st.dataframe(df_consents, use_container_width=True, hide_index=True)
+        with st.expander("Customer consent sample"):
+            st.dataframe(df_consents, use_container_width=True, hide_index=True)
     else:
         st.info("No consent data available.")
 
-    section_title("Retention policies")
+    section_title("Retention, anonymization and audit trail")
 
-    df_policies = pd.DataFrame(policies)
+    r1, r2 = st.columns(2)
 
-    if not df_policies.empty:
-        st.dataframe(df_policies, use_container_width=True, hide_index=True)
-    else:
-        st.warning("No retention policies found.")
+    with r1:
+        st.subheader("Retention policies")
+        df_policies = pd.DataFrame(policies)
 
-    section_title("Anonymization and audit trail")
+        if not df_policies.empty:
+            st.dataframe(df_policies, use_container_width=True, hide_index=True)
+        else:
+            st.warning("No retention policies found.")
 
-    df_actions = pd.DataFrame(actions)
+    with r2:
+        st.subheader("Anonymization and audit actions")
+        df_actions = pd.DataFrame(actions)
 
-    if not df_actions.empty:
-        st.dataframe(df_actions, use_container_width=True, hide_index=True)
-    else:
-        st.info("No retention actions logged yet.")
+        if not df_actions.empty:
+            st.dataframe(df_actions, use_container_width=True, hide_index=True)
+        else:
+            st.info("No retention actions logged yet.")
 
-    section_title("Risk register")
+    section_title("Regulatory alignment")
 
-    risk1, risk2 = st.columns(2)
+    g1, g2, g3, g4 = st.columns(4)
 
-    with risk1:
-        info_card(
-            "Personal data exposure",
-            "Customer identity, contact details and behavioral data require retention limits, anonymization and access control.",
+    with g1:
+        proof_card(
+            "RGPD",
+            "Consentement, minimisation, rétention, anonymisation et auditabilité.",
         )
 
-    with risk2:
-        info_card(
-            "Data quality risk",
-            "Invalid events or incomplete attributes can propagate to analytics and ML outputs if not detected early.",
+    with g2:
+        proof_card(
+            "ISO 27001 mindset",
+            "Gestion des risques, accès, documentation, sauvegarde et contrôle opérationnel.",
         )
 
-    risk3, risk4 = st.columns(2)
-
-    with risk3:
-        info_card(
-            "ML drift risk",
-            "Customer behavior may change over time, reducing model reliability without monitoring and retraining.",
+    with g3:
+        proof_card(
+            "Accessibility",
+            "Interface structurée, navigation claire, textes explicatifs et information compréhensible.",
         )
 
-    with risk4:
-        info_card(
-            "Compliance risk",
-            "Retention and consent policies must be auditable to support GDPR-aligned governance.",
+    with g4:
+        proof_card(
+            "Accountability",
+            "Les politiques et actions de gouvernance sont visibles et traçables.",
         )
 
-    section_title("GDPR alignment")
-
-    st.markdown(
-        """
-        RetailFlow applique une logique de gouvernance inspirée du RGPD :
-
-        - **Purpose limitation** : les données clients sont utilisées pour des cas d’usage définis.
-        - **Consent management** : les consentements marketing, analytics et personalization sont suivis.
-        - **Storage limitation** : les politiques de rétention définissent une durée et une action.
-        - **Right to erasure / anonymization** : les clients peuvent être anonymisés selon les règles de rétention.
-        - **Accountability** : les actions de rétention sont journalisées dans un audit trail.
-        """
-    )
-
-    with st.expander("Technical evidence"):
+    with st.expander("Compliance mechanisms"):
         st.markdown(
             """
-            Tables utilisées par cette page :
+            **Mécanismes de conformité utilisés dans RetailFlow :**
 
-            - `core.customers`
-            - `governance.data_retention_policies`
-            - `governance.retention_actions_log`
-
-            Endpoints FastAPI :
-
-            - `/governance/summary`
-            - `/governance/customer-consents`
-            - `/governance/retention-policies`
-            - `/governance/retention-actions`
+            - suivi des consentements marketing, analytics et personalization ;
+            - limitation des usages analytiques via le consentement analytics ;
+            - politiques de rétention versionnées dans la base ;
+            - anonymisation des clients selon les règles de rétention ;
+            - journalisation des actions de rétention ;
+            - rôle readonly pour l'accès en lecture ;
+            - documentation d'exploitation et monitoring ;
+            - rapports qualité et dead-letter events pour l'audit pipeline.
             """
         )
+
+    section_title("Breach response procedure")
+
+    breach_steps = [
+        {
+            "Step": 1,
+            "Phase": "Detect",
+            "Action": "Identifier l'incident via logs, monitoring, data quality, alertes ou signalement utilisateur.",
+            "Owner": "Data Custodian / IT",
+        },
+        {
+            "Step": 2,
+            "Phase": "Contain",
+            "Action": "Limiter l'impact : couper l'accès concerné, isoler le flux ou bloquer le traitement fautif.",
+            "Owner": "IT / Data Engineer",
+        },
+        {
+            "Step": 3,
+            "Phase": "Assess",
+            "Action": "Évaluer les données concernées, les personnes impactées, la gravité et le risque.",
+            "Owner": "DPO / Compliance",
+        },
+        {
+            "Step": 4,
+            "Phase": "Notify",
+            "Action": "Préparer la notification aux autorités ou personnes concernées si nécessaire.",
+            "Owner": "DPO / Executive Sponsor",
+        },
+        {
+            "Step": 5,
+            "Phase": "Correct",
+            "Action": "Appliquer les mesures correctives : patch, changement de règle, purge, anonymisation ou rollback.",
+            "Owner": "Data Custodian / Data Engineer",
+        },
+        {
+            "Step": 6,
+            "Phase": "Review",
+            "Action": "Documenter l'incident, mettre à jour les politiques et intégrer les enseignements.",
+            "Owner": "Governance Council",
+        },
+    ]
+
+    st.dataframe(pd.DataFrame(breach_steps), use_container_width=True, hide_index=True)
+
+    section_title("Data risk register")
+
+    risks = [
+        {
+            "Risk": "Personal data exposure",
+            "Impact": "Atteinte à la confidentialité ou non-conformité RGPD.",
+            "Mitigation": "Consentement, rétention, anonymisation, readonly role et audit trail.",
+            "Owner": "DPO / Data Custodian",
+        },
+        {
+            "Risk": "Data quality issue",
+            "Impact": "Données invalides utilisées dans analytics ou ML.",
+            "Mitigation": "Validation events, dead-letter events, quality logs et Data Quality page.",
+            "Owner": "Data Steward / Data Engineer",
+        },
+        {
+            "Risk": "ML drift",
+            "Impact": "Baisse de fiabilité des prédictions clients.",
+            "Mitigation": "Drift report, retraining Airflow, model registry et AI Monitoring.",
+            "Owner": "ML Engineer",
+        },
+        {
+            "Risk": "Unauthorized access",
+            "Impact": "Accès excessif ou non justifié aux données clients.",
+            "Mitigation": "Principe du moindre privilège, rôle readonly, séparation des responsabilités.",
+            "Owner": "Data Custodian / IT",
+        },
+        {
+            "Risk": "Operational failure",
+            "Impact": "Interruption de service ou perte de visibilité.",
+            "Mitigation": "Healthchecks, backup/restore, Prometheus, Grafana et documentation operations.",
+            "Owner": "IT / Data Engineer",
+        },
+        {
+            "Risk": "Regulatory change",
+            "Impact": "Décalage entre politiques internes et obligations réglementaires.",
+            "Mitigation": "Revue périodique par DPO, Governance Council et mise à jour documentaire.",
+            "Owner": "DPO / Governance Council",
+        },
+    ]
+
+    st.dataframe(pd.DataFrame(risks), use_container_width=True, hide_index=True)
+
+    section_title("Accessibility and inclusion")
+
+    a1, a2, a3 = st.columns(3)
+
+    with a1:
+        info_card(
+            "Clarté de l'information",
+            "Les pages utilisent des titres structurés, métriques lisibles et explications courtes.",
+        )
+
+    with a2:
+        info_card(
+            "Navigation compréhensible",
+            "Les pages sont organisées par thème et les preuves détaillées sont placées en expanders.",
+        )
+
+    with a3:
+        info_card(
+            "Langage accessible",
+            "Les termes techniques sont accompagnés d'une interprétation métier lorsque nécessaire.",
+        )
+
+    section_title("Governance lifecycle")
+
+    lifecycle = [
+        {
+            "Activity": "Define",
+            "Description": "Définir politiques, rôles, règles d'usage et risques.",
+        },
+        {
+            "Activity": "Implement",
+            "Description": "Implémenter consentement, rétention, qualité, monitoring et accès.",
+        },
+        {
+            "Activity": "Monitor",
+            "Description": "Suivre métriques, erreurs, actions de rétention, drift et qualité.",
+        },
+        {
+            "Activity": "Audit",
+            "Description": "Contrôler traces, logs, rapports, règles et documentation.",
+        },
+        {
+            "Activity": "Improve",
+            "Description": "Mettre à jour les politiques selon incidents, risques et évolutions réglementaires.",
+        },
+    ]
+
+    st.dataframe(pd.DataFrame(lifecycle), use_container_width=True, hide_index=True)
+
+    section_title("What this page demonstrates")
+
+    d1, d2, d3 = st.columns(3)
+
+    with d1:
+        info_card(
+            "Governance structure",
+            "Les responsabilités data sont distribuées entre métier, IT, conformité, ML et direction.",
+        )
+
+    with d2:
+        info_card(
+            "Regulatory control",
+            "Consentement, rétention, anonymisation et audit trail soutiennent une logique RGPD.",
+        )
+
+    with d3:
+        info_card(
+            "Risk management",
+            "Les risques data sont identifiés avec propriétaires, impacts et mesures de mitigation.",
+        )
+
+    academic_mapping(
+        [
+            {
+                "Bloc": "Bloc 1",
+                "Section": "Governance operating model",
+                "Preuve": "Identification des parties prenantes et définition des rôles.",
+            },
+            {
+                "Bloc": "Bloc 1",
+                "Section": "Regulatory alignment",
+                "Preuve": "RGPD, accessibilité, accountability et mécanismes de conformité.",
+            },
+            {
+                "Bloc": "Bloc 1",
+                "Section": "Breach response procedure",
+                "Preuve": "Procédure de gestion des violations et mesures correctives.",
+            },
+            {
+                "Bloc": "Bloc 1",
+                "Section": "Data risk register",
+                "Preuve": "Risques data identifiés avec stratégie de mitigation.",
+            },
+            {
+                "Bloc": "Bloc 2",
+                "Section": "Data Custodian / IT",
+                "Preuve": "Lien avec architecture, accès, sauvegarde et exploitation.",
+            },
+            {
+                "Bloc": "Bloc 3",
+                "Section": "Data quality risk",
+                "Preuve": "Lien entre gouvernance, qualité des pipelines et dead-letter events.",
+            },
+            {
+                "Bloc": "Bloc 4",
+                "Section": "ML drift risk",
+                "Preuve": "Lien entre gouvernance, monitoring ML et retraining.",
+            },
+        ]
+    )
+
+    technical_evidence(
+        {
+            "FastAPI endpoints": [
+                "`GET /governance/summary`",
+                "`GET /governance/customer-consents`",
+                "`GET /governance/retention-policies`",
+                "`GET /governance/retention-actions`",
+            ],
+            "Database tables": [
+                "`core.customers`",
+                "`governance.data_retention_policies`",
+                "`governance.retention_actions_log`",
+                "`governance.dead_letter_events`",
+                "`governance.data_quality_logs`",
+            ],
+            "Related files": [
+                "`streamlit_app/pages/4_Data_Governance.py`",
+                "`api/app/routes/governance.py`",
+                "`database/init/`",
+                "`docs/INFRA_OPERATIONS.md`",
+            ],
+            "Tools": [
+                "Streamlit",
+                "FastAPI",
+                "PostgreSQL",
+                "pgAdmin",
+                "VSCode",
+            ],
+        }
+    )
 
 except Exception as exc:
     st.error(f"Unable to load Data Governance data: {exc}")

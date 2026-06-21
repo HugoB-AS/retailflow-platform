@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r /app/streamlit_app/requirements.txt
 
 COPY streamlit_app /app/streamlit_app
+COPY ml /app/ml
 
 EXPOSE 8501
 

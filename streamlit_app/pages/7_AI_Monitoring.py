@@ -1,10 +1,21 @@
+import json
 import os
+from pathlib import Path
 
 import pandas as pd
 import requests
 import streamlit as st
 
-from components import load_css, section_title, info_card, footer_note
+from components import (
+    load_css,
+    section_title,
+    info_card,
+    proof_card,
+    block_badges,
+    technical_evidence,
+    academic_mapping,
+    footer_note,
+)
 
 
 API_URL = os.getenv("API_URL", "http://fastapi:8000")
@@ -24,415 +35,525 @@ def api_get(path: str, params=None):
     return response.json()
 
 
-def get_report(name: str):
-    return api_get(f"/ai/model-report/{name}")
+def safe_api_get(path: str, params=None, default=None):
+    try:
+        return api_get(path, params=params)
+    except Exception:
+        return default
+
+
+def find_file(relative_path: str) -> Path | None:
+    candidates = [
+        Path(relative_path),
+        Path("/app") / relative_path,
+        Path("/app/streamlit_app") / relative_path,
+        Path("/app/streamlit_app").parent / relative_path,
+    ]
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    return None
+
+
+def read_json_file(relative_path: str, default=None):
+    file_path = find_file(relative_path)
+
+    if file_path is None:
+        return default
+
+    try:
+        with file_path.open("r", encoding="utf-8") as file:
+            return json.load(file)
+    except Exception:
+        return default
+
+
+def to_dataframe(payload):
+    if payload is None:
+        return pd.DataFrame()
+
+    if isinstance(payload, list):
+        return pd.DataFrame(payload)
+
+    if isinstance(payload, dict):
+        for key in ["items", "models", "runs", "reports", "data", "results"]:
+            if isinstance(payload.get(key), list):
+                return pd.DataFrame(payload[key])
+
+        return pd.DataFrame([payload])
+
+    return pd.DataFrame()
+
+
+def flatten_registry(registry_payload):
+    if not registry_payload:
+        return pd.DataFrame()
+
+    if isinstance(registry_payload, list):
+        return pd.DataFrame(registry_payload)
+
+    if isinstance(registry_payload, dict):
+        if isinstance(registry_payload.get("models"), list):
+            return pd.DataFrame(registry_payload["models"])
+
+        rows = []
+
+        for model_name, value in registry_payload.items():
+            if isinstance(value, dict):
+                row = {"model_name": model_name}
+                row.update(value)
+                rows.append(row)
+
+        if rows:
+            return pd.DataFrame(rows)
+
+        return pd.DataFrame([registry_payload])
+
+    return pd.DataFrame()
+
+
+def format_status(value) -> str:
+    if value in [True, "true", "True", "ok", "healthy", "success"]:
+        return "OK"
+
+    if value in [False, "false", "False", "failed", "error"]:
+        return "Attention"
+
+    if value in [None, ""]:
+        return "N/A"
+
+    return str(value)
+
+
+def extract_model_counts(summary: dict) -> dict:
+    counts = {
+        "churn_model": 0,
+        "clv_model": 0,
+        "segmentation_model": 0,
+    }
+
+    for row in summary.get("predictions_by_model", []) or []:
+        model_name = row.get("model_name")
+        if model_name in counts:
+            counts[model_name] += int(row.get("predictions_count", 0) or 0)
+
+    return counts
+
+
+def latest_file_modified(relative_path: str) -> str:
+    file_path = find_file(relative_path)
+
+    if file_path is None:
+        return "Not found"
+
+    try:
+        return pd.to_datetime(file_path.stat().st_mtime, unit="s").strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return "Unknown"
 
 
 st.title("🤖 AI Monitoring")
+block_badges(["Bloc 4"])
+
 st.markdown(
     """
-    Cette page couvre le **Bloc 4 — AI / MLOps**.  
-    Elle montre comment RetailFlow suit la performance, l’explicabilité, la validation
-    et la dérive des modèles ML utilisés pour l’intelligence client.
+    Cette page présente le monitoring MLOps de RetailFlow :
+    prédictions disponibles, registre de modèles, rapports d'entraînement,
+    suivi du drift, retraining et preuves de maintenabilité.
     """
 )
 
 try:
-    summary = api_get("/ai/summary")
-    model_summary = get_report("model_summary")
-    churn_report = get_report("churn")
-    clv_report = get_report("clv")
-    segmentation_report = get_report("segmentation")
-    drift_report = get_report("drift")
+    summary = safe_api_get("/ai/summary", default={}) or {}
 
-    section_title("Executive model overview")
+    registry_payload = read_json_file("ml/model_registry.json", default={})
+    retraining_payload = read_json_file("ml/reports/retraining_runs.json", default=[])
+    model_summary_payload = read_json_file("ml/reports/model_summary.json", default={})
+    drift_payload = read_json_file("ml/reports/drift_report.json", default={})
 
-    churn_metrics = churn_report.get("holdout_calibrated_metrics", {}) or {}
-    clv_metrics = clv_report.get("holdout_metrics", {}) or {}
-    drift_overall = drift_report.get("overall", {}) or {}
+    churn_report = read_json_file("ml/reports/churn_model_report.json", default={})
+    clv_report = read_json_file("ml/reports/clv_model_report.json", default={})
+    segmentation_report = read_json_file("ml/reports/segmentation_model_report.json", default={})
+
+    df_registry = flatten_registry(registry_payload)
+    df_retraining = to_dataframe(retraining_payload)
+    df_model_summary = to_dataframe(model_summary_payload)
+    df_drift = to_dataframe(drift_payload)
+
+    section_title("AI monitoring overview")
+
+    freshness = summary.get("prediction_freshness", {}) or {}
+    model_counts = extract_model_counts(summary)
 
     k1, k2, k3, k4 = st.columns(4)
 
     with k1:
-        st.metric("Churn ROC AUC", f"{churn_metrics.get('roc_auc', 0):.3f}")
+        st.metric("Predicted customers", freshness.get("predicted_customers", 0))
 
     with k2:
-        st.metric("Churn F1", f"{churn_metrics.get('f1', 0):.3f}")
+        st.metric("Prediction rows", freshness.get("prediction_rows", 0))
 
     with k3:
-        st.metric("CLV R²", f"{clv_metrics.get('r2', 0):.3f}")
+        st.metric("Registered models", len(df_registry) if not df_registry.empty else 0)
 
     with k4:
-        drift_label = "Detected" if drift_overall.get("drift_detected") else "Stable"
-        st.metric("Drift status", drift_label)
+        st.metric("Retraining runs", len(df_retraining) if not df_retraining.empty else 0)
 
-    k5, k6, k7, k8 = st.columns(4)
+    section_title("AI use cases")
 
-    with k5:
-        st.metric("CLV MAE", f"{clv_metrics.get('mae', 0):.2f}")
+    u1, u2, u3 = st.columns(3)
 
-    with k6:
-        st.metric("CLV RMSE", f"{clv_metrics.get('rmse', 0):.2f}")
-
-    with k7:
-        st.metric("Selected K", segmentation_report.get("selected_k", "N/A"))
-
-    with k8:
-        st.metric("Drifted features", drift_overall.get("drifted_features_count", 0))
-
-    section_title("Model lifecycle")
-
-    l1, l2, l3 = st.columns(3)
-
-    with l1:
-        info_card(
-            "Training",
-            "Churn, CLV and segmentation models are trained from customer behavioral features.",
+    with u1:
+        proof_card(
+            "Churn prediction",
+            "Identifie les clients à risque pour prioriser les campagnes de rétention.",
         )
 
-    with l2:
-        info_card(
-            "Serving",
-            "Predictions are stored in PostgreSQL and exposed through FastAPI endpoints consumed by Streamlit.",
+    with u2:
+        proof_card(
+            "Customer lifetime value",
+            "Estime la valeur client future pour orienter fidélisation, upsell et priorisation.",
         )
 
-    with l3:
+    with u3:
+        proof_card(
+            "Customer segmentation",
+            "Regroupe les clients selon leurs comportements pour adapter les actions marketing.",
+        )
+
+    section_title("Prediction availability")
+
+    prediction_rows = [
+        {
+            "Model": "churn_model",
+            "Prediction rows": model_counts.get("churn_model", 0),
+            "Business usage": "Retention prioritization",
+        },
+        {
+            "Model": "clv_model",
+            "Prediction rows": model_counts.get("clv_model", 0),
+            "Business usage": "Customer value prioritization",
+        },
+        {
+            "Model": "segmentation_model",
+            "Prediction rows": model_counts.get("segmentation_model", 0),
+            "Business usage": "Marketing segmentation",
+        },
+    ]
+
+    df_prediction_rows = pd.DataFrame(prediction_rows)
+    st.dataframe(df_prediction_rows, use_container_width=True, hide_index=True)
+
+    if not df_prediction_rows.empty:
+        st.bar_chart(df_prediction_rows.set_index("Model")["Prediction rows"])
+
+    section_title("Model registry")
+
+    st.markdown(
+        """
+        Le registre de modèles documente les modèles disponibles, leurs versions,
+        leurs chemins de sauvegarde et les informations utiles à la reproductibilité.
+        """
+    )
+
+    if not df_registry.empty:
+        st.dataframe(df_registry, use_container_width=True, hide_index=True)
+    else:
+        st.warning("Model registry not found or empty.")
+
+    with st.expander("Raw model registry"):
+        st.json(registry_payload if registry_payload else {"status": "not_found"})
+
+    section_title("Training and retraining evidence")
+
+    if not df_retraining.empty:
+        st.dataframe(df_retraining, use_container_width=True, hide_index=True)
+
+        date_col = None
+        for candidate in ["run_at", "created_at", "timestamp", "training_date", "execution_date"]:
+            if candidate in df_retraining.columns:
+                date_col = candidate
+                break
+
+        status_col = None
+        for candidate in ["status", "run_status", "result"]:
+            if candidate in df_retraining.columns:
+                status_col = candidate
+                break
+
+        if status_col:
+            status_counts = df_retraining[status_col].astype(str).value_counts()
+            st.subheader("Retraining status distribution")
+            st.bar_chart(status_counts)
+    else:
+        st.info("No retraining run log found yet.")
+
+    with st.expander("Raw retraining runs"):
+        st.json(retraining_payload if retraining_payload else {"status": "not_found"})
+
+    section_title("Model reports")
+
+    report_rows = [
+        {
+            "Report": "Churn model",
+            "File": "ml/reports/churn_model_report.json",
+            "Last modified": latest_file_modified("ml/reports/churn_model_report.json"),
+            "Available": bool(churn_report),
+        },
+        {
+            "Report": "CLV model",
+            "File": "ml/reports/clv_model_report.json",
+            "Last modified": latest_file_modified("ml/reports/clv_model_report.json"),
+            "Available": bool(clv_report),
+        },
+        {
+            "Report": "Segmentation model",
+            "File": "ml/reports/segmentation_model_report.json",
+            "Last modified": latest_file_modified("ml/reports/segmentation_model_report.json"),
+            "Available": bool(segmentation_report),
+        },
+        {
+            "Report": "Model summary",
+            "File": "ml/reports/model_summary.json",
+            "Last modified": latest_file_modified("ml/reports/model_summary.json"),
+            "Available": bool(model_summary_payload),
+        },
+        {
+            "Report": "Drift report",
+            "File": "ml/reports/drift_report.json",
+            "Last modified": latest_file_modified("ml/reports/drift_report.json"),
+            "Available": bool(drift_payload),
+        },
+    ]
+
+    df_reports = pd.DataFrame(report_rows)
+    df_reports["Status"] = df_reports["Available"].apply(format_status)
+
+    st.dataframe(
+        df_reports[["Report", "File", "Last modified", "Status"]],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    r1, r2, r3 = st.columns(3)
+
+    with r1:
+        with st.expander("Churn model report"):
+            st.json(churn_report if churn_report else {"status": "not_found"})
+
+    with r2:
+        with st.expander("CLV model report"):
+            st.json(clv_report if clv_report else {"status": "not_found"})
+
+    with r3:
+        with st.expander("Segmentation model report"):
+            st.json(segmentation_report if segmentation_report else {"status": "not_found"})
+
+    with st.expander("Model summary report"):
+        st.json(model_summary_payload if model_summary_payload else {"status": "not_found"})
+
+    section_title("Drift monitoring")
+
+    if drift_payload:
+        d1, d2, d3 = st.columns(3)
+
+        drift_status = (
+            drift_payload.get("status")
+            or drift_payload.get("drift_status")
+            or drift_payload.get("overall_status")
+            or "available"
+            if isinstance(drift_payload, dict)
+            else "available"
+        )
+
+        with d1:
+            st.metric("Drift report", format_status(drift_status))
+
+        with d2:
+            st.metric("Report file", latest_file_modified("ml/reports/drift_report.json"))
+
+        with d3:
+            st.metric("Drift rows", len(df_drift) if not df_drift.empty else 1)
+
+        if not df_drift.empty:
+            st.dataframe(df_drift, use_container_width=True, hide_index=True)
+
+        with st.expander("Raw drift report"):
+            st.json(drift_payload)
+    else:
+        st.warning("No drift report found.")
+
+    section_title("MLOps controls")
+
+    controls = [
+        {
+            "Control": "Model versioning",
+            "Purpose": "Identifier les modèles disponibles et leurs artefacts.",
+            "Evidence": "`ml/model_registry.json`.",
+        },
+        {
+            "Control": "Reproducible training",
+            "Purpose": "Tracer les scripts et rapports utilisés pour entraîner les modèles.",
+            "Evidence": "`ml/src/train_*.py` et `ml/reports/*.json`.",
+        },
+        {
+            "Control": "Prediction serving",
+            "Purpose": "Exposer les prédictions via une API consommée par l'application.",
+            "Evidence": "`GET /ai/customer/{customer_id}` et Customer Intelligence.",
+        },
+        {
+            "Control": "Retraining",
+            "Purpose": "Automatiser ou documenter le réentraînement des modèles.",
+            "Evidence": "Airflow DAG `ml_retraining.py` et `retraining_runs.json`.",
+        },
+        {
+            "Control": "Drift monitoring",
+            "Purpose": "Détecter les écarts entre données d'entraînement et données récentes.",
+            "Evidence": "`ml/reports/drift_report.json`.",
+        },
+        {
+            "Control": "Robustness",
+            "Purpose": "Tester les comportements limites et éviter les régressions.",
+            "Evidence": "Tests ML et GitHub Actions.",
+        },
+    ]
+
+    st.dataframe(pd.DataFrame(controls), use_container_width=True, hide_index=True)
+
+    section_title("AI operational lifecycle")
+
+    lifecycle = [
+        {
+            "Step": 1,
+            "Phase": "Train",
+            "Description": "Entraîner les modèles churn, CLV et segmentation avec les features clients.",
+        },
+        {
+            "Step": 2,
+            "Phase": "Evaluate",
+            "Description": "Produire des rapports de performance et résumer les métriques clés.",
+        },
+        {
+            "Step": 3,
+            "Phase": "Register",
+            "Description": "Enregistrer les artefacts et métadonnées dans le model registry.",
+        },
+        {
+            "Step": 4,
+            "Phase": "Serve",
+            "Description": "Exposer les prédictions via FastAPI pour Streamlit et les usages métier.",
+        },
+        {
+            "Step": 5,
+            "Phase": "Monitor",
+            "Description": "Surveiller disponibilité, prédictions, drift et cohérence des rapports.",
+        },
+        {
+            "Step": 6,
+            "Phase": "Retrain",
+            "Description": "Relancer l'entraînement via Airflow ou workflow documenté lorsque nécessaire.",
+        },
+    ]
+
+    st.dataframe(pd.DataFrame(lifecycle), use_container_width=True, hide_index=True)
+
+    section_title("What this page demonstrates")
+
+    m1, m2, m3 = st.columns(3)
+
+    with m1:
+        info_card(
+            "AI deployment",
+            "Les prédictions sont servies par FastAPI et utilisées dans l'application Streamlit.",
+        )
+
+    with m2:
+        info_card(
+            "Maintainability",
+            "Les modèles, rapports, tests et runs de retraining sont documentés.",
+        )
+
+    with m3:
         info_card(
             "Monitoring",
-            "Reports track validation metrics, feature importance, model versions and lightweight drift detection.",
+            "Le projet expose des preuves de suivi du drift, du retraining et de la disponibilité des prédictions.",
         )
 
-    section_title("Churn model")
-
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        info_card(
-            "Selected model",
-            f"{churn_report.get('selected_model')} • version {churn_report.get('model_version')}",
-        )
-
-    with c2:
-        positive_rate = churn_report.get("class_distribution", {}).get("positive_rate", 0)
-        info_card(
-            "Target distribution",
-            f"Positive churn rate: {positive_rate:.2%}. The model uses calibrated probabilities to avoid overconfident scores.",
-        )
-
-    with c3:
-        info_card(
-            "Business interpretation",
-            "The churn model is designed for prioritization: identifying customers who deserve retention attention.",
-        )
-
-    with st.expander("📖 Guide d'interprétation des métriques churn"):
-        st.markdown(
-            """
-            ### ROC AUC
-            **Définition**  
-            Mesure la capacité du modèle à classer correctement les clients du moins risqué au plus risqué.
-
-            **Interprétation métier**  
-            Permet de prioriser les actions de rétention en identifiant les clients les plus susceptibles de quitter la plateforme.
-
-            ### F1 Score
-            **Définition**  
-            Mesure l'équilibre entre la précision et le rappel.
-
-            **Interprétation métier**  
-            Indique si le modèle parvient à détecter les clients à risque sans générer trop de fausses alertes.
-
-            ### Precision
-            **Définition**  
-            Pourcentage des clients prédits comme à risque qui sont réellement à risque.
-
-            **Interprétation métier**  
-            Mesure la fiabilité des alertes envoyées aux équipes.  
-            Une faible précision signifie que trop de clients sont contactés inutilement.
-
-            ### Recall
-            **Définition**  
-            Pourcentage des clients réellement à risque détectés par le modèle.
-
-            **Interprétation métier**  
-            Mesure la capacité du modèle à identifier les clients qu'il faut tenter de retenir avant leur départ.  
-            
-
-            ### Brier Score
-            **Définition**  
-            Mesure la qualité des probabilités produites par le modèle.
-
-            **Interprétation métier**  
-            Permet de vérifier si un score de risque annoncé à 70 % correspond réellement à un risque proche de 70 %.  
-            Plus le score est faible, meilleure est la calibration du modèle.
-            """
-        )
-
-    churn_metric_df = pd.DataFrame(
+    academic_mapping(
         [
             {
-                "metric": "ROC AUC",
-                "value": churn_metrics.get("roc_auc"),
-                "meaning": "Capacité à classer correctement le risque churn.",
+                "Bloc": "Bloc 4",
+                "Section": "AI use cases",
+                "Preuve": "Cas d'usage IA définis : churn, CLV et segmentation.",
             },
             {
-                "metric": "F1",
-                "value": churn_metrics.get("f1"),
-                "meaning": "Équilibre entre précision et rappel.",
+                "Bloc": "Bloc 4",
+                "Section": "Prediction availability",
+                "Preuve": "Prédictions disponibles et exposées via API.",
             },
             {
-                "metric": "Precision",
-                "value": churn_metrics.get("precision"),
-                "meaning": "Fiabilité des clients prédits à risque.",
+                "Bloc": "Bloc 4",
+                "Section": "Model registry",
+                "Preuve": "Registre de modèles et artefacts pour versioning et reproductibilité.",
             },
             {
-                "metric": "Recall",
-                "value": churn_metrics.get("recall"),
-                "meaning": "Capacité à détecter les clients réellement à risque.",
+                "Bloc": "Bloc 4",
+                "Section": "Training and retraining evidence",
+                "Preuve": "Runs de réentraînement et preuve d'automatisation MLOps.",
             },
             {
-                "metric": "Brier score",
-                "value": churn_metrics.get("brier_score"),
-                "meaning": "Qualité de calibration des probabilités.",
+                "Bloc": "Bloc 4",
+                "Section": "Drift monitoring",
+                "Preuve": "Rapport de drift pour surveiller la dérive des données.",
+            },
+            {
+                "Bloc": "Bloc 4",
+                "Section": "MLOps controls",
+                "Preuve": "Contrôles de maintenabilité, robustesse, serving, retraining et monitoring.",
             },
         ]
     )
 
-    st.dataframe(churn_metric_df, use_container_width=True, hide_index=True)
-
-    section_title("CLV model")
-
-    clv1, clv2, clv3 = st.columns(3)
-
-    with clv1:
-        info_card(
-            "Selected model",
-            f"{clv_report.get('selected_model')} • version {clv_report.get('model_version')}",
-        )
-
-    with clv2:
-        target_summary = clv_report.get("target_summary", {}) or {}
-        info_card(
-            "Target distribution",
-            f"Average synthetic CLV: {float(target_summary.get('mean', 0)):.2f} €.",
-        )
-
-    with clv3:
-        info_card(
-            "Business interpretation",
-            "The CLV model helps prioritize customers for loyalty, upsell and retention strategies.",
-        )
-
-    with st.expander("📖 Guide d'interprétation des métriques CLV"):
-        st.markdown(
-            """
-            ### MAE — Mean Absolute Error
-            **Définition**  
-            Erreur moyenne absolue entre la valeur client prédite et la valeur observée.
-
-            **Interprétation métier**  
-            Représente l'erreur moyenne commise sur la valeur financière estimée d'un client.
-
-            ### RMSE — Root Mean Squared Error
-            **Définition**  
-            Erreur quadratique moyenne. Cette métrique pénalise davantage les grosses erreurs.
-
-            **Interprétation métier**  
-            Permet d'identifier si le modèle réalise parfois des erreurs importantes sur certains clients à forte valeur.
-
-            ### R² — Coefficient de détermination
-            **Définition**  
-            Part de la variance expliquée par le modèle.
-
-            **Interprétation métier**  
-            Indique dans quelle mesure le modèle est capable d'expliquer les différences de valeur entre les clients.
-            **Lecture rapide**   
-            - `0.50` = capacité moyenne  
-            - `0.80+` = très bonne capacité explicative    
-            """
-        )
-
-    clv_metric_df = pd.DataFrame(
-        [
-            {
-                "metric": "MAE",
-                "value": clv_metrics.get("mae"),
-                "meaning": "Erreur moyenne absolue en valeur monétaire.",
-            },
-            {
-                "metric": "RMSE",
-                "value": clv_metrics.get("rmse"),
-                "meaning": "Erreur qui pénalise fortement les grosses erreurs.",
-            },
-            {
-                "metric": "R²",
-                "value": clv_metrics.get("r2"),
-                "meaning": "Part de variance CLV expliquée par le modèle.",
-            },
-        ]
+    technical_evidence(
+        {
+            "FastAPI endpoints": [
+                "`GET /ai/summary`",
+                "`GET /ai/customers`",
+                "`GET /ai/customer/{customer_id}`",
+                "`GET /ai/churn-top`",
+                "`GET /ai/clv-top`",
+                "`GET /ai/segments`",
+            ],
+            "ML reports": [
+                "`ml/model_registry.json`",
+                "`ml/reports/churn_model_report.json`",
+                "`ml/reports/clv_model_report.json`",
+                "`ml/reports/segmentation_model_report.json`",
+                "`ml/reports/model_summary.json`",
+                "`ml/reports/drift_report.json`",
+                "`ml/reports/retraining_runs.json`",
+            ],
+            "MLOps files": [
+                "`ml/src/train_churn.py`",
+                "`ml/src/train_clv.py`",
+                "`ml/src/train_segmentation.py`",
+                "`ml/src/predict.py`",
+                "`ml/src/generate_model_registry.py`",
+                "`ml/src/log_retraining_run.py`",
+                "`airflow/dags/ml_retraining.py`",
+            ],
+            "Tools": [
+                "FastAPI",
+                "Streamlit",
+                "Airflow",
+                "PostgreSQL",
+                "GitHub Actions",
+                "VSCode",
+            ],
+        }
     )
-
-    st.dataframe(clv_metric_df, use_container_width=True, hide_index=True)
-
-    section_title("Segmentation model")
-
-    s1, s2, s3 = st.columns(3)
-
-    with s1:
-        info_card(
-            "Selected number of clusters",
-            f"K = {segmentation_report.get('selected_k')} selected using {segmentation_report.get('selection_metric')}.",
-        )
-
-    with s2:
-        info_card(
-            "Business labels",
-            "Clusters are translated into readable business segments such as High Value Loyal Customers or Promo-Sensitive Browsers.",
-        )
-
-    with s3:
-        info_card(
-            "Usage",
-            "Segments support campaign targeting, lifecycle strategy and customer portfolio analysis.",
-        )
-
-    cluster_summary = pd.DataFrame(segmentation_report.get("cluster_summary", []))
-    if not cluster_summary.empty:
-        st.dataframe(cluster_summary, use_container_width=True, hide_index=True)
-
-        if "segment_label" in cluster_summary.columns and "customers_count" in cluster_summary.columns:
-            st.bar_chart(cluster_summary.set_index("segment_label")["customers_count"])
-
-    section_title("Prediction distribution")
-
-    with st.expander("📖 Que montre cette section ?"):
-        st.markdown(
-            """
-            Cette visualisation présente la répartition des prédictions générées par les modèles.
-
-            Elle permet de vérifier :
-            - la cohérence des populations prédites ;
-            - l'équilibre entre les différentes catégories ;
-            - l'absence de comportement anormal du modèle ;
-            - la présence éventuelle d'un modèle trop extrême ou trop déséquilibré.
-
-            **Interprétation métier**  
-            Cette section permet de vérifier que les modèles produisent des groupes clients réalistes.
-            """
-        )
-
-    predictions_df = pd.DataFrame(summary.get("predictions_by_model", []))
-
-    if not predictions_df.empty:
-        st.dataframe(predictions_df, use_container_width=True, hide_index=True)
-
-        predictions_df["label"] = predictions_df["model_name"] + " / " + predictions_df["prediction_label"]
-        st.bar_chart(predictions_df.set_index("label")["predictions_count"])
-
-    section_title("Feature importance")
-
-    f1, f2 = st.columns(2)
-
-    with f1:
-        st.subheader("Churn drivers")
-        churn_importance = pd.DataFrame(churn_report.get("feature_importance", []))
-
-        if not churn_importance.empty:
-            churn_top = churn_importance.head(10)
-            st.dataframe(churn_top, use_container_width=True, hide_index=True)
-            st.bar_chart(churn_top.set_index("feature")["normalized_importance"])
-        else:
-            st.info("No churn feature importance available.")
-
-    with f2:
-        st.subheader("CLV drivers")
-        clv_importance = pd.DataFrame(clv_report.get("feature_importance", []))
-
-        if not clv_importance.empty:
-            clv_top = clv_importance.head(10)
-            st.dataframe(clv_top, use_container_width=True, hide_index=True)
-            st.bar_chart(clv_top.set_index("feature")["normalized_importance"])
-        else:
-            st.info("No CLV feature importance available.")
-
-    section_title("Lightweight drift monitoring")
-
-    with st.expander("📖 Qu'est-ce que le drift monitoring ?"):
-        st.markdown(
-            """
-            Le **drift** correspond à une évolution du comportement des données dans le temps.
-
-            Par exemple :
-            - les habitudes d'achat changent ;
-            - les profils clients évoluent ;
-            - les comportements observés aujourd'hui deviennent différents de ceux utilisés lors de l'entraînement du modèle.
-
-            ### Pourquoi surveiller le drift ?
-            Même un bon modèle peut perdre en performance si les données évoluent.
-
-            Le suivi du drift permet :
-            - d'identifier une baisse potentielle de fiabilité ;
-            - de déclencher une analyse ;
-            - de décider d'un éventuel réentraînement.
-
-            ### Interprétation métier
-            Un drift important peut signifier que :
-            - les campagnes marketing modifient le comportement client ;
-            - le modèle ne représente plus correctement la réalité métier.
-            """
-        )
-
-    d1, d2, d3 = st.columns(3)
-
-    with d1:
-        st.metric("Drift detected", str(drift_overall.get("drift_detected")))
-
-    with d2:
-        st.metric("Drifted features", drift_overall.get("drifted_features_count", 0))
-
-    with d3:
-        st.metric("Threshold", f"{float(drift_overall.get('threshold', 0)):.0%}")
-
-    drift_df = pd.DataFrame(drift_report.get("feature_drift", []))
-
-    if not drift_df.empty:
-        st.dataframe(drift_df, use_container_width=True, hide_index=True)
-
-        drift_chart = drift_df[["feature", "absolute_relative_mean_change"]].copy()
-        st.bar_chart(drift_chart.set_index("feature")["absolute_relative_mean_change"])
-
-    section_title("Validation details")
-
-    with st.expander("Churn cross-validation"):
-        st.json(churn_report.get("cross_validation", {}))
-
-    with st.expander("CLV cross-validation"):
-        st.json(clv_report.get("cross_validation", {}))
-
-    with st.expander("Segmentation K evaluation"):
-        st.json(segmentation_report.get("k_evaluation", {}))
-
-    with st.expander("Technical evidence"):
-        st.markdown(
-            """
-            Main artifacts used:
-
-            - `ml/reports/churn_model_report.json`
-            - `ml/reports/clv_model_report.json`
-            - `ml/reports/segmentation_model_report.json`
-            - `ml/reports/drift_report.json`
-            - `ml/reports/model_summary.json`
-
-            FastAPI endpoints used:
-
-            - `/ai/summary`
-            - `/ai/model-report/model_summary`
-            - `/ai/model-report/churn`
-            - `/ai/model-report/clv`
-            - `/ai/model-report/segmentation`
-            - `/ai/model-report/drift`
-            """
-        )
 
 except Exception as exc:
     st.error(f"Unable to load AI Monitoring data: {exc}")
