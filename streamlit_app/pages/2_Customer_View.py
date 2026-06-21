@@ -220,7 +220,7 @@ section_title("Full demo journey generator")
 st.markdown(
     """
     Ce générateur permet de produire rapidement un parcours complet sans cliquer manuellement
-    sur chaque étape. Il est utile pour démontrer le pipeline temps réel pendant l'oral.
+    sur chaque étape pour démontrer la pipeline temps réel.
     """
 )
 

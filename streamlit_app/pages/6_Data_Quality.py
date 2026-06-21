@@ -64,7 +64,7 @@ block_badges(["Bloc 1", "Bloc 3"])
 
 st.markdown(
     """
-    Cette page démontre comment RetailFlow contrôle la qualité des données dans le pipeline.
+    Cette page démontre comment RetailFlow contrôle la qualité des données dans la pipeline.
     Les événements valides alimentent les usages analytiques, tandis que les événements invalides
     sont isolés dans une table de dead-letter pour audit, correction ou reprocessing.
     """
@@ -146,7 +146,7 @@ try:
 
     st.markdown(
         """
-        Exemple vérifié dans la démo : depuis **Customer View**, un événement
+        Exemple : depuis **Customer View**, un événement
         `invalid_demo_event` est publié dans Redpanda, puis rejeté par le consumer
         et enregistré dans la dead-letter table.
         """

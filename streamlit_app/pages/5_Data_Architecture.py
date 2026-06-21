@@ -80,7 +80,7 @@ with c3:
 
 with c4:
     grafana_status = grafana_health.get("database", "unknown") if grafana_health else "unknown"
-    st.metric("Grafana DB", grafana_status)
+    st.metric("Grafana", grafana_status)
 
 section_title("End-to-end platform architecture")
 
@@ -188,25 +188,25 @@ o1, o2, o3, o4 = st.columns(4)
 with o1:
     proof_card(
         "Healthchecks",
-        "Core services expose health indicators or Docker healthchecks.",
+        "Les services principaux exposent des indicateurs santé ou des healthchecks Docker pour vérifier leur disponibilité.",
     )
 
 with o2:
     proof_card(
         "Backup / restore",
-        "PostgreSQL backup and restore scripts are versioned in scripts/.",
+        "Des scripts de sauvegarde et de restauration PostgreSQL sont versionnés afin de sécuriser la reprise des données.",
     )
 
 with o3:
     proof_card(
         "Readonly access",
-        "A retailflow_readonly role supports least-privilege data access.",
+        "Un rôle retailflow_readonly applique le principe du moindre privilège pour les accès en lecture.",
     )
 
 with o4:
     proof_card(
         "Monitoring",
-        "Prometheus and Grafana provide platform observability.",
+        "Prometheus et Grafana fournissent une supervision de la plateforme, des services et des métriques opérationnelles.",
     )
 
 section_title("Architecture tools")

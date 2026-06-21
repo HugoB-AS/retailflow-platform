@@ -33,6 +33,70 @@ def api_get(path: str, params=None):
     return response.json()
 
 
+def is_truthy(value) -> bool:
+    return str(value).lower() in ["true", "1", "yes", "y"]
+
+
+def has_analytics_consent(customer: dict) -> bool:
+    return is_truthy(customer.get("analytics_consent"))
+
+
+def filter_analytics_consent(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty or "analytics_consent" not in df.columns:
+        return df.copy()
+
+    return df[df["analytics_consent"].apply(is_truthy)].copy()
+
+
+def filter_by_authorized_customers(
+    df: pd.DataFrame,
+    authorized_customer_ids: set,
+) -> pd.DataFrame:
+    if df.empty or "customer_id" not in df.columns:
+        return df.copy()
+
+    return df[df["customer_id"].isin(authorized_customer_ids)].copy()
+
+
+def build_authorized_segments(df_authorized_customers: pd.DataFrame) -> pd.DataFrame:
+    if df_authorized_customers.empty or "segment_label" not in df_authorized_customers.columns:
+        return pd.DataFrame()
+
+    aggregation = {
+        "customer_id": "count",
+    }
+
+    optional_average_columns = [
+        "total_orders",
+        "total_spent",
+        "predicted_clv",
+        "churn_probability",
+    ]
+
+    for column in optional_average_columns:
+        if column in df_authorized_customers.columns:
+            aggregation[column] = "mean"
+
+    df_segments = (
+        df_authorized_customers
+        .groupby("segment_label", dropna=False)
+        .agg(aggregation)
+        .reset_index()
+        .rename(columns={"customer_id": "customers_count"})
+    )
+
+    rename_columns = {
+        "total_orders": "avg_total_orders",
+        "total_spent": "avg_total_spent",
+        "predicted_clv": "avg_predicted_clv",
+        "churn_probability": "avg_churn_probability",
+    }
+
+    df_segments = df_segments.rename(columns=rename_columns)
+
+    return df_segments
+
+
 def segment_recommendation(segment_label: str) -> str:
     mapping = {
         "High Value Loyal Customers": (
@@ -199,8 +263,8 @@ st.markdown(
 
 try:
     summary = api_get("/ai/summary")
-    churn = api_get("/ai/churn-top", params={"limit": 100})
-    clv = api_get("/ai/clv-top", params={"limit": 20})
+    churn = api_get("/ai/churn-top", params={"limit": 10000})
+    clv = api_get("/ai/clv-top", params={"limit": 10000})
     segments = api_get("/ai/segments")
     ai_customers = api_get(
         "/ai/customers",
@@ -212,27 +276,49 @@ try:
     df_segments = pd.DataFrame(segments)
     df_ai_customers = pd.DataFrame(ai_customers)
 
+    df_authorized_customers = filter_analytics_consent(df_ai_customers)
+    authorized_customer_ids = set(df_authorized_customers.get("customer_id", pd.Series(dtype=str)).dropna())
+
+    df_churn_authorized = filter_by_authorized_customers(df_churn, authorized_customer_ids)
+    df_clv_authorized = filter_by_authorized_customers(df_clv, authorized_customer_ids)
+    df_segments_authorized = build_authorized_segments(df_authorized_customers)
+
     section_title("Business overview")
 
-    freshness = summary.get("prediction_freshness", {}) or {}
+    authorized_customers_count = len(authorized_customer_ids)
+    authorized_prediction_rows = len(df_churn_authorized) + len(df_clv_authorized)
 
     k1, k2, k3, k4 = st.columns(4)
 
     with k1:
-        st.metric("Predicted customers", freshness.get("predicted_customers", 0))
+        st.metric("Predicted customers", authorized_customers_count)
 
     with k2:
-        st.metric("Prediction rows", freshness.get("prediction_rows", 0))
+        st.metric("Prediction rows", authorized_prediction_rows)
 
     with k3:
         high_risk_count = 0
-        for row in summary.get("predictions_by_model", []):
-            if row.get("model_name") == "churn_model" and row.get("prediction_label") == "high_risk":
-                high_risk_count = row.get("predictions_count", 0)
+
+        if not df_churn_authorized.empty:
+            if "prediction_label" in df_churn_authorized.columns:
+                high_risk_count = int(
+                    df_churn_authorized["prediction_label"]
+                    .astype(str)
+                    .str.contains("high", case=False, na=False)
+                    .sum()
+                )
+            elif "churn_risk" in df_churn_authorized.columns:
+                high_risk_count = int(
+                    df_churn_authorized["churn_risk"]
+                    .astype(str)
+                    .str.contains("high", case=False, na=False)
+                    .sum()
+                )
+
         st.metric("High churn risk", high_risk_count)
 
     with k4:
-        st.metric("Business segments", len(summary.get("segments", [])))
+        st.metric("Business segments", len(df_segments_authorized))
 
     section_title("Decision framework")
 
@@ -279,7 +365,7 @@ try:
         df_explorer = df_ai_customers.copy()
 
         if only_analytics_consent and "analytics_consent" in df_explorer.columns:
-            df_explorer = df_explorer[df_explorer["analytics_consent"] == True]
+            df_explorer = filter_analytics_consent(df_explorer)
 
         if df_explorer.empty:
             st.warning("No customer matches the selected consent filter.")
@@ -305,65 +391,97 @@ try:
             st.caption(
                 "Consent filter enabled: only customers with analytics consent are shown."
                 if only_analytics_consent
-                else "Consent filter disabled: all customers are shown for technical demonstration."
+                else "Consent filter disabled: all customers are shown for governance demonstration."
             )
 
             profile = api_get(f"/ai/customer/{selected_customer_id}")
 
             customer = profile.get("customer") or {}
-            churn_profile = profile.get("churn") or {}
-            clv_profile = profile.get("clv") or {}
-            segment_profile = profile.get("segment") or {}
-            decision = business_decision_from_profile(profile)
 
-            p1, p2, p3, p4 = st.columns(4)
+            if "analytics_consent" not in customer and "customer_id" in df_ai_customers.columns:
+                selected_rows = df_ai_customers[df_ai_customers["customer_id"] == selected_customer_id]
+                if not selected_rows.empty:
+                    customer["analytics_consent"] = selected_rows.iloc[0].get("analytics_consent")
 
-            with p1:
-                st.metric("Priority", decision["priority"])
-
-            with p2:
-                st.metric("Decision", decision["decision"])
-
-            with p3:
-                st.metric(
-                    "Churn risk",
-                    churn_profile.get("prediction_label", "N/A"),
-                    format_pct(churn_profile.get("prediction_value")),
-                )
-
-            with p4:
-                st.metric(
-                    "Predicted CLV",
-                    format_eur(clv_profile.get("prediction_value")),
-                    clv_profile.get("prediction_label", "N/A"),
-                )
+            analytics_allowed = has_analytics_consent(customer)
 
             b1, b2, b3 = st.columns(3)
 
             with b1:
                 info_card(
-                    "Business reason",
-                    decision["reason"],
-                )
-
-            with b2:
-                info_card(
-                    "Segment",
-                    segment_profile.get("segment_label", "N/A"),
-                )
-
-            with b3:
-                info_card(
                     "Customer context",
                     f"{customer.get('city', 'N/A')} • {customer.get('country', 'N/A')} • {customer.get('total_orders', 0)} orders",
                 )
 
-            st.subheader("Recommended actions")
+            with b2:
+                info_card(
+                    "Analytics consent",
+                    "Granted" if analytics_allowed else "Not granted",
+                )
 
-            recommendations = recommendation_from_profile(profile)
+            with b3:
+                info_card(
+                    "Governance rule",
+                    "AI predictions are displayed only when analytics consent is granted.",
+                )
 
-            for recommendation in recommendations:
-                st.markdown(f"- {recommendation}")
+            if not analytics_allowed:
+                st.warning(
+                    "Ce client n’a pas donné son consentement analytics. "
+                    "Les prédictions IA ne sont donc pas disponibles."
+                )
+
+            else:
+                churn_profile = profile.get("churn") or {}
+                clv_profile = profile.get("clv") or {}
+                segment_profile = profile.get("segment") or {}
+                decision = business_decision_from_profile(profile)
+
+                p1, p2, p3, p4 = st.columns(4)
+
+                with p1:
+                    st.metric("Priority", decision["priority"])
+
+                with p2:
+                    st.metric("Decision", decision["decision"])
+
+                with p3:
+                    st.metric(
+                        "Churn risk",
+                        churn_profile.get("prediction_label", "N/A"),
+                        format_pct(churn_profile.get("prediction_value")),
+                    )
+
+                with p4:
+                    st.metric(
+                        "Predicted CLV",
+                        format_eur(clv_profile.get("prediction_value")),
+                        clv_profile.get("prediction_label", "N/A"),
+                    )
+
+                c1, c2 = st.columns(2)
+
+                with c1:
+                    info_card(
+                        "Business reason",
+                        decision["reason"],
+                    )
+
+                with c2:
+                    info_card(
+                        "Segment",
+                        segment_profile.get("segment_label", "N/A"),
+                    )
+
+                st.subheader("Recommended actions")
+
+                recommendations = recommendation_from_profile(profile)
+
+                for recommendation in recommendations:
+                    st.markdown(f"- {recommendation}")
+
+                with st.expander("Raw AI profile"):
+                    st.json(profile)
 
             with st.expander("Behavioral features"):
                 st.json(
@@ -380,9 +498,6 @@ try:
                     }
                 )
 
-            with st.expander("Raw AI profile"):
-                st.json(profile)
-
     section_title("Customer intelligence views")
 
     tab1, tab2, tab3 = st.tabs(
@@ -397,15 +512,15 @@ try:
         st.markdown(
             """
             Les clients à risque sont prioritaires pour les actions de rétention.
-            Les clients sans achat sont exclus de cette vue métier quand l'information est disponible.
+            Cette vue affiche uniquement les clients avec consentement analytics.
             """
         )
 
-        if not df_churn.empty:
-            if "total_orders" in df_churn.columns:
-                df_churn_display = df_churn[df_churn["total_orders"] > 0].copy()
+        if not df_churn_authorized.empty:
+            if "total_orders" in df_churn_authorized.columns:
+                df_churn_display = df_churn_authorized[df_churn_authorized["total_orders"] > 0].copy()
             else:
-                df_churn_display = df_churn.copy()
+                df_churn_display = df_churn_authorized.copy()
 
             st.dataframe(df_churn_display, use_container_width=True, hide_index=True)
 
@@ -413,35 +528,35 @@ try:
             if all(col in df_churn_display.columns for col in chart_cols) and not df_churn_display.empty:
                 st.bar_chart(df_churn_display.set_index("customer_id")["churn_probability"])
         else:
-            st.info("No churn predictions available.")
+            st.info("No authorized churn predictions available.")
 
     with tab2:
         st.markdown(
             """
             Les clients avec CLV élevée peuvent être priorisés pour les stratégies de fidélisation,
-            d'upsell ou d'expérience premium.
+            d'upsell ou d'expérience premium. Cette vue affiche uniquement les clients avec consentement analytics.
             """
         )
 
-        if not df_clv.empty:
-            st.dataframe(df_clv, use_container_width=True, hide_index=True)
+        if not df_clv_authorized.empty:
+            st.dataframe(df_clv_authorized, use_container_width=True, hide_index=True)
 
             chart_cols = ["customer_id", "predicted_clv"]
-            if all(col in df_clv.columns for col in chart_cols):
-                st.bar_chart(df_clv.set_index("customer_id")["predicted_clv"])
+            if all(col in df_clv_authorized.columns for col in chart_cols):
+                st.bar_chart(df_clv_authorized.set_index("customer_id")["predicted_clv"])
         else:
-            st.info("No CLV predictions available.")
+            st.info("No authorized CLV predictions available.")
 
     with tab3:
-        if not df_segments.empty:
-            st.dataframe(df_segments, use_container_width=True, hide_index=True)
+        if not df_segments_authorized.empty:
+            st.dataframe(df_segments_authorized, use_container_width=True, hide_index=True)
 
-            if "segment_label" in df_segments.columns and "customers_count" in df_segments.columns:
-                st.bar_chart(df_segments.set_index("segment_label")["customers_count"])
+            if "segment_label" in df_segments_authorized.columns and "customers_count" in df_segments_authorized.columns:
+                st.bar_chart(df_segments_authorized.set_index("segment_label")["customers_count"])
 
             st.subheader("Segment action guide")
 
-            segment_options = sorted(df_segments["segment_label"].dropna().unique().tolist())
+            segment_options = sorted(df_segments_authorized["segment_label"].dropna().unique().tolist())
             selected_segment = st.selectbox(
                 "Select segment",
                 segment_options,
@@ -450,8 +565,8 @@ try:
 
             st.info(segment_recommendation(selected_segment))
 
-            df_selected_segment = df_ai_customers[
-                df_ai_customers["segment_label"] == selected_segment
+            df_selected_segment = df_authorized_customers[
+                df_authorized_customers["segment_label"] == selected_segment
             ].copy()
 
             segment_cols = [
@@ -477,7 +592,7 @@ try:
                 )
 
         else:
-            st.info("No customer segments available.")
+            st.info("No authorized customer segments available.")
 
     section_title("What this page demonstrates")
 
@@ -498,7 +613,7 @@ try:
     with v3:
         info_card(
             "Governed analytics",
-            "L'exploration peut être limitée aux clients avec consentement analytics.",
+            "Les prédictions IA sont affichées uniquement pour les clients avec consentement analytics.",
         )
 
     academic_mapping(
@@ -506,12 +621,12 @@ try:
             {
                 "Bloc": "Bloc 1",
                 "Section": "Customer decision explorer",
-                "Preuve": "Filtre analytics consent pour limiter l'usage des données clients.",
+                "Preuve": "Règle de gouvernance : les prédictions IA sont masquées si le consentement analytics est absent.",
             },
             {
                 "Bloc": "Bloc 4",
                 "Section": "Business overview",
-                "Preuve": "Prédictions churn, CLV et segmentation exposées pour l'aide à la décision.",
+                "Preuve": "Prédictions churn, CLV et segmentation exposées pour l'aide à la décision sur les clients autorisés.",
             },
             {
                 "Bloc": "Bloc 4",
@@ -521,7 +636,7 @@ try:
             {
                 "Bloc": "Bloc 4",
                 "Section": "Customer intelligence views",
-                "Preuve": "API serving des prédictions et visualisation dans l'interface applicative.",
+                "Preuve": "API serving des prédictions et visualisation gouvernée dans l'interface applicative.",
             },
         ]
     )
@@ -546,6 +661,10 @@ try:
                 "Customer lifetime value prediction",
                 "Customer segmentation",
                 "Business recommendation logic",
+            ],
+            "Governance control": [
+                "AI predictions are hidden when `analytics_consent = false`.",
+                "Customer intelligence views are filtered to analytics-authorized customers.",
             ],
             "Related files": [
                 "`streamlit_app/pages/3_Customer_Intelligence.py`",

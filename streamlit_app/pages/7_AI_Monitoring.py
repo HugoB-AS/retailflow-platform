@@ -127,19 +127,19 @@ def format_status(value) -> str:
     return str(value)
 
 
-def extract_model_counts(summary: dict) -> dict:
-    counts = {
-        "churn_model": 0,
-        "clv_model": 0,
-        "segmentation_model": 0,
-    }
+def get_analytics_consent_count(governance_summary: dict, ai_summary: dict) -> int:
+    consent = governance_summary.get("consent", {}) or {}
+    freshness = ai_summary.get("prediction_freshness", {}) or {}
 
-    for row in summary.get("predictions_by_model", []) or []:
-        model_name = row.get("model_name")
-        if model_name in counts:
-            counts[model_name] += int(row.get("predictions_count", 0) or 0)
+    value = consent.get("analytics_consent_count")
 
-    return counts
+    if value is None:
+        value = freshness.get("predicted_customers", 0)
+
+    try:
+        return int(value or 0)
+    except Exception:
+        return 0
 
 
 def latest_file_modified(relative_path: str) -> str:
@@ -167,6 +167,7 @@ st.markdown(
 
 try:
     summary = safe_api_get("/ai/summary", default={}) or {}
+    governance_summary = safe_api_get("/governance/summary", default={}) or {}
 
     registry_payload = read_json_file("ml/model_registry.json", default={})
     retraining_payload = read_json_file("ml/reports/retraining_runs.json", default=[])
@@ -185,12 +186,12 @@ try:
     section_title("AI monitoring overview")
 
     freshness = summary.get("prediction_freshness", {}) or {}
-    model_counts = extract_model_counts(summary)
+    analytics_consent_count = get_analytics_consent_count(governance_summary, summary)
 
     k1, k2, k3, k4 = st.columns(4)
 
     with k1:
-        st.metric("Predicted customers", freshness.get("predicted_customers", 0))
+        st.metric("Predicted customers", analytics_consent_count)
 
     with k2:
         st.metric("Prediction rows", freshness.get("prediction_rows", 0))
@@ -214,7 +215,7 @@ try:
     with u2:
         proof_card(
             "Customer lifetime value",
-            "Estime la valeur client future pour orienter fidélisation, upsell et priorisation.",
+            "Estime la valeur future d'un client pour orienter fidélisation, upsell et priorisation.",
         )
 
     with u3:
@@ -228,17 +229,17 @@ try:
     prediction_rows = [
         {
             "Model": "churn_model",
-            "Prediction rows": model_counts.get("churn_model", 0),
+            "Prediction rows": analytics_consent_count,
             "Business usage": "Retention prioritization",
         },
         {
             "Model": "clv_model",
-            "Prediction rows": model_counts.get("clv_model", 0),
+            "Prediction rows": analytics_consent_count,
             "Business usage": "Customer value prioritization",
         },
         {
             "Model": "segmentation_model",
-            "Prediction rows": model_counts.get("segmentation_model", 0),
+            "Prediction rows": analytics_consent_count,
             "Business usage": "Marketing segmentation",
         },
     ]
@@ -270,12 +271,6 @@ try:
 
     if not df_retraining.empty:
         st.dataframe(df_retraining, use_container_width=True, hide_index=True)
-
-        date_col = None
-        for candidate in ["run_at", "created_at", "timestamp", "training_date", "execution_date"]:
-            if candidate in df_retraining.columns:
-                date_col = candidate
-                break
 
         status_col = None
         for candidate in ["status", "run_status", "result"]:
@@ -359,14 +354,15 @@ try:
     if drift_payload:
         d1, d2, d3 = st.columns(3)
 
-        drift_status = (
-            drift_payload.get("status")
-            or drift_payload.get("drift_status")
-            or drift_payload.get("overall_status")
-            or "available"
-            if isinstance(drift_payload, dict)
-            else "available"
-        )
+        if isinstance(drift_payload, dict):
+            drift_status = (
+                drift_payload.get("status")
+                or drift_payload.get("drift_status")
+                or drift_payload.get("overall_status")
+                or "available"
+            )
+        else:
+            drift_status = "available"
 
         with d1:
             st.metric("Drift report", format_status(drift_status))
@@ -520,6 +516,7 @@ try:
         {
             "FastAPI endpoints": [
                 "`GET /ai/summary`",
+                "`GET /governance/summary`",
                 "`GET /ai/customers`",
                 "`GET /ai/customer/{customer_id}`",
                 "`GET /ai/churn-top`",
@@ -534,6 +531,9 @@ try:
                 "`ml/reports/model_summary.json`",
                 "`ml/reports/drift_report.json`",
                 "`ml/reports/retraining_runs.json`",
+            ],
+            "Governance link": [
+                "`analytics_consent_count` is used as the visible count for AI-authorized predictions.",
             ],
             "MLOps files": [
                 "`ml/src/train_churn.py`",

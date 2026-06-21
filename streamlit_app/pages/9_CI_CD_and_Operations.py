@@ -83,7 +83,7 @@ ci_jobs = [
     },
     {
         "Job": "Security Checks and Audit Reports",
-        "Role": "Generate non-blocking security reports",
+        "Role": "Generate security reports",
         "Evidence": "pip-audit, Bandit, security-reports artifact",
     },
 ]
@@ -153,19 +153,19 @@ s1, s2, s3 = st.columns(3)
 with s1:
     proof_card(
         "pip-audit",
-        "Audits Python dependencies and produces a report artifact.",
+        "Audite les dépendances Python et génère un rapport artefacts.",
     )
 
 with s2:
     proof_card(
         "Bandit",
-        "Scans Python code for common security-sensitive patterns.",
+        "Analyse du code Python afin de détecter les patterns sensibles ou à risque du point de vue sécurité.",
     )
 
 with s3:
     proof_card(
-        "Non-blocking mode",
-        "Security reports inform the project without breaking the demonstrator CI.",
+        "Continuous security checks",
+        "La CI exécute des contrôles de sécurité automatisés afin de détecter les vulnérabilités Python et les patterns de code à risque.",
     )
 
 section_title("Operational documentation")

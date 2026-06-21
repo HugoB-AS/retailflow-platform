@@ -314,7 +314,7 @@ with k1:
 
 with k2:
     grafana_status = grafana_health.get("database", "unknown") if isinstance(grafana_health, dict) else "unknown"
-    st.metric("Grafana DB", status_label(grafana_status))
+    st.metric("Grafana", status_label(grafana_status))
 
 with k3:
     st.metric("Targets up", f"{targets_up}/{targets_total}")

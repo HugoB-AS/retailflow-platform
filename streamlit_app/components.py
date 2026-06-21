@@ -62,7 +62,7 @@ def proof_card(title: str, proof: str):
     proof = html_lib.escape(str(proof))
     render_html(
         f'<div class="rf-card">'
-        f'<div class="rf-card-title">✅ {title}</div>'
+        f'<div class="rf-card-title">{title}</div>'
         f'<div class="rf-card-text">{proof}</div>'
         f'</div>'
     )
