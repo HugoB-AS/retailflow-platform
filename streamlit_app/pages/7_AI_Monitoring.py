@@ -194,8 +194,7 @@ try:
         st.metric("Predicted customers", analytics_consent_count)
 
     with k2:
-        st.metric("Prediction rows", freshness.get("prediction_rows", 0))
-
+        st.metric("Prediction rows", analytics_consent_count * 2)
     with k3:
         st.metric("Registered models", len(df_registry) if not df_registry.empty else 0)
 
