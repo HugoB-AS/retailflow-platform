@@ -53,3 +53,6 @@ retailflow_defense_master_guide_v1.md
 
 # Local CI/test reports
 reports/
+
+# Local database backups
+backups/*.sql
