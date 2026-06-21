@@ -7,7 +7,12 @@ from components import (
     hero,
     section_title,
     info_card,
+    proof_card,
+    block_badges,
     architecture_overview,
+    technical_evidence,
+    academic_mapping,
+    tool_links,
     footer_note,
 )
 
@@ -15,6 +20,7 @@ from components import (
 API_URL = os.getenv("API_URL", "http://fastapi:8000")
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://prometheus:9090")
 AIRFLOW_URL = os.getenv("AIRFLOW_URL", "http://airflow-webserver:8080")
+GRAFANA_URL = os.getenv("GRAFANA_URL", "http://grafana:3000")
 
 st.set_page_config(
     page_title="RetailFlow Platform Overview",
@@ -52,17 +58,32 @@ def status_badge(label: str, ok: bool | None):
 
 
 hero()
+block_badges(["Bloc 1", "Bloc 2", "Bloc 3", "Bloc 4"])
+
+section_title("RetailFlow en une phrase")
+
+st.markdown(
+    """
+    **RetailFlow transforme des événements clients e-commerce en décisions métier actionnables
+    grâce à une plateforme data/IA gouvernée, observable et industrialisée.**
+
+    La plateforme est pensée comme un démonstrateur de retail intelligence : elle relie
+    parcours client, pipelines temps réel, gouvernance, qualité, MLOps, API serving,
+    CI/CD et observabilité dans une architecture cohérente.
+    """
+)
 
 section_title("Problem statement")
 
 st.markdown(
     """
-    **Research question**  
+    **Research question**
+
     *Comment concevoir une plateforme data moderne pour le e-commerce combinant pipelines temps réel,
     intelligence artificielle et observabilité afin d’améliorer la prise de décision métier ?*
 
-    RetailFlow est une plateforme de retail intelligence qui transforme des événements clients
-    en données exploitables pour la décision métier, le pilotage opérationnel et le monitoring ML.
+    RetailFlow simule l'utilisation d'une plateforme de retail intelligence par une entreprise
+    e-commerce multi-catégories.
     """
 )
 
@@ -71,6 +92,7 @@ section_title("Platform status")
 api_health = safe_get_json(f"{API_URL}/health")
 ai_summary = safe_get_json(f"{API_URL}/ai/summary")
 airflow_health = safe_get_json(f"{AIRFLOW_URL}/health")
+grafana_health = safe_get_json(f"{GRAFANA_URL}/api/health")
 
 try:
     prom_response = requests.get(f"{PROMETHEUS_URL}/-/ready", timeout=3)
@@ -78,7 +100,7 @@ try:
 except Exception:
     prom_ready = None
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
     status_badge("FastAPI", bool(api_health and api_health.get("status") == "ok"))
@@ -94,6 +116,12 @@ with col3:
 
 with col4:
     status_badge("Prometheus", prom_ready)
+
+with col5:
+    grafana_ok = None
+    if grafana_health:
+        grafana_ok = grafana_health.get("database") == "ok"
+    status_badge("Grafana", grafana_ok)
 
 if ai_summary:
     freshness = ai_summary.get("prediction_freshness", {}) or {}
@@ -116,6 +144,19 @@ if ai_summary:
     with k4:
         st.metric("Customer segments", len(ai_summary.get("segments", [])))
 
+section_title("Tool access")
+
+tool_links(
+    [
+        {"label": "FastAPI Docs", "url": "http://127.0.0.1:8000/docs"},
+        {"label": "Streamlit", "url": "http://127.0.0.1:8501"},
+        {"label": "Airflow", "url": "http://127.0.0.1:8080"},
+        {"label": "Prometheus", "url": "http://127.0.0.1:9090"},
+        {"label": "Grafana", "url": "http://127.0.0.1:3000"},
+        {"label": "pgAdmin", "url": "http://127.0.0.1:5050"},
+    ]
+)
+
 section_title("Architecture overview")
 
 architecture_overview()
@@ -128,20 +169,20 @@ st.markdown(
     """
 )
 
-section_title("Academic block mapping")
+section_title("Academic block mapping overview")
 
 b1, b2 = st.columns(2)
 
 with b1:
     info_card(
         "Bloc 1 — Data Governance",
-        "Consentements, politiques de rétention, anonymisation, auditabilité, RGPD et gestion des risques data.",
+        "Consentements, politiques de rétention, anonymisation, auditabilité, RGPD, risques data et parties prenantes.",
     )
 
 with b2:
     info_card(
         "Bloc 2 — Data Architecture",
-        "Architecture Docker, PostgreSQL, FastAPI, Streamlit, Prometheus, Grafana et PostgreSQL exporter.",
+        "Docker Compose, PostgreSQL, Redpanda, FastAPI, Streamlit, Airflow, Prometheus, Grafana et documentation d'exploitation.",
     )
 
 b3, b4 = st.columns(2)
@@ -149,13 +190,13 @@ b3, b4 = st.columns(2)
 with b3:
     info_card(
         "Bloc 3 — Real-time Data Pipelines",
-        "Redpanda, consumer Python, ingestion événementielle, dead letters, data quality et orchestration Airflow.",
+        "Ingestion événementielle, validation, dead letters, data quality, Airflow et monitoring pipeline.",
     )
 
 with b4:
     info_card(
         "Bloc 4 — AI / MLOps",
-        "Churn prediction, CLV, segmentation, retraining Airflow, API serving, drift monitoring et rapports ML.",
+        "Churn prediction, CLV, segmentation, API serving, retraining, model registry, drift monitoring et CI/CD.",
     )
 
 section_title("Business capabilities")
@@ -165,71 +206,162 @@ c1, c2, c3 = st.columns(3)
 with c1:
     info_card(
         "Customer journey simulation",
-        "Simulate product discovery, product details, cart and checkout events from the customer point of view.",
+        "Simuler discovery, product view, cart, checkout et purchase events depuis une vue client.",
     )
 
 with c2:
     info_card(
         "Customer intelligence",
-        "Identify churn candidates, high-value customers, business segments and actionable recommendations.",
+        "Identifier churn risk, CLV, segments métier et recommandations actionnables.",
     )
 
 with c3:
     info_card(
         "Operational readiness",
-        "Monitor platform health, API latency, PostgreSQL status, alerting rules and ML drift signals.",
-    )
-
-section_title("Airflow orchestration")
-
-a1, a2, a3, a4 = st.columns(4)
-
-with a1:
-    info_card(
-        "daily_sales_aggregation",
-        "Builds daily business aggregates for analytics usage.",
-    )
-
-with a2:
-    info_card(
-        "daily_data_quality",
-        "Runs data quality checks and supports monitoring of pipeline reliability.",
-    )
-
-with a3:
-    info_card(
-        "ml_retraining",
-        "Retrains ML models, refreshes predictions and produces monitoring reports.",
-    )
-
-with a4:
-    info_card(
-        "retention_cleanup",
-        "Applies retention and anonymization logic for governance compliance.",
+        "Surveiller santé plateforme, latence API, PostgreSQL, alerting rules, CI/CD et drift ML.",
     )
 
 section_title("Live demo flow")
 
-st.markdown(
-    """
-    1. **Platform Overview** — explique la problématique, l’architecture et le mapping aux blocs.  
-    2. **Customer View** — simule un parcours e-commerce et génére des événements.  
-    3. **Customer Intelligence** — montre churn, CLV, segmentation et recommandations métier.  
-    4. **Data Governance** — explique consentement, rétention, anonymisation et audit.  
-    5. **Data Quality** — montre les erreurs rejetées, règles qualité et dead-letter events.  
-    6. **AI Monitoring** — présente métriques ML, feature importance, cross-validation et drift.  
-    7. **Observability** — Prometheus/Grafana et montre la supervision plateforme.
-    """
-)
+demo_steps = [
+    {
+        "Step": 1,
+        "Page": "Platform Overview",
+        "Purpose": "Comprendre le contexte RetailFlow, la stack et l'état live.",
+    },
+    {
+        "Step": 2,
+        "Page": "Customer View",
+        "Purpose": "Générer un parcours client et des événements temps réel.",
+    },
+    {
+        "Step": 3,
+        "Page": "Customer Intelligence",
+        "Purpose": "Transformer les données clients en décisions métier.",
+    },
+    {
+        "Step": 4,
+        "Page": "Data Governance",
+        "Purpose": "Montrer consentement, rétention, anonymisation, risques et audit.",
+    },
+    {
+        "Step": 5,
+        "Page": "Data Architecture",
+        "Purpose": "Présenter l'infrastructure, les services, les schemas et l'exploitation.",
+    },
+    {
+        "Step": 6,
+        "Page": "Data Quality",
+        "Purpose": "Montrer validation, dead letters et qualité pipeline.",
+    },
+    {
+        "Step": 7,
+        "Page": "AI Monitoring",
+        "Purpose": "Montrer performance ML, drift, registry et retraining.",
+    },
+    {
+        "Step": 8,
+        "Page": "Observability",
+        "Purpose": "Montrer Prometheus, Grafana, alert rules et métriques plateforme.",
+    },
+    {
+        "Step": 9,
+        "Page": "CI/CD and Operations",
+        "Purpose": "Montrer tests, build, security reports et opérations.",
+    },
+    {
+        "Step": 10,
+        "Page": "Project Evidence",
+        "Purpose": "Retrouver rapidement les preuves par bloc, outil et emplacement.",
+    },
+]
 
-with st.expander("Positioning note for the jury"):
+st.dataframe(demo_steps, use_container_width=True, hide_index=True)
+
+section_title("Project scope and assumptions")
+
+with st.expander("Project scope and assumptions"):
     st.markdown(
         """
-        RetailFlow n’est pas seulement un dashboard : c’est une plateforme data complète.
-        Elle combine architecture, pipelines temps réel, gouvernance, MLOps, API serving,
-        monitoring et observability dans un scénario retail avec la logique d’architecture 
-        et d’industrialisation proche d’une plateforme startup moderne.
+        RetailFlow est un démonstrateur académique complet, construit pour représenter
+        une plateforme de retail intelligence moderne.
+
+        **Périmètre couvert :**
+
+        - données clients et événements e-commerce ;
+        - ingestion temps réel ;
+        - stockage PostgreSQL structuré par zones ;
+        - gouvernance, consentement, rétention et audit ;
+        - contrôle qualité et dead-letter events ;
+        - modèles ML churn, CLV et segmentation ;
+        - API serving avec FastAPI ;
+        - orchestration avec Airflow ;
+        - monitoring avec Prometheus et Grafana ;
+        - CI/CD avec GitHub Actions.
+
+        **Hypothèse principale :**
+        la plateforme est exécutée localement via Docker Compose pour démontrer les concepts
+        d'architecture, de data engineering, de gouvernance, de MLOps et d'observabilité
+        sans prétendre être un déploiement cloud hautement disponible.
         """
     )
+
+academic_mapping(
+    [
+        {
+            "Bloc": "Bloc 1",
+            "Section": "Academic block mapping / Data Governance",
+            "Preuve": "Le projet intègre consentement, rétention, auditabilité, risques et responsabilités.",
+        },
+        {
+            "Bloc": "Bloc 2",
+            "Section": "Architecture overview / Tool access",
+            "Preuve": "L'architecture déployée combine stockage, API, orchestration, monitoring et documentation.",
+        },
+        {
+            "Bloc": "Bloc 3",
+            "Section": "Architecture overview / Live demo flow",
+            "Preuve": "Le parcours client alimente un pipeline événementiel temps réel.",
+        },
+        {
+            "Bloc": "Bloc 4",
+            "Section": "Business capabilities / Platform status",
+            "Preuve": "Les prédictions IA, l'API serving, le monitoring et la CI/CD sont intégrés au produit.",
+        },
+    ]
+)
+
+technical_evidence(
+    {
+        "Runtime endpoints": [
+            "`GET /health`",
+            "`GET /ai/summary`",
+            "`Airflow /health`",
+            "`Prometheus /-/ready`",
+            "`Grafana /api/health`",
+        ],
+        "Main Streamlit pages": [
+            "`1_Platform_Overview.py`",
+            "`2_Customer_View.py`",
+            "`3_Customer_Intelligence.py`",
+            "`4_Data_Governance.py`",
+            "`5_Data_Architecture.py`",
+            "`6_Data_Quality.py`",
+            "`7_AI_Monitoring.py`",
+            "`8_Observability.py`",
+            "`9_CI_CD_and_Operations.py`",
+            "`10_Project_Evidence.py`",
+        ],
+        "External tools": [
+            "FastAPI",
+            "Airflow",
+            "pgAdmin",
+            "PostgreSQL",
+            "Prometheus",
+            "Grafana",
+            "GitHub Actions",
+        ],
+    }
+)
 
 footer_note()
