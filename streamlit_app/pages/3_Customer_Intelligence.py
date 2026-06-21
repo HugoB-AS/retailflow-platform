@@ -4,7 +4,16 @@ import pandas as pd
 import requests
 import streamlit as st
 
-from components import load_css, section_title, info_card, footer_note
+from components import (
+    load_css,
+    section_title,
+    info_card,
+    proof_card,
+    block_badges,
+    technical_evidence,
+    academic_mapping,
+    footer_note,
+)
 
 
 API_URL = os.getenv("API_URL", "http://fastapi:8000")
@@ -27,24 +36,19 @@ def api_get(path: str, params=None):
 def segment_recommendation(segment_label: str) -> str:
     mapping = {
         "High Value Loyal Customers": (
-            "Priorité business : programme VIP, avantages exclusifs, fidélisation premium "
-            "et attention commerciale renforcée."
+            "Programme VIP, avantages exclusifs, fidélisation premium et attention commerciale renforcée."
         ),
         "Dormant Low Value Customers": (
-            "Priorité business : campagne de réactivation à faible coût, relance ciblée "
-            "et limitation des investissements marketing lourds."
+            "Campagne de réactivation à faible coût et limitation des investissements marketing lourds."
         ),
         "Promo-Sensitive Browsers": (
-            "Priorité business : offres promotionnelles, coupons limités dans le temps "
-            "et messages orientés prix."
+            "Offres promotionnelles, coupons limités dans le temps et messages orientés prix."
         ),
         "Return-Prone Customers": (
-            "Priorité business : améliorer l'information produit, le sizing, le support client "
-            "et réduire les causes de retour."
+            "Améliorer l'information produit, le sizing, le support client et réduire les causes de retour."
         ),
         "Standard Active Customers": (
-            "Priorité business : marketing lifecycle standard, cross-sell, recommandations produits "
-            "et maintien de l'engagement."
+            "Marketing lifecycle standard, cross-sell, recommandations produits et maintien de l'engagement."
         ),
     }
 
@@ -52,9 +56,7 @@ def segment_recommendation(segment_label: str) -> str:
         if key in segment_label:
             return value
 
-    return (
-        "Priorité business : analyser le comportement du segment et définir une action marketing adaptée."
-    )
+    return "Analyser le comportement du segment et définir une action marketing adaptée."
 
 
 def recommendation_from_profile(profile: dict) -> list[str]:
@@ -95,7 +97,7 @@ def recommendation_from_profile(profile: dict) -> list[str]:
         )
     else:
         recommendations.append(
-            "Utiliser des campagnes automatisées à faible coût avant un effort commercial plus important."
+            "Utiliser des campagnes automatisées à faible coût avant un effort commercial lourd."
         )
 
     if segment_label:
@@ -119,12 +121,79 @@ def recommendation_from_profile(profile: dict) -> list[str]:
     return list(dict.fromkeys(recommendations))
 
 
+def business_decision_from_profile(profile: dict) -> dict:
+    churn = profile.get("churn") or {}
+    clv = profile.get("clv") or {}
+    segment = profile.get("segment") or {}
+
+    churn_label = churn.get("prediction_label", "unknown")
+    clv_label = clv.get("prediction_label", "unknown")
+    segment_label = segment.get("segment_label", "unknown")
+
+    if churn_label == "high_risk" and clv_label == "high_value":
+        return {
+            "priority": "Très élevée",
+            "decision": "Rétention prioritaire premium",
+            "reason": "Client à forte valeur avec risque élevé de départ.",
+        }
+
+    if churn_label == "high_risk":
+        return {
+            "priority": "Élevée",
+            "decision": "Campagne de rétention ciblée",
+            "reason": "Client identifié comme prioritaire par le modèle churn.",
+        }
+
+    if clv_label == "high_value":
+        return {
+            "priority": "Élevée",
+            "decision": "Fidélisation et upsell",
+            "reason": "Client avec valeur future élevée.",
+        }
+
+    if "Dormant" in segment_label:
+        return {
+            "priority": "Moyenne",
+            "decision": "Réactivation automatisée",
+            "reason": "Client dormant à traiter avec une campagne à faible coût.",
+        }
+
+    if "Promo-Sensitive" in segment_label:
+        return {
+            "priority": "Moyenne",
+            "decision": "Coupon ou offre limitée",
+            "reason": "Segment sensible aux promotions.",
+        }
+
+    return {
+        "priority": "Standard",
+        "decision": "Marketing lifecycle standard",
+        "reason": "Aucun signal de priorité critique détecté.",
+    }
+
+
+def format_eur(value) -> str:
+    try:
+        return f"{float(value):.2f} €"
+    except Exception:
+        return "N/A"
+
+
+def format_pct(value) -> str:
+    try:
+        return f"{float(value):.2%}"
+    except Exception:
+        return "N/A"
+
+
 st.title("🧠 Customer Intelligence")
+block_badges(["Bloc 1", "Bloc 4"])
+
 st.markdown(
     """
-    Cette page représente la **vue entreprise** de RetailFlow.
-    Elle montre comment les données clients deviennent des insights actionnables :
-    churn, CLV, segmentation, profil client et recommandations métier.
+    Cette page représente la vue métier de RetailFlow.
+    Elle transforme les données clients et les prédictions IA en décisions actionnables :
+    rétention, valeur client, segmentation et recommandations.
     """
 )
 
@@ -165,97 +234,35 @@ try:
     with k4:
         st.metric("Business segments", len(summary.get("segments", [])))
 
-    section_title("Top churn risk customers")
+    section_title("Decision framework")
 
-    st.markdown(
-        """
-        Ces clients sont prioritaires pour les actions de rétention.
+    d1, d2, d3, d4 = st.columns(4)
 
-        Les clients avec `total_orders = 0` sont exclus de cette vue métier,
-        car l'analyse de churn concerne ici des clients ayant déjà acheté.
-        """
-    )
-
-    if not df_churn.empty:
-        if "total_orders" in df_churn.columns:
-            df_churn_display = df_churn[df_churn["total_orders"] > 0].copy()
-        else:
-            df_churn_display = df_churn.copy()
-
-        st.dataframe(df_churn_display, use_container_width=True, hide_index=True)
-
-        chart_cols = ["customer_id", "churn_probability"]
-        if all(col in df_churn_display.columns for col in chart_cols) and not df_churn_display.empty:
-            st.bar_chart(df_churn_display.set_index("customer_id")["churn_probability"])
-    else:
-        st.info("No churn predictions available.")
-
-    section_title("Top predicted CLV customers")
-
-    st.markdown(
-        """
-        Ces clients représentent la plus forte valeur future estimée.
-        Ils peuvent être priorisés pour des actions de fidélisation ou d’upsell.
-        """
-    )
-
-    if not df_clv.empty:
-        st.dataframe(df_clv, use_container_width=True, hide_index=True)
-
-        chart_cols = ["customer_id", "predicted_clv"]
-        if all(col in df_clv.columns for col in chart_cols):
-            st.bar_chart(df_clv.set_index("customer_id")["predicted_clv"])
-    else:
-        st.info("No CLV predictions available.")
-
-    section_title("Customer segments")
-
-    if not df_segments.empty:
-        st.dataframe(df_segments, use_container_width=True, hide_index=True)
-
-        if "segment_label" in df_segments.columns and "customers_count" in df_segments.columns:
-            st.bar_chart(df_segments.set_index("segment_label")["customers_count"])
-
-        st.subheader("Segment customer explorer")
-
-        segment_options = sorted(df_segments["segment_label"].dropna().unique().tolist())
-        selected_segment = st.selectbox(
-            "Select segment",
-            segment_options,
-            help="Affiche les clients appartenant au segment sélectionné.",
+    with d1:
+        proof_card(
+            "High churn + high CLV",
+            "Rétention prioritaire premium.",
         )
 
-        df_selected_segment = df_ai_customers[
-            df_ai_customers["segment_label"] == selected_segment
-        ].copy()
-
-        segment_cols = [
-            "customer_id",
-            "city",
-            "total_orders",
-            "total_spent",
-            "churn_risk",
-            "predicted_clv",
-            "clv_band",
-            "segment_label",
-        ]
-
-        available_segment_cols = [
-            col for col in segment_cols if col in df_selected_segment.columns
-        ]
-
-        st.dataframe(
-            df_selected_segment[available_segment_cols],
-            use_container_width=True,
-            hide_index=True,
+    with d2:
+        proof_card(
+            "High churn",
+            "Campagne de rétention ciblée.",
         )
 
-        st.info(segment_recommendation(selected_segment))
+    with d3:
+        proof_card(
+            "High CLV",
+            "Fidélisation, upsell et traitement prioritaire.",
+        )
 
-    else:
-        st.info("No customer segments available.")
+    with d4:
+        proof_card(
+            "Segment spécifique",
+            "Action marketing adaptée au comportement.",
+        )
 
-    section_title("Customer explorer")
+    section_title("Customer decision explorer")
 
     if df_ai_customers.empty:
         st.warning("No customer data available for explorer.")
@@ -279,9 +286,19 @@ try:
         else:
             customer_options = df_explorer["customer_id"].dropna().tolist()
 
+            default_index = 0
+            if "churn_risk" in df_explorer.columns:
+                high_risk_customers = df_explorer[
+                    df_explorer["churn_risk"].astype(str).str.contains("high", case=False, na=False)
+                ]["customer_id"].tolist()
+
+                if high_risk_customers and high_risk_customers[0] in customer_options:
+                    default_index = customer_options.index(high_risk_customers[0])
+
             selected_customer_id = st.selectbox(
                 "Select customer",
                 customer_options,
+                index=default_index,
                 help="Explore a complete AI profile for a specific customer.",
             )
 
@@ -291,53 +308,64 @@ try:
                 else "Consent filter disabled: all customers are shown for technical demonstration."
             )
 
-            if st.button("Load customer AI profile", use_container_width=True):
-                profile = api_get(f"/ai/customer/{selected_customer_id}")
+            profile = api_get(f"/ai/customer/{selected_customer_id}")
 
-                customer = profile.get("customer") or {}
-                churn_profile = profile.get("churn") or {}
-                clv_profile = profile.get("clv") or {}
-                segment_profile = profile.get("segment") or {}
+            customer = profile.get("customer") or {}
+            churn_profile = profile.get("churn") or {}
+            clv_profile = profile.get("clv") or {}
+            segment_profile = profile.get("segment") or {}
+            decision = business_decision_from_profile(profile)
 
-                st.subheader("Customer profile")
+            p1, p2, p3, p4 = st.columns(4)
 
-                p1, p2, p3, p4 = st.columns(4)
+            with p1:
+                st.metric("Priority", decision["priority"])
 
-                with p1:
-                    st.metric("Country", customer.get("country", "N/A"))
+            with p2:
+                st.metric("Decision", decision["decision"])
 
-                with p2:
-                    st.metric("City", customer.get("city", "N/A"))
+            with p3:
+                st.metric(
+                    "Churn risk",
+                    churn_profile.get("prediction_label", "N/A"),
+                    format_pct(churn_profile.get("prediction_value")),
+                )
 
-                with p3:
-                    st.metric("Total orders", customer.get("total_orders", 0))
+            with p4:
+                st.metric(
+                    "Predicted CLV",
+                    format_eur(clv_profile.get("prediction_value")),
+                    clv_profile.get("prediction_label", "N/A"),
+                )
 
-                with p4:
-                    st.metric("Total spent", f"{float(customer.get('total_spent') or 0):.2f} €")
+            b1, b2, b3 = st.columns(3)
 
-                m1, m2, m3 = st.columns(3)
+            with b1:
+                info_card(
+                    "Business reason",
+                    decision["reason"],
+                )
 
-                with m1:
-                    st.metric(
-                        "Churn risk",
-                        churn_profile.get("prediction_label", "N/A"),
-                        f"{float(churn_profile.get('prediction_value') or 0):.2%}",
-                    )
+            with b2:
+                info_card(
+                    "Segment",
+                    segment_profile.get("segment_label", "N/A"),
+                )
 
-                with m2:
-                    st.metric(
-                        "Predicted CLV",
-                        f"{float(clv_profile.get('prediction_value') or 0):.2f} €",
-                        clv_profile.get("prediction_label", "N/A"),
-                    )
+            with b3:
+                info_card(
+                    "Customer context",
+                    f"{customer.get('city', 'N/A')} • {customer.get('country', 'N/A')} • {customer.get('total_orders', 0)} orders",
+                )
 
-                with m3:
-                    st.metric(
-                        "Segment",
-                        segment_profile.get("segment_label", "N/A"),
-                    )
+            st.subheader("Recommended actions")
 
-                st.subheader("Behavioral features")
+            recommendations = recommendation_from_profile(profile)
+
+            for recommendation in recommendations:
+                st.markdown(f"- {recommendation}")
+
+            with st.expander("Behavioral features"):
                 st.json(
                     {
                         "avg_order_value": customer.get("avg_order_value"),
@@ -352,37 +380,180 @@ try:
                     }
                 )
 
-                st.subheader("Business recommendations")
+            with st.expander("Raw AI profile"):
+                st.json(profile)
 
-                recommendations = recommendation_from_profile(profile)
+    section_title("Customer intelligence views")
 
-                for recommendation in recommendations:
-                    st.markdown(f"- {recommendation}")
+    tab1, tab2, tab3 = st.tabs(
+        [
+            "Retention priorities",
+            "Customer value",
+            "Segments",
+        ]
+    )
 
-                with st.expander("Raw AI profile"):
-                    st.json(profile)
+    with tab1:
+        st.markdown(
+            """
+            Les clients à risque sont prioritaires pour les actions de rétention.
+            Les clients sans achat sont exclus de cette vue métier quand l'information est disponible.
+            """
+        )
+
+        if not df_churn.empty:
+            if "total_orders" in df_churn.columns:
+                df_churn_display = df_churn[df_churn["total_orders"] > 0].copy()
+            else:
+                df_churn_display = df_churn.copy()
+
+            st.dataframe(df_churn_display, use_container_width=True, hide_index=True)
+
+            chart_cols = ["customer_id", "churn_probability"]
+            if all(col in df_churn_display.columns for col in chart_cols) and not df_churn_display.empty:
+                st.bar_chart(df_churn_display.set_index("customer_id")["churn_probability"])
+        else:
+            st.info("No churn predictions available.")
+
+    with tab2:
+        st.markdown(
+            """
+            Les clients avec CLV élevée peuvent être priorisés pour les stratégies de fidélisation,
+            d'upsell ou d'expérience premium.
+            """
+        )
+
+        if not df_clv.empty:
+            st.dataframe(df_clv, use_container_width=True, hide_index=True)
+
+            chart_cols = ["customer_id", "predicted_clv"]
+            if all(col in df_clv.columns for col in chart_cols):
+                st.bar_chart(df_clv.set_index("customer_id")["predicted_clv"])
+        else:
+            st.info("No CLV predictions available.")
+
+    with tab3:
+        if not df_segments.empty:
+            st.dataframe(df_segments, use_container_width=True, hide_index=True)
+
+            if "segment_label" in df_segments.columns and "customers_count" in df_segments.columns:
+                st.bar_chart(df_segments.set_index("segment_label")["customers_count"])
+
+            st.subheader("Segment action guide")
+
+            segment_options = sorted(df_segments["segment_label"].dropna().unique().tolist())
+            selected_segment = st.selectbox(
+                "Select segment",
+                segment_options,
+                help="Affiche l'action recommandée pour le segment sélectionné.",
+            )
+
+            st.info(segment_recommendation(selected_segment))
+
+            df_selected_segment = df_ai_customers[
+                df_ai_customers["segment_label"] == selected_segment
+            ].copy()
+
+            segment_cols = [
+                "customer_id",
+                "city",
+                "total_orders",
+                "total_spent",
+                "churn_risk",
+                "predicted_clv",
+                "clv_band",
+                "segment_label",
+            ]
+
+            available_segment_cols = [
+                col for col in segment_cols if col in df_selected_segment.columns
+            ]
+
+            with st.expander("Customers in selected segment"):
+                st.dataframe(
+                    df_selected_segment[available_segment_cols],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+        else:
+            st.info("No customer segments available.")
 
     section_title("What this page demonstrates")
 
-    d1, d2, d3 = st.columns(3)
+    v1, v2, v3 = st.columns(3)
 
-    with d1:
+    with v1:
         info_card(
             "Business value",
-            "Transforms raw customer behavior into prioritizable business actions.",
+            "Les prédictions sont traduites en priorités et actions métier concrètes.",
         )
 
-    with d2:
+    with v2:
         info_card(
             "AI serving",
-            "Predictions are exposed through FastAPI endpoints and consumed by Streamlit.",
+            "Les profils IA sont exposés par FastAPI et consommés en temps réel dans Streamlit.",
         )
 
-    with d3:
+    with v3:
         info_card(
             "Governed analytics",
-            "Customer exploration can be restricted to analytics-consented customers.",
+            "L'exploration peut être limitée aux clients avec consentement analytics.",
         )
+
+    academic_mapping(
+        [
+            {
+                "Bloc": "Bloc 1",
+                "Section": "Customer decision explorer",
+                "Preuve": "Filtre analytics consent pour limiter l'usage des données clients.",
+            },
+            {
+                "Bloc": "Bloc 4",
+                "Section": "Business overview",
+                "Preuve": "Prédictions churn, CLV et segmentation exposées pour l'aide à la décision.",
+            },
+            {
+                "Bloc": "Bloc 4",
+                "Section": "Decision framework",
+                "Preuve": "Traduction des sorties IA en actions métier explicables.",
+            },
+            {
+                "Bloc": "Bloc 4",
+                "Section": "Customer intelligence views",
+                "Preuve": "API serving des prédictions et visualisation dans l'interface applicative.",
+            },
+        ]
+    )
+
+    technical_evidence(
+        {
+            "FastAPI endpoints": [
+                "`GET /ai/summary`",
+                "`GET /ai/churn-top`",
+                "`GET /ai/clv-top`",
+                "`GET /ai/segments`",
+                "`GET /ai/customers`",
+                "`GET /ai/customer/{customer_id}`",
+            ],
+            "Database usage": [
+                "`analytics.customer_features`",
+                "`analytics.customer_predictions`",
+                "`core.customers`",
+            ],
+            "AI use cases": [
+                "Churn prediction",
+                "Customer lifetime value prediction",
+                "Customer segmentation",
+                "Business recommendation logic",
+            ],
+            "Related files": [
+                "`streamlit_app/pages/3_Customer_Intelligence.py`",
+                "`api/app/routes/ai.py`",
+                "`ml/src/predict.py`",
+            ],
+        }
+    )
 
 except Exception as exc:
     st.error(f"Unable to load Customer Intelligence data: {exc}")
