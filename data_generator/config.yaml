@@ -1,0 +1,48 @@
+dataset_profiles:
+  small:
+    customers: 500
+    products: 100
+    suppliers: 10
+    orders: 2000
+    order_items: 5000
+    sessions: 5000
+    reviews: 500
+    support_tickets: 250
+    returns: 200
+    events: 10000
+
+  medium:
+    customers: 5000
+    products: 500
+    suppliers: 40
+    orders: 35000
+    order_items: 90000
+    sessions: 50000
+    reviews: 5000
+    support_tickets: 2000
+    returns: 3000
+    events: 200000
+
+  large:
+    customers: 15000
+    products: 1000
+    suppliers: 80
+    orders: 100000
+    order_items: 260000
+    sessions: 150000
+    reviews: 15000
+    support_tickets: 6000
+    returns: 9000
+    events: 600000
+
+personas:
+  loyal_high_value: 0.18
+  promo_hunter: 0.20
+  window_shopper: 0.14
+  dissatisfied_customer: 0.05
+  new_customer: 0.23
+  luxury_buyer: 0.09
+  at_risk_former_loyal: 0.11
+
+random_seed: 42
+output_dir: data/raw

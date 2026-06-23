@@ -1,0 +1,34 @@
+CLV Model Report
+================
+
+Rows: 5000
+Selected model: gradient_boosting
+
+Target summary:
+- mean: 4981.17
+- median: 3149.44
+- std: 5683.90
+
+Cross-validation results:
+- linear_regression: MAE=1536.63 (std=50.89), RMSE=2277.44, R2=0.8391
+- random_forest: MAE=1354.66 (std=44.05), RMSE=2032.11, R2=0.8718
+- gradient_boosting: MAE=1323.81 (std=35.07), RMSE=1974.31, R2=0.8788
+
+Holdout metrics:
+- MAE: 1376.30
+- RMSE: 2066.44
+- R2: 0.8823
+
+Top feature importance:
+- total_spent: 0.8702
+- days_since_last_order: 0.0575
+- avg_order_value: 0.0300
+- cart_abandon_rate: 0.0163
+- return_rate: 0.0151
+- pages_viewed_30d: 0.0037
+- avg_rating_given: 0.0037
+- total_orders: 0.0017
+- discount_usage_rate: 0.0009
+- support_tickets_count: 0.0008
+
+Generated at: 2026-06-14T18:01:29.087412+00:00

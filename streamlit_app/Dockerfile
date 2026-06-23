@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY streamlit_app/requirements.txt /app/streamlit_app/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r /app/streamlit_app/requirements.txt
+
+COPY streamlit_app /app/streamlit_app
+COPY ml /app/ml
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "streamlit_app/app.py", "--server.address=0.0.0.0", "--server.port=8501"]

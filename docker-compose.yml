@@ -1,0 +1,275 @@
+x-airflow-common:
+  &airflow-common
+  image: apache/airflow:2.10.3-python3.11
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
+    AIRFLOW_CONN_RETAILFLOW_POSTGRES: postgresql://retailflow:retailflow@postgres:5432/retailflow_db
+    DATABASE_URL: postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db
+    PYTHONPATH: /opt/airflow
+    _PIP_ADDITIONAL_REQUIREMENTS: pandas==2.2.3 numpy==2.2.1 scikit-learn==1.6.0 joblib==1.4.2 psycopg2-binary==2.9.10
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+    - ./ml:/opt/airflow/ml
+    - ./data_generator:/opt/airflow/data_generator
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    airflow_postgres:
+      condition: service_healthy
+  networks:
+    - retailflow_network
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: retailflow_postgres
+    environment:
+      POSTGRES_USER: retailflow
+      POSTGRES_PASSWORD: retailflow
+      POSTGRES_DB: retailflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retailflow -d retailflow_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - retailflow_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: retailflow_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@retailflow.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - retailflow_network
+
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: retailflow_redpanda
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - "1G"
+      - --reserve-memory
+      - "0M"
+      - --node-id
+      - "0"
+      - --check=false
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - internal://redpanda:9092,external://localhost:19092
+      - --rpc-addr
+      - 0.0.0.0:33145
+      - --advertise-rpc-addr
+      - redpanda:33145
+    ports:
+      - "9092:9092"
+      - "19092:19092"
+      - "9644:9644"
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster info --brokers localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - retailflow_network
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: retailflow_fastapi
+    environment:
+      DATABASE_URL: postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      EVENT_TOPIC: retailflow_events
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/openapi.json', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - retailflow_network
+    volumes:
+      - ./ml/reports:/app/ml/reports:ro
+
+  event_consumer:
+    build:
+      context: .
+      dockerfile: pipeline/consumer/Dockerfile
+    container_name: retailflow_event_consumer
+    environment:
+      DATABASE_URL: postgresql+psycopg2://retailflow:retailflow@postgres:5432/retailflow_db
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      EVENT_TOPIC: retailflow_events
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    networks:
+      - retailflow_network
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: streamlit_app/Dockerfile
+    container_name: retailflow_streamlit
+    environment:
+      API_URL: http://fastapi:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      fastapi:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - retailflow_network
+
+  airflow_postgres:
+    image: postgres:16
+    container_name: retailflow_airflow_postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+    networks:
+      - retailflow_network
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: retailflow_airflow_init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin \
+          --firstname RetailFlow \
+          --lastname Admin \
+          --role Admin \
+          --email admin@retailflow.local \
+          --password admin || true
+    depends_on:
+      airflow_postgres:
+        condition: service_healthy
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: retailflow_airflow_webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: retailflow_airflow_scheduler
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: retailflow_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules
+    depends_on:
+      - fastapi
+    networks:
+      - retailflow_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: retailflow_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - retailflow_network
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: retailflow_postgres_exporter
+    environment:
+      DATA_SOURCE_NAME: postgresql://retailflow:retailflow@postgres:5432/retailflow_db?sslmode=disable
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
+    networks:
+      - retailflow_network
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  redpanda_data:
+  airflow_postgres_data:
+  grafana_data:
+
+networks:
+  retailflow_network:
+    driver: bridge

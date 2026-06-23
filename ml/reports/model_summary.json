@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-06-14T18:01:47.630135+00:00",
+  "project": "RetailFlow",
+  "summary_type": "ml_model_summary",
+  "churn": {
+    "available": true,
+    "model_version": "v2_realism",
+    "selected_model": "logistic_regression",
+    "roc_auc": 0.6781228387211923,
+    "f1": 0.3333333333333333,
+    "positive_rate": 0.3568
+  },
+  "clv": {
+    "available": true,
+    "model_version": "v2_realism",
+    "selected_model": "gradient_boosting",
+    "mae": 1376.2997044142421,
+    "rmse": 2066.4438456282605,
+    "r2": 0.8822843952696444
+  },
+  "segmentation": {
+    "available": true,
+    "model_version": "v2_realism",
+    "selected_k": 5,
+    "selection_metric": "highest_silhouette"
+  },
+  "drift": {
+    "available": true,
+    "drift_detected": true,
+    "drifted_features_count": 2,
+    "threshold": 0.2
+  }
+}

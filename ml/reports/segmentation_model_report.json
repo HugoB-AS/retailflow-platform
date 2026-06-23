@@ -1,0 +1,139 @@
+{
+  "generated_at": "2026-06-14T18:01:27.347026+00:00",
+  "model_name": "segmentation_model",
+  "model_version": "v2_realism",
+  "task_type": "clustering",
+  "dataset_rows": 5000,
+  "features": [
+    "total_orders",
+    "total_spent",
+    "avg_order_value",
+    "days_since_last_order",
+    "return_rate",
+    "cart_abandon_rate",
+    "support_tickets_count",
+    "discount_usage_rate"
+  ],
+  "tested_k_values": [
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "k_evaluation": {
+    "3": {
+      "silhouette": 0.22925120207466088,
+      "davies_bouldin": 1.6634272299204262,
+      "calinski_harabasz": 923.4512754781133
+    },
+    "4": {
+      "silhouette": 0.2517255417811315,
+      "davies_bouldin": 1.4499936640523756,
+      "calinski_harabasz": 944.4727644981891
+    },
+    "5": {
+      "silhouette": 0.25602475659852664,
+      "davies_bouldin": 1.3564436222965113,
+      "calinski_harabasz": 949.8634177661645
+    },
+    "6": {
+      "silhouette": 0.2158626259700438,
+      "davies_bouldin": 1.360771842285818,
+      "calinski_harabasz": 966.2673878538608
+    },
+    "7": {
+      "silhouette": 0.21304545033531777,
+      "davies_bouldin": 1.272886200636256,
+      "calinski_harabasz": 973.3361607176288
+    }
+  },
+  "selected_k": 5,
+  "selection_metric": "highest_silhouette",
+  "segment_labels": {
+    "0": "Dormant Low Value Customers",
+    "1": "Standard Active Customers",
+    "2": "High Value Loyal Customers",
+    "3": "Return-Prone Customers",
+    "4": "Promo-Sensitive Browsers"
+  },
+  "segment_descriptions": {
+    "0": "Customers with long inactivity and weaker recent engagement.",
+    "1": "Customers with balanced activity and medium business value.",
+    "2": "Customers with the highest spending and strong purchase history.",
+    "3": "Customers with comparatively high return behavior.",
+    "4": "Customers influenced by discounts and browsing/cart behavior."
+  },
+  "cluster_summary": [
+    {
+      "cluster_id": 0,
+      "segment_label": "Dormant Low Value Customers",
+      "segment_description": "Customers with long inactivity and weaker recent engagement.",
+      "customers_count": 274,
+      "total_orders": 0.71,
+      "total_spent": 874.08,
+      "avg_order_value": 586.38,
+      "days_since_last_order": 790.19,
+      "return_rate": 0.0,
+      "cart_abandon_rate": 0.95,
+      "support_tickets_count": 0.21,
+      "discount_usage_rate": 0.02
+    },
+    {
+      "cluster_id": 1,
+      "segment_label": "Standard Active Customers",
+      "segment_description": "Customers with balanced activity and medium business value.",
+      "customers_count": 2778,
+      "total_orders": 5.37,
+      "total_spent": 5650.43,
+      "avg_order_value": 1114.29,
+      "days_since_last_order": 98.76,
+      "return_rate": 0.05,
+      "cart_abandon_rate": 0.97,
+      "support_tickets_count": 0.28,
+      "discount_usage_rate": 0.15
+    },
+    {
+      "cluster_id": 2,
+      "segment_label": "High Value Loyal Customers",
+      "segment_description": "Customers with the highest spending and strong purchase history.",
+      "customers_count": 995,
+      "total_orders": 12.05,
+      "total_spent": 25685.04,
+      "avg_order_value": 2448.65,
+      "days_since_last_order": 71.92,
+      "return_rate": 0.07,
+      "cart_abandon_rate": 0.94,
+      "support_tickets_count": 0.33,
+      "discount_usage_rate": 0.15
+    },
+    {
+      "cluster_id": 3,
+      "segment_label": "Return-Prone Customers",
+      "segment_description": "Customers with comparatively high return behavior.",
+      "customers_count": 425,
+      "total_orders": 4.94,
+      "total_spent": 7637.52,
+      "avg_order_value": 1601.74,
+      "days_since_last_order": 117.58,
+      "return_rate": 0.46,
+      "cart_abandon_rate": 0.98,
+      "support_tickets_count": 1.64,
+      "discount_usage_rate": 0.14
+    },
+    {
+      "cluster_id": 4,
+      "segment_label": "Promo-Sensitive Browsers",
+      "segment_description": "Customers influenced by discounts and browsing/cart behavior.",
+      "customers_count": 528,
+      "total_orders": 10.98,
+      "total_spent": 17360.57,
+      "avg_order_value": 1548.07,
+      "days_since_last_order": 40.05,
+      "return_rate": 0.06,
+      "cart_abandon_rate": 0.15,
+      "support_tickets_count": 0.27,
+      "discount_usage_rate": 0.16
+    }
+  ]
+}

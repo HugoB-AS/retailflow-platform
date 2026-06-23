@@ -1,0 +1,32 @@
+Churn Model Report
+==================
+
+Rows: 5000
+Positive churn rate: 0.3568
+Selected model: logistic_regression
+
+Cross-validation results:
+- logistic_regression: ROC AUC=0.6829 (std=0.0150), F1=0.5364
+- random_forest: ROC AUC=0.6815 (std=0.0151), F1=0.5329
+- gradient_boosting: ROC AUC=0.6718 (std=0.0150), F1=0.3682
+
+Holdout calibrated metrics:
+- ROC AUC: 0.6781
+- F1: 0.3333
+- Precision: 0.6312
+- Recall: 0.2265
+- Brier score: 0.2043
+
+Top feature importance:
+- days_since_last_order: 0.3715
+- cart_abandon_rate: 0.1273
+- pages_viewed_30d: 0.1197
+- return_rate: 0.1096
+- total_orders: 0.0863
+- support_tickets_count: 0.0674
+- avg_order_value: 0.0468
+- session_count_30d: 0.0324
+- avg_rating_given: 0.0177
+- total_spent: 0.0110
+
+Generated at: 2026-06-14T18:01:26.193584+00:00

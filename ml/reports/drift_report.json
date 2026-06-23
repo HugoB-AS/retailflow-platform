@@ -1,0 +1,150 @@
+{
+  "generated_at": "2026-06-14T18:01:47.628256+00:00",
+  "report_name": "lightweight_ml_drift_report",
+  "method": "synthetic current dataset simulation with relative mean-change threshold",
+  "threshold": 0.2,
+  "reference_rows": 5000,
+  "current_rows": 5000,
+  "features": [
+    "total_orders",
+    "total_spent",
+    "avg_order_value",
+    "days_since_last_order",
+    "return_rate",
+    "cart_abandon_rate",
+    "session_count_30d",
+    "pages_viewed_30d",
+    "support_tickets_count",
+    "avg_rating_given",
+    "discount_usage_rate"
+  ],
+  "overall": {
+    "drift_detected": true,
+    "drifted_features_count": 2,
+    "threshold": 0.2
+  },
+  "feature_drift": [
+    {
+      "feature": "days_since_last_order",
+      "reference_mean": 126.7108,
+      "current_mean": 164.705923962526,
+      "reference_std": 193.93248806052344,
+      "current_std": 252.33843315439987,
+      "relative_mean_change": 0.2998570284658133,
+      "absolute_relative_mean_change": 0.2998570284658133,
+      "drift_detected": true,
+      "threshold": 0.2
+    },
+    {
+      "feature": "avg_order_value",
+      "reference_mean": 1438.1396280000001,
+      "current_mean": 1796.7364901017754,
+      "reference_std": 1046.1295339095466,
+      "current_std": 1310.5521409839687,
+      "relative_mean_change": 0.24934773725724443,
+      "absolute_relative_mean_change": 0.24934773725724443,
+      "drift_detected": true,
+      "threshold": 0.2
+    },
+    {
+      "feature": "discount_usage_rate",
+      "reference_mean": 0.14432786,
+      "current_mean": 0.17102866744640197,
+      "reference_std": 0.1776672739416755,
+      "current_std": 0.20266810924077067,
+      "relative_mean_change": 0.18500106248649403,
+      "absolute_relative_mean_change": 0.18500106248649403,
+      "drift_detected": false,
+      "threshold": 0.2
+    },
+    {
+      "feature": "return_rate",
+      "reference_mean": 0.08760488,
+      "current_mean": 0.09904498092526966,
+      "reference_std": 0.16507472904542198,
+      "current_std": 0.17562202216710396,
+      "relative_mean_change": 0.13058748468429682,
+      "absolute_relative_mean_change": 0.13058748468429682,
+      "drift_detected": false,
+      "threshold": 0.2
+    },
+    {
+      "feature": "cart_abandon_rate",
+      "reference_mean": 0.8781370399999999,
+      "current_mean": 0.8858555362272109,
+      "reference_std": 0.2844584861488699,
+      "current_std": 0.2776503456604372,
+      "relative_mean_change": 0.008789626078420508,
+      "absolute_relative_mean_change": 0.008789626078420508,
+      "drift_detected": false,
+      "threshold": 0.2
+    },
+    {
+      "feature": "total_orders",
+      "reference_mean": 7.0,
+      "current_mean": 7.0,
+      "reference_std": 4.998539494633996,
+      "current_std": 4.998539494633996,
+      "relative_mean_change": 0.0,
+      "absolute_relative_mean_change": 0.0,
+      "drift_detected": false,
+      "threshold": 0.2
+    },
+    {
+      "feature": "total_spent",
+      "reference_mean": 10781.069354,
+      "current_mean": 10781.069354,
+      "reference_std": 11390.625358248688,
+      "current_std": 11390.625358248688,
+      "relative_mean_change": 0.0,
+      "absolute_relative_mean_change": 0.0,
+      "drift_detected": false,
+      "threshold": 0.2
+    },
+    {
+      "feature": "session_count_30d",
+      "reference_mean": 0.9988,
+      "current_mean": 0.9988,
+      "reference_std": 1.3103976451435189,
+      "current_std": 1.3103976451435189,
+      "relative_mean_change": 0.0,
+      "absolute_relative_mean_change": 0.0,
+      "drift_detected": false,
+      "threshold": 0.2
+    },
+    {
+      "feature": "pages_viewed_30d",
+      "reference_mean": 4.6974,
+      "current_mean": 4.6974,
+      "reference_std": 7.19756863384072,
+      "current_std": 7.19756863384072,
+      "relative_mean_change": 0.0,
+      "absolute_relative_mean_change": 0.0,
+      "drift_detected": false,
+      "threshold": 0.2
+    },
+    {
+      "feature": "support_tickets_count",
+      "reference_mean": 0.4,
+      "current_mean": 0.4,
+      "reference_std": 0.7650601697988744,
+      "current_std": 0.7650601697988744,
+      "relative_mean_change": 0.0,
+      "absolute_relative_mean_change": 0.0,
+      "drift_detected": false,
+      "threshold": 0.2
+    },
+    {
+      "feature": "avg_rating_given",
+      "reference_mean": 2.1880300000000004,
+      "current_mean": 2.1880300000000004,
+      "reference_std": 2.107310288123248,
+      "current_std": 2.107310288123248,
+      "relative_mean_change": 0.0,
+      "absolute_relative_mean_change": 0.0,
+      "drift_detected": false,
+      "threshold": 0.2
+    }
+  ],
+  "production_note": "This is a lightweight demonstration. In production, current datasets should come from real periodic snapshots and trigger alerts or retraining when drift is detected."
+}

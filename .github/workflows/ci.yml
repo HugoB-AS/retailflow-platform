@@ -1,0 +1,184 @@
+name: RetailFlow CI
+
+on:
+  push:
+    branches:
+      - develop
+      - "feature/**"
+  pull_request:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  python-tests:
+    name: Python tests and syntax checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            api/requirements.txt
+            ml/requirements.txt
+            pipeline/requirements.txt
+            streamlit_app/requirements.txt
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install pytest httpx
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -r api/requirements.txt
+          python -m pip install -r ml/requirements.txt
+          python -m pip install -r pipeline/requirements.txt
+          python -m pip install -r streamlit_app/requirements.txt
+
+      - name: Check Python syntax
+        run: |
+          python -m compileall api ml pipeline data_generator tests streamlit_app
+
+      - name: Run tests with JUnit report
+        run: |
+          mkdir -p reports/ci
+          python -m pytest tests/test_*.py -q --junitxml=reports/ci/pytest-results.xml
+
+      - name: Upload pytest report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: reports/ci/pytest-results.xml
+          if-no-files-found: error
+
+  security-reports:
+    name: Security Checks and Audit Reports
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pip-audit bandit
+
+      - name: Generate pip-audit report
+        run: |
+          mkdir -p reports/security
+          pip-audit             --format json             --output reports/security/pip-audit.json             -r requirements.txt             -r requirements-dev.txt             -r api/requirements.txt             -r ml/requirements.txt             -r pipeline/requirements.txt             -r streamlit_app/requirements.txt             || true
+
+      - name: Generate Bandit report
+        run: |
+          mkdir -p reports/security
+          bandit -r api ml pipeline data_generator streamlit_app             -f json             -o reports/security/bandit.json             || true
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: reports/security/
+          if-no-files-found: warn
+
+  repository-quality-checks:
+    name: Repository quality checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate JSON files
+        run: |
+          python - << 'PY'
+          import json
+          from pathlib import Path
+
+          ignored_parts = {
+              ".git",
+              ".venv",
+              "venv",
+              "__pycache__",
+              "backups",
+              "airflow/logs",
+          }
+
+          json_files = [
+              path
+              for path in Path(".").rglob("*.json")
+              if not any(part in ignored_parts for part in path.parts)
+          ]
+
+          for path in json_files:
+              try:
+                  json.loads(path.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  raise SystemExit(f"Invalid JSON file: {path} -> {exc}")
+
+          print(f"Validated {len(json_files)} JSON files.")
+          PY
+
+      - name: Validate Bash scripts
+        run: |
+          find scripts -type f -name "*.sh" -print0 | while IFS= read -r -d '' script; do
+            echo "Checking ${script}"
+            bash -n "${script}"
+          done
+
+  docker-compose-validation:
+    name: Docker Compose validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose configuration
+        run: |
+          docker compose config --quiet
+
+  docker-build:
+    name: Docker image build validation
+    runs-on: ubuntu-latest
+    needs:
+      - python-tests
+      - repository-quality-checks
+      - docker-compose-validation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build FastAPI image
+        run: |
+          docker build -t retailflow-api-ci -f api/Dockerfile .
+
+      - name: Build Streamlit image
+        run: |
+          docker build -t retailflow-streamlit-ci -f streamlit_app/Dockerfile .
+
+      - name: Build event consumer image
+        run: |
+          docker build -t retailflow-consumer-ci -f pipeline/consumer/Dockerfile .

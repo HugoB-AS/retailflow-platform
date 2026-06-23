@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.local
+
+# Data outputs
+data/raw/*.csv
+data/processed/*.csv
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Debug exports
+*_debug*.csv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# ML artifacts
+ml/models/*.pkl
+ml/models/*.joblib
+ml/reports/evidently/*
+!ml/reports/evidently/.gitkeep
+
+# Docker
+postgres_data/
+pgadmin_data/
+
+# Airflow runtime logs
+airflow/logs/
+
+retailflow_defense_master_guide_v1.md
+
+# Local CI/test reports
+reports/
+
+# Local database backups
+backups/*.sql

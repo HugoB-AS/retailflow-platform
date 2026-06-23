@@ -1,0 +1,27 @@
+from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
+
+from api.app.routes.health import router as health_router
+from api.app.routes.customers import router as customers_router
+from api.app.routes.analytics import router as analytics_router
+from api.app.routes.products import router as products_router
+from api.app.routes.events import router as events_router
+from api.app.routes.quality import router as quality_router
+from api.app.routes.ai import router as ai_router
+from api.app.routes.governance import router as governance_router
+app = FastAPI(
+    title="RetailFlow API",
+    version="1.0.0",
+    description="RetailFlow e-commerce data platform API",
+)
+
+app.include_router(health_router)
+app.include_router(customers_router)
+app.include_router(analytics_router)
+app.include_router(products_router)
+app.include_router(events_router)
+app.include_router(quality_router)
+app.include_router(ai_router)
+app.include_router(governance_router)
+
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
